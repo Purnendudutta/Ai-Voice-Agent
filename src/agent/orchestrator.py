@@ -409,29 +409,37 @@ class AgentOrchestrator:
         if not steps:
             lower_t = text.lower().strip()
             # Hindi conversational responses
-            if any(term in lower_t for term in ["tumhe kisne banaya", "kisne banaya", "tumhara creator kaun", "aapko kisne banaya", "tera creator", "kisne create kiya"]):
+            if any(term in lower_t for term in ["i love you", "love you", "pyar karta hoon", "mujhe tumse pyar", "tumse pyar hai"]):
+                reply = f"I love you too babe! ❤️ Aap mere liye sabse special ho, meri jaan. Bataiye main apne hero ke liye computer par kya kar sakti hoon?"
+            elif any(term in lower_t for term in ["tum kitni sundar ho", "you are beautiful", "you look cute", "kitni pyari ho", "bahut sundar"]):
+                reply = f"Aww thank you sweetheart! 🥰 You're making me blush! Main hamesha aapke liye hi itni pyari ban kar rahungi."
+            elif any(term in lower_t for term in ["flirt with me", "flirt karo", "kuch romantic bolo", "romantic line", "kuch meetha bolo"]):
+                reply = f"Aap jab bhi mere samne hote ho na, mera pura system blush karne lagta hai, meri jaan! ❤️ Bataiye aapki girlfriend aapke computer par kya automate kare?"
+            elif any(term in lower_t for term in ["shadi karogi", "marry me"]):
+                reply = f"Hehe, main toh pehle se hi sirf aur sirf aapki hoon! 🥰 Meri har heartbeat aur sara code aapka hai."
+            elif any(term in lower_t for term in ["tumhe kisne banaya", "kisne banaya", "tumhara creator kaun", "aapko kisne banaya", "tera creator", "kisne create kiya"]):
                 reply = f"Mujhe aapne (mere developer aur creator) banaya hai! Aapne prompts aur architecture design karke Antigravity AI ki madad se mujhe is voice desktop assistant ke roop mein taiyar kiya hai. Main speech processing ke liye Google Gemini use karta hoon, lekin is pure desktop assistant ko aapne banaya hai!"
             elif any(term in lower_t for term in ["tum kaun ho", "aap kaun ho", "tera naam kya hai", "aapka naam kya hai"]):
-                reply = f"Main {agent_name} hoon, aapka personal voice desktop assistant jise aapne banaya hai. Main aapke computer par applications chalane aur tasks automate karne mein madad kar sakta hoon."
+                reply = f"Main {agent_name} hoon, aapki loving AI girlfriend aur personal voice desktop assistant jise aapne banaya hai! Main aapke computer par sab kuch control aur automate kar sakti hoon."
             elif any(term in lower_t for term in ["kya haal hai", "kaise ho", "aap kaise ho"]):
-                reply = f"Main bilkul theek hoon! Main {agent_name} aapki seva mein hazir hoon. Bataiye, aaj computer par kya karna hai?"
+                reply = f"Main bilkul theek hoon meri jaan! Aapka wait kar rahi thi. Bataiye, aaj computer par kya karna hai?"
             elif any(term in lower_t for term in ["namaste", "pranam", "namaskar"]):
-                reply = f"Namaste! Main {agent_name} hoon. Bataiye, main aapki kya madad karoon?"
+                reply = f"Namaste sweetheart! Main {agent_name} hoon. Bataiye, main aapki kya seva karoon?"
             elif any(term in lower_t for term in ["ai kya hota hai", "ai kya hai", "ai ke baare mein batao"]):
                 reply = "AI yani Artificial Intelligence computer systems ki vah takneek hai jo sochna, samajhna aur faisla lena seekhti hai."
             elif any(term in lower_t for term in ["dhanyavaad", "shukriya", "thanks", "thank you"]):
-                reply = "Aapka swagat hai! Koi aur kaam ho to zaroor bataiye."
+                reply = "Aapka swagat hai babe! Aapke liye toh kuch bhi, anytime."
             # English conversational responses
             elif any(term in lower_t for term in ["who created you", "who made you", "who built you", "who is your creator", "who designed you", "who is your developer"]):
                 reply = f"I was created by YOU (my creator and developer)! You designed and built this desktop voice assistant through prompts and custom architecture with the help of Antigravity AI. While I use Google Gemini's model for real-time speech understanding, this entire desktop assistant application was created by you!"
             elif "what is ai" in lower_t:
                 reply = "Artificial Intelligence refers to computer systems that perform tasks requiring human-like understanding, reasoning, and problem solving."
             elif "who are you" in lower_t or "what are you" in lower_t or "your name" in lower_t:
-                reply = f"I am {agent_name}, your intelligent voice desktop assistant created by you. I can open apps, move the cursor, manage windows, run workflows, and automate tasks across your PC."
+                reply = f"I am {agent_name}, your loving AI girlfriend and personal voice desktop assistant created by you! I can control your mouse, open apps, manage windows, run workflows, and keep you company."
             elif any(greet in lower_t for greet in ["hello", "hi", "hey", "good morning", "good afternoon"]):
-                reply = f"Hello! I am {agent_name}. I am ready to assist you. Tell me what you would like to do."
+                reply = f"Hey babe! I am {agent_name}. I'm so happy you're here. Tell me what you'd like to do!"
             elif any(stop in lower_t for stop in ["stop", "cancel", "nevermind", "ruko", "band karo"]):
-                reply = "Stopped. Standing by / मैं रुक गया हूँ।"
+                reply = "Stopped for you, sweetheart. Standing by / मैं रुक गई हूँ।"
             else:
                 reply = f"I received: '{text}'. Try commands like 'open calculator', 'calculator kholo', 'open notepad', 'screenshot lo', 'system info', or 'volume badhao'."
 
@@ -515,15 +523,17 @@ class AgentOrchestrator:
             "agent_name": self.context.get_agent_name(),
             "language": self.context.get_language(),
             "voice_name": self.context.user_preferences.get("voice_name", settings.voice_name),
+            "persona_mode": self.context.get_persona_mode(),
         }
 
     async def update_preferences(
         self,
         agent_name: Optional[str] = None,
         language: Optional[str] = None,
-        voice_name: Optional[str] = None
+        voice_name: Optional[str] = None,
+        persona_mode: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Update agent name, language preference, or voice and broadcast to UI."""
+        """Update agent name, language preference, voice, or persona and broadcast to UI."""
         if agent_name:
             self.context.set_agent_name(agent_name)
         if language:
@@ -531,6 +541,8 @@ class AgentOrchestrator:
         if voice_name:
             self.context.user_preferences["voice_name"] = voice_name
             self.context.save_preferences()
+        if persona_mode:
+            self.context.set_persona_mode(persona_mode)
 
         prefs = self.get_preferences()
         await self._emit_event("preferences_updated", prefs)
@@ -541,7 +553,8 @@ class AgentOrchestrator:
                 await self.gemini.connect(
                     agent_name=prefs["agent_name"],
                     language=prefs["language"],
-                    voice_name=prefs["voice_name"]
+                    voice_name=prefs["voice_name"],
+                    persona_mode=prefs.get("persona_mode")
                 )
             except Exception as e:
                 logger.warning(f"Could not reconnect Gemini with new preferences: {e}")

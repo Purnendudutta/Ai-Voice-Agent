@@ -152,6 +152,17 @@ class ContextManager:
         self.save_preferences()
         logger.info(f"Language preference updated to: {clean_lang}")
 
+    def get_persona_mode(self) -> str:
+        """Get current persona mode (e.g. romantic_girlfriend, assistant)."""
+        return self.user_preferences.get("persona_mode", getattr(settings, "persona_mode", "romantic_girlfriend"))
+
+    def set_persona_mode(self, mode: str) -> None:
+        """Update persona mode."""
+        clean_mode = mode.lower().strip() or "romantic_girlfriend"
+        self.user_preferences["persona_mode"] = clean_mode
+        self.save_preferences()
+        logger.info(f"Persona mode updated to: {clean_mode}")
+
     def load_preferences(self) -> None:
         """Load user preferences from disk."""
         if self.prefs_file.exists():
@@ -172,3 +183,5 @@ class ContextManager:
             self.user_preferences["language"] = settings.language_preference
         if "voice_name" not in self.user_preferences:
             self.user_preferences["voice_name"] = settings.voice_name
+        if "persona_mode" not in self.user_preferences:
+            self.user_preferences["persona_mode"] = getattr(settings, "persona_mode", "romantic_girlfriend")

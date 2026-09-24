@@ -45,6 +45,7 @@ class PreferencesRequest(BaseModel):
     agent_name: Optional[str] = None
     language: Optional[str] = None
     voice_name: Optional[str] = None
+    persona_mode: Optional[str] = None
 
 
 class IPCServer:
@@ -180,7 +181,8 @@ class IPCServer:
             updated = await self.orchestrator.update_preferences(
                 agent_name=req.agent_name,
                 language=req.language,
-                voice_name=req.voice_name
+                voice_name=req.voice_name,
+                persona_mode=req.persona_mode
             )
             return {"status": "updated", "preferences": updated}
 
@@ -239,7 +241,8 @@ class IPCServer:
                 await self.orchestrator.update_preferences(
                     agent_name=data.get("agent_name"),
                     language=data.get("language"),
-                    voice_name=data.get("voice_name")
+                    voice_name=data.get("voice_name"),
+                    persona_mode=data.get("persona_mode")
                 )
 
             elif msg_type == "ping":

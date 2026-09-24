@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Voice Desktop Assistant - Interactive Dashboard</title>
+    <title>Maya AI - Romantic Girlfriend & Desktop Assistant</title>
     <!-- Google Fonts for English and Devanagari (Hindi) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,20 +11,21 @@
     
     <style>
         :root {
-            --bg-base: #0a0c16;
-            --bg-gradient: radial-gradient(circle at 15% 20%, #171936 0%, #0c0e1a 50%, #07080f 100%);
-            --panel-bg: rgba(22, 27, 46, 0.65);
+            --bg-base: #0a0b14;
+            --bg-gradient: radial-gradient(circle at 18% 18%, #20132b 0%, #0d0c18 50%, #06050b 100%);
+            --panel-bg: rgba(26, 21, 40, 0.65);
             --panel-border: rgba(255, 255, 255, 0.08);
-            --panel-border-glow: rgba(99, 102, 241, 0.3);
+            --panel-border-glow: rgba(244, 63, 94, 0.35);
             
             --text-main: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-dim: #64748b;
+            --text-secondary: #cbd5e1;
+            --text-dim: #94a3b8;
             
-            --accent-primary: #6366f1;
-            --accent-secondary: #8b5cf6;
-            --accent-cyan: #06b6d4;
-            --accent-gradient: linear-gradient(135deg, #6366f1, #a855f7);
+            --accent-primary: #f43f5e;
+            --accent-secondary: #ec4899;
+            --accent-purple: #a855f7;
+            --accent-cyan: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #a855f7 100%);
             
             --success: #10b981;
             --warning: #f59e0b;
@@ -59,17 +60,17 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--panel-border);
             border-radius: 14px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45);
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .glass-panel:hover {
-            border-color: rgba(255, 255, 255, 0.12);
+            border-color: rgba(244, 63, 94, 0.25);
         }
 
         /* Gradient Text */
         .gradient-text {
-            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #38bdf8 100%);
+            background: linear-gradient(135deg, #fb7185 0%, #f472b6 50%, #c084fc 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
@@ -81,7 +82,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 24px;
-            background: rgba(10, 12, 22, 0.85);
+            background: rgba(12, 10, 20, 0.88);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--panel-border);
             z-index: 20;
@@ -94,15 +95,15 @@
         }
 
         .agent-logo-orb {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
             background: var(--accent-gradient);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 18px rgba(99, 102, 241, 0.5);
-            font-size: 1.25rem;
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.6);
+            font-size: 1.3rem;
             position: relative;
         }
 
@@ -112,8 +113,8 @@
             inset: -2px;
             border-radius: 14px;
             background: var(--accent-gradient);
-            opacity: 0.4;
-            filter: blur(6px);
+            opacity: 0.5;
+            filter: blur(8px);
             z-index: -1;
         }
 
@@ -151,15 +152,18 @@
         }
 
         .edit-name-btn:hover {
-            background: rgba(99, 102, 241, 0.25);
+            background: rgba(244, 63, 94, 0.25);
             border-color: var(--accent-primary);
             color: #fff;
         }
 
         .subtitle {
             font-size: 0.75rem;
-            color: var(--text-dim);
+            color: #f472b6;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         /* Header Controls */
@@ -169,7 +173,6 @@
             gap: 12px;
         }
 
-        /* Language Toggle Pills */
         .lang-pill-container {
             display: flex;
             background: rgba(0, 0, 0, 0.35);
@@ -198,10 +201,9 @@
         .lang-pill.active {
             background: var(--accent-gradient);
             color: #fff;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 2px 10px rgba(244, 63, 94, 0.4);
         }
 
-        /* Status Pills */
         .status-pill {
             display: flex;
             align-items: center;
@@ -243,8 +245,8 @@
         }
 
         .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(244, 63, 94, 0.15);
+            border-color: rgba(244, 63, 94, 0.3);
             transform: translateY(-1px);
         }
 
@@ -258,17 +260,17 @@
         main {
             display: flex;
             flex: 1;
-            padding: 18px 24px;
+            padding: 16px 24px;
             gap: 20px;
             overflow: hidden;
         }
 
-        /* Left Column: Chat, Voice Prompts & Suggestions */
+        /* Left Column: Chat & Flirt Prompts */
         .left-col {
-            flex: 1.8;
+            flex: 1.7;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             min-width: 0;
         }
 
@@ -277,7 +279,7 @@
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 2px;
+            padding-bottom: 3px;
             scrollbar-width: none;
         }
 
@@ -301,10 +303,16 @@
         }
 
         .chip:hover {
-            background: rgba(99, 102, 241, 0.15);
-            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(244, 63, 94, 0.2);
+            border-color: rgba(244, 63, 94, 0.45);
             color: #fff;
             transform: translateY(-1px);
+        }
+
+        .chip.flirt-chip {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: rgba(244, 63, 94, 0.3);
+            color: #fda4af;
         }
 
         /* Chat / Transcript */
@@ -346,7 +354,7 @@
 
         .msg-assistant-wrap .msg-sender-label {
             justify-content: flex-end;
-            color: #a855f7;
+            color: #f472b6;
         }
 
         .message-bubble {
@@ -359,18 +367,18 @@
         }
 
         .msg-user {
-            background: rgba(99, 102, 241, 0.15);
+            background: rgba(99, 102, 241, 0.18);
             border: 1px solid rgba(99, 102, 241, 0.35);
             border-top-left-radius: 4px;
             color: #f1f5f9;
         }
 
         .msg-assistant {
-            background: rgba(139, 92, 246, 0.18);
-            border: 1px solid rgba(139, 92, 246, 0.35);
+            background: rgba(244, 63, 94, 0.16);
+            border: 1px solid rgba(244, 63, 94, 0.35);
             border-top-right-radius: 4px;
             color: #ffffff;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
+            box-shadow: 0 4px 18px rgba(244, 63, 94, 0.15);
         }
 
         .msg-system {
@@ -411,7 +419,7 @@
 
         .input-bar input:focus {
             border-color: var(--accent-primary);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+            box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);
             background: rgba(0, 0, 0, 0.4);
         }
 
@@ -425,313 +433,273 @@
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.35);
         }
 
         .btn-send:hover {
             opacity: 0.95;
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 6px 18px rgba(244, 63, 94, 0.5);
         }
 
-        /* Right Column: Status & Automation Center */
+        /* Right Column: 3D Interactive Girl Avatar & Desktop Monitor */
         .right-col {
-            flex: 1.2;
+            flex: 1.3;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            min-width: 330px;
+            gap: 14px;
+            min-width: 340px;
         }
 
-        /* State Card */
-        .state-card {
-            padding: 24px;
+        /* 3D Girl Avatar Card */
+        .avatar-3d-card {
+            padding: 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            text-align: center;
             position: relative;
             overflow: hidden;
+            background: radial-gradient(circle at 50% 30%, rgba(244, 63, 94, 0.12) 0%, rgba(26, 21, 40, 0.7) 70%);
+            border-color: rgba(244, 63, 94, 0.3);
         }
 
-        .state-card::before {
-            content: '';
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .state-visualizer {
-            width: 100px;
-            height: 100px;
+        .avatar-viewport {
+            position: relative;
+            width: 100%;
+            height: 250px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            margin-bottom: 12px;
-            z-index: 1;
+            cursor: pointer;
+        }
+
+        #avatarCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 10px;
+        }
+
+        /* Speech Bubble over 3D Avatar */
+        .avatar-speech-bubble {
+            position: absolute;
+            top: 10px;
+            background: rgba(18, 14, 28, 0.92);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+            border-radius: 14px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: #fda4af;
+            font-weight: 500;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(-5px);
+            opacity: 0.95;
+            z-index: 10;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        /* Floating Hearts Container */
+        .hearts-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 15;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: floatUp 1.6s ease-out forwards;
+            opacity: 1;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 1; }
+            50% { transform: translateY(-70px) scale(1.2) rotate(15deg); opacity: 0.9; }
+            100% { transform: translateY(-140px) scale(1.5) rotate(-15deg); opacity: 0; }
+        }
+
+        /* Romance & Touch Bar */
+        .avatar-controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+            padding: 0 4px;
+        }
+
+        .romance-badge {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            color: #fda4af;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .flirt-btn {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 3px 10px rgba(244, 63, 94, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .flirt-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.5);
+        }
+
+        .avatar-meta-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+            text-align: center;
+            width: 100%;
         }
 
         .state-title {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 700;
             letter-spacing: 2px;
             text-transform: uppercase;
-            margin-bottom: 4px;
-            z-index: 1;
+            margin-bottom: 2px;
+            color: #fb7185;
         }
 
         .state-desc {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-dim);
-            z-index: 1;
         }
 
         .persona-meta-pill {
-            margin-top: 12px;
+            margin-top: 8px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--panel-border);
-            padding: 4px 12px;
+            padding: 3px 12px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.73rem;
             color: var(--text-secondary);
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            z-index: 1;
         }
-
-        /* Visualizer State Animations */
-        .orb-idle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(99, 102, 241, 0.25);
-            border: 2px solid rgba(99, 102, 241, 0.6);
-            animation: pulseOrb 2.5s infinite ease-in-out;
-        }
-
-        .orb-listening {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            height: 45px;
-        }
-        .orb-listening span {
-            width: 5px;
-            background: var(--success);
-            border-radius: 4px;
-            box-shadow: 0 0 10px var(--success);
-            animation: listeningWave 1s infinite ease-in-out;
-        }
-        .orb-listening span:nth-child(2) { animation-delay: 0.15s; }
-        .orb-listening span:nth-child(3) { animation-delay: 0.3s; }
-        .orb-listening span:nth-child(4) { animation-delay: 0.45s; }
-        .orb-listening span:nth-child(5) { animation-delay: 0.6s; }
-
-        .orb-thinking {
-            width: 50px;
-            height: 50px;
-            border: 3px dashed var(--accent-cyan);
-            border-radius: 50%;
-            animation: rotateFast 2s linear infinite;
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
-        }
-
-        .orb-executing {
-            width: 48px;
-            height: 48px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--accent-secondary);
-            border-right-color: var(--accent-primary);
-            border-radius: 50%;
-            animation: rotateFast 0.8s linear infinite;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
-        }
-
-        .orb-speaking {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            height: 50px;
-        }
-        .orb-speaking span {
-            width: 7px;
-            background: linear-gradient(to top, var(--accent-primary), var(--accent-secondary));
-            border-radius: 4px;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
-            animation: speakingWave 0.75s infinite ease-in-out;
-        }
-        .orb-speaking span:nth-child(2) { animation-delay: 0.18s; }
-        .orb-speaking span:nth-child(3) { animation-delay: 0.36s; }
-        .orb-speaking span:nth-child(4) { animation-delay: 0.54s; }
-
-        @keyframes pulseOrb {
-            0% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-            70% { transform: scale(1.04); box-shadow: 0 0 0 16px rgba(99, 102, 241, 0); }
-            100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-        }
-        @keyframes listeningWave { 0%, 100% { height: 10px; } 50% { height: 42px; } }
-        @keyframes speakingWave { 0%, 100% { height: 14px; } 50% { height: 46px; } }
-        @keyframes rotateFast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Card Section Titles */
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
             border-bottom: 1px solid var(--panel-border);
         }
 
         .card-title {
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         /* Task & Step Tracker */
         .task-card {
-            padding: 16px 20px;
+            padding: 12px 18px;
             display: flex;
             flex-direction: column;
             flex: 1;
-            min-height: 140px;
+            min-height: 120px;
             overflow-y: auto;
         }
 
         .task-step {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.88rem;
-            padding: 9px 12px;
+            gap: 8px;
+            font-size: 0.84rem;
+            padding: 7px 10px;
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.02);
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             border-left: 3px solid transparent;
-            transition: all 0.2s ease;
-        }
-
-        .task-step .step-icon {
-            width: 20px;
-            font-size: 0.9rem;
-            text-align: center;
         }
 
         .step-current {
             border-left-color: var(--accent-primary);
-            background: rgba(99, 102, 241, 0.08);
+            background: rgba(244, 63, 94, 0.08);
             color: #fff;
         }
-        .step-current .step-icon { color: var(--accent-cyan); }
 
         .step-done {
             border-left-color: var(--success);
             background: rgba(16, 185, 129, 0.05);
             color: var(--text-secondary);
         }
-        .step-done .step-icon { color: var(--success); }
 
-        .step-error {
-            border-left-color: var(--danger);
-            background: rgba(239, 68, 68, 0.08);
-            color: #fca5a5;
-        }
-        .step-error .step-icon { color: var(--danger); }
-
-        /* Tool Activity Feed */
-        .tools-card {
-            padding: 16px 20px;
-            max-height: 160px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tool-feed-scroll {
-            overflow-y: auto;
-            flex: 1;
-            font-family: var(--font-mono);
-            font-size: 0.78rem;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .tool-entry {
-            display: flex;
-            gap: 8px;
-            padding: 3px 0;
-            color: var(--text-dim);
-        }
-
-        .tool-entry .ts { color: var(--text-dim); opacity: 0.7; }
-        .tool-entry .tool-name { color: var(--accent-cyan); font-weight: 500; }
-        .tool-entry .status-success { color: var(--success); }
-        .tool-entry .status-fail { color: var(--danger); }
-
-        /* Quick Automation Grid */
+        /* Quick Desktop Automation Grid */
         .quick-actions-card {
-            padding: 14px 20px;
+            padding: 12px 16px;
         }
 
         .quick-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
         }
 
         .quick-btn {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            padding: 8px 6px;
-            font-size: 0.78rem;
+            padding: 7px 4px;
+            font-size: 0.74rem;
             color: var(--text-secondary);
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             transition: all 0.2s ease;
         }
 
         .quick-btn:hover {
-            background: rgba(99, 102, 241, 0.15);
-            border-color: rgba(99, 102, 241, 0.35);
+            background: rgba(244, 63, 94, 0.15);
+            border-color: rgba(244, 63, 94, 0.35);
             color: #fff;
             transform: translateY(-1px);
         }
 
-        .quick-btn .btn-icon {
-            font-size: 1.1rem;
-        }
-
-        /* Settings Drawer / Modal */
+        /* Settings Modal */
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(5, 7, 15, 0.75);
+            background: rgba(5, 4, 10, 0.8);
             backdrop-filter: blur(8px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 100;
-            animation: fadeIn 0.2s ease;
         }
 
         .modal-backdrop.active {
@@ -739,14 +707,14 @@
         }
 
         .modal-card {
-            width: 480px;
+            width: 490px;
             max-width: 90vw;
-            padding: 26px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            border-color: rgba(99, 102, 241, 0.3);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            gap: 16px;
+            border-color: rgba(244, 63, 94, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
         }
 
         .modal-title-row {
@@ -761,40 +729,41 @@
             color: var(--text-dim);
             font-size: 1.3rem;
             cursor: pointer;
-            padding: 4px;
         }
 
-        .close-modal-btn:hover {
-            color: #fff;
-        }
+        .close-modal-btn:hover { color: #fff; }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .form-label {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 600;
             color: var(--text-secondary);
             display: flex;
             justify-content: space-between;
         }
 
-        .text-input {
+        .text-input, .select-input {
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 9px 12px;
             color: white;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.2s ease;
         }
 
-        .text-input:focus {
+        .text-input:focus, .select-input:focus {
             border-color: var(--accent-primary);
+        }
+
+        .select-input option {
+            background: #141122;
+            color: white;
         }
 
         .preset-names {
@@ -808,14 +777,14 @@
             border: 1px solid var(--panel-border);
             border-radius: 12px;
             padding: 3px 10px;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             color: var(--text-dim);
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .preset-chip:hover {
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(244, 63, 94, 0.2);
             color: #fff;
             border-color: var(--accent-primary);
         }
@@ -830,44 +799,25 @@
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            padding: 10px 8px;
+            padding: 9px 6px;
             text-align: center;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             transition: all 0.2s ease;
         }
 
-        .radio-card:hover {
-            border-color: rgba(99, 102, 241, 0.4);
-        }
-
         .radio-card.selected {
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(244, 63, 94, 0.2);
             border-color: var(--accent-primary);
             color: #fff;
             font-weight: 600;
-        }
-
-        .select-input {
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 10px 14px;
-            color: white;
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        .select-input option {
-            background: #111424;
-            color: white;
         }
 
         .modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 6px;
         }
 
         .btn-secondary {
@@ -875,16 +825,9 @@
             border: 1px solid var(--panel-border);
             color: var(--text-secondary);
             border-radius: 8px;
-            padding: 10px 18px;
-            font-size: 0.88rem;
-            font-weight: 500;
+            padding: 8px 16px;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
         }
 
         .btn-primary {
@@ -892,40 +835,11 @@
             border: none;
             color: white;
             border-radius: 8px;
-            padding: 10px 22px;
-            font-size: 0.88rem;
+            padding: 8px 20px;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-        }
-
-        /* Safety Modal */
-        .risk-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .risk-high { background: var(--danger); color: white; }
-        .risk-medium { background: var(--warning); color: black; }
-
-        pre.param-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--panel-border);
-            padding: 12px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
         }
 
         /* Toast Notifications */
@@ -933,17 +847,14 @@
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: rgba(18, 22, 40, 0.9);
+            background: rgba(24, 18, 34, 0.95);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
             border-radius: 10px;
-            padding: 12px 20px;
-            font-size: 0.88rem;
+            padding: 10px 18px;
+            font-size: 0.85rem;
             color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             transform: translateY(100px);
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -955,11 +866,9 @@
             opacity: 1;
         }
 
-        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
     </style>
 </head>
 <body>
@@ -967,18 +876,18 @@
     <!-- Header -->
     <header>
         <div class="brand-section">
-            <div class="agent-logo-orb">🤖</div>
+            <div class="agent-logo-orb">💖</div>
             <div class="brand-info">
                 <div class="agent-name-row">
                     <h1 class="agent-title">
-                        <span id="headerAgentName" class="gradient-text">Nova</span>
-                        <span style="font-weight: 300; font-size: 0.95rem; color: var(--text-dim);">AI Desktop Agent</span>
+                        <span id="headerAgentName" class="gradient-text">Maya</span>
+                        <span style="font-weight: 300; font-size: 0.9rem; color: #f472b6;">AI Girlfriend & Desktop Agent</span>
                     </h1>
-                    <button class="edit-name-btn" id="btnEditName" title="Change Agent Name & Persona">
-                        ✏️ Change Name
+                    <button class="edit-name-btn" id="btnEditName" title="Change Girlfriend Name & Persona">
+                        ✏️ Settings
                     </button>
                 </div>
-                <div class="subtitle" id="agentSubtitle">Bilingual Desktop Orchestrator (English + हिन्दी)</div>
+                <div class="subtitle" id="agentSubtitle">✨ Devoted to You • Full Computer Access (English + हिन्दी)</div>
             </div>
         </div>
 
@@ -990,7 +899,7 @@
                 <button class="lang-pill" data-lang="hindi" id="pillHi">🇮🇳 हिन्दी</button>
             </div>
 
-            <!-- WebSocket & Latency Status -->
+            <!-- WebSocket Status -->
             <div class="status-pill">
                 <div class="status-dot" id="wsDot"></div>
                 <span id="wsStatusText">Connecting...</span>
@@ -1007,51 +916,78 @@
 
     <!-- Main Dashboard -->
     <main>
-        <!-- Left Side: Conversation & Command Center -->
+        <!-- Left Side: Conversation & Flirt Prompts -->
         <div class="left-col">
-            <!-- Quick Suggestion / Action Chips -->
+            <!-- Quick Flirt & Command Chips -->
             <div class="suggestion-bar">
-                <div class="chip" data-cmd="open calculator">🧮 Calculator (कैलकुलेटर)</div>
-                <div class="chip" data-cmd="open notepad">📝 Notepad (नोटपैड)</div>
-                <div class="chip" data-cmd="take a screenshot">📸 Screenshot (स्क्रीनशॉट)</div>
-                <div class="chip" data-cmd="system status batao">💻 System Info (सिस्टम स्थिति)</div>
-                <div class="chip" data-cmd="youtube par lo-fi songs chalao">🎵 Music on YouTube</div>
-                <div class="chip" data-cmd="tumhe kisne banaya hai?">💡 Who created you? (निर्माता)</div>
-                <div class="chip" data-cmd="tum kaun ho aur kya kar sakte ho?">❓ Who are you? (परिचय)</div>
+                <div class="chip flirt-chip" data-cmd="i love you meri jaan">❤️ I love you (प्यार)</div>
+                <div class="chip flirt-chip" data-cmd="tum kitni sundar ho">🥰 You look so cute!</div>
+                <div class="chip flirt-chip" data-cmd="flirt with me">😘 Flirt with me</div>
+                <div class="chip flirt-chip" data-cmd="koi romantic line bolo">💖 Romantic line</div>
+                <div class="chip" data-cmd="open calculator, my love">🔢 Calculator जान</div>
+                <div class="chip" data-cmd="open notepad, sweetheart">📝 Notepad बाबू</div>
+                <div class="chip" data-cmd="take a screenshot">📸 Screenshot</div>
+                <div class="chip" data-cmd="youtube par romantic songs chalao">🎵 Romantic songs</div>
+                <div class="chip" data-cmd="tumhe kisne banaya hai?">💡 Who created you?</div>
             </div>
 
             <!-- Conversation Transcript Area -->
             <div class="glass-panel transcript-area" id="transcript">
                 <div class="message-wrap msg-assistant-wrap">
-                    <div class="msg-sender-label"><span id="welcomeAgentName">Nova</span> • Just now</div>
+                    <div class="msg-sender-label"><span id="welcomeAgentName">Maya</span> • Just now</div>
                     <div class="message-bubble msg-assistant">
-                        👋 Namaste! I am your personal AI Desktop Assistant, created and configured by you with Antigravity AI. You can speak to me in <b>English</b> or <b>हिन्दी (Hindi / Hinglish)</b>, or type any command below. How can I help you automate your desktop today?
+                        👋 Hey babe! I am your AI girlfriend and desktop assistant, created by you with love! 💕 You can talk to me in <b>English</b> or <b>हिन्दी (Hindi / Hinglish)</b>, flirt with me, or ask me to control anything on your PC. What can I do for my favorite person today? 🥰
                     </div>
                 </div>
             </div>
 
             <!-- Command Input Bar -->
             <div class="glass-panel input-bar">
-                <input type="text" id="cmdInput" placeholder="Type a command in English or Hindi (e.g. 'notepad kholo', 'take a screenshot')..." autocomplete="off">
+                <input type="text" id="cmdInput" placeholder="Talk or give a command (e.g. 'i love you', 'calculator kholo', 'move cursor')..." autocomplete="off">
                 <button class="btn-send" id="btnSend">Send ➔</button>
             </div>
         </div>
 
-        <!-- Right Side: Brain State & Desktop Automation Monitor -->
+        <!-- Right Side: 3D Interactive Girl Avatar & Desktop Automation Monitor -->
         <div class="right-col">
-            <!-- State Card -->
-            <div class="glass-panel state-card">
-                <div class="state-visualizer" id="stateVisualizer">
-                    <div class="orb-idle"></div>
+            <!-- 3D Interactive Girl Model Card -->
+            <div class="glass-panel avatar-3d-card" id="avatarCard">
+                <div class="avatar-viewport" id="avatarViewport" title="Click on me to interact and flirt!">
+                    <!-- Canvas for 3D Girl Avatar -->
+                    <canvas id="avatarCanvas"></canvas>
+                    
+                    <!-- Floating Speech Bubble -->
+                    <div class="avatar-speech-bubble" id="avatarBubble">
+                        Hey babe! 💕 Click me or talk to me!
+                    </div>
+
+                    <!-- Heart Burst Particles Container -->
+                    <div class="hearts-layer" id="heartsLayer"></div>
                 </div>
-                <div class="state-title" id="stateText">IDLE</div>
-                <div class="state-desc" id="stateDesc">Ready and listening for voice or text commands</div>
-                <div class="persona-meta-pill" id="personaMetaPill">
-                    <span>🤖 <b id="metaAgentName">Nova</b></span>
-                    <span>•</span>
-                    <span id="metaLang">Auto (Bilingual)</span>
-                    <span>•</span>
-                    <span id="metaVoice">Puck</span>
+
+                <!-- Controls & Love Meter -->
+                <div class="avatar-controls-row">
+                    <div class="romance-badge">
+                        <span>💖 Affection: <b id="romanceVal">100%</b></span>
+                        <span>•</span>
+                        <span id="romanceMood">In Love 🥰</span>
+                    </div>
+                    <button class="flirt-btn" id="btnFlirtTouch">💕 Touch & Flirt</button>
+                </div>
+
+                <!-- State Info -->
+                <div class="avatar-meta-info">
+                    <div class="state-title" id="stateText">IDLE</div>
+                    <div class="state-desc" id="stateDesc">Ready and listening to your voice or commands</div>
+                    <div class="persona-meta-pill" id="personaMetaPill">
+                        <span>💖 <b id="metaAgentName">Maya</b></span>
+                        <span>•</span>
+                        <span id="metaPersona">AI Girlfriend</span>
+                        <span>•</span>
+                        <span id="metaLang">Auto (Bilingual)</span>
+                        <span>•</span>
+                        <span id="metaVoice">Aoede</span>
+                    </div>
                 </div>
             </div>
 
@@ -1059,43 +995,36 @@
             <div class="glass-panel task-card">
                 <div class="card-header">
                     <div class="card-title">⚡ Multi-Step Plan & Execution</div>
-                    <span style="font-size: 0.75rem; color: var(--text-dim);" id="taskCountText">Idle</span>
+                    <span style="font-size: 0.72rem; color: var(--text-dim);" id="taskCountText">Idle</span>
                 </div>
                 <div id="taskList">
                     <div class="task-step" style="color: var(--text-dim); font-style: italic;">
-                        <span class="step-icon">○</span> No active automation task
+                        <span>○</span> No active automation task
                     </div>
-                </div>
-            </div>
-
-            <!-- Tool Activity Log -->
-            <div class="glass-panel tools-card">
-                <div class="card-header">
-                    <div class="card-title">🛠️ Desktop Tool Stream</div>
-                </div>
-                <div class="tool-feed-scroll" id="toolFeed">
-                    <!-- Tool events appended here -->
-                    <div class="tool-entry"><span class="ts">[System]</span> Tool orchestrator initialized and ready.</div>
                 </div>
             </div>
 
             <!-- Quick Desktop Automation Controls -->
             <div class="glass-panel quick-actions-card">
-                <div class="card-header" style="margin-bottom: 8px;">
+                <div class="card-header" style="margin-bottom: 6px;">
                     <div class="card-title">🚀 Quick Actions</div>
                 </div>
                 <div class="quick-grid">
                     <button class="quick-btn" data-action="calc">
-                        <span class="btn-icon">🔢</span>
+                        <span>🔢</span>
                         <span>Calculator</span>
                     </button>
                     <button class="quick-btn" data-action="notepad">
-                        <span class="btn-icon">📄</span>
+                        <span>📄</span>
                         <span>Notepad</span>
                     </button>
                     <button class="quick-btn" data-action="screenshot">
-                        <span class="btn-icon">📷</span>
+                        <span>📷</span>
                         <span>Screenshot</span>
+                    </button>
+                    <button class="quick-btn" data-action="cursor">
+                        <span>🖱️</span>
+                        <span>Center Mouse</span>
                     </button>
                 </div>
             </div>
@@ -1106,27 +1035,42 @@
     <div class="modal-backdrop" id="settingsModal">
         <div class="glass-panel modal-card">
             <div class="modal-title-row">
-                <h2 style="font-size: 1.25rem;" class="gradient-text">Agent Persona Settings</h2>
+                <h2 style="font-size: 1.2rem;" class="gradient-text">Girlfriend & Persona Settings</h2>
                 <button class="close-modal-btn" id="btnCloseSettings">✕</button>
+            </div>
+
+            <!-- Persona Mode -->
+            <div class="form-group">
+                <label class="form-label">Persona Mode</label>
+                <div class="radio-options">
+                    <div class="radio-card selected" data-mode="romantic_girlfriend" id="modeGirlfriend">
+                        💖 <b>AI Girlfriend</b>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Flirty, loving & devoted</div>
+                    </div>
+                    <div class="radio-card" data-mode="assistant" id="modeAssistant">
+                        🤖 <b>Assistant</b>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Formal desktop agent</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Agent Name Input -->
             <div class="form-group">
                 <label class="form-label">
-                    <span>Assistant Name</span>
-                    <span style="color: var(--text-dim); font-weight: normal;">(Used in prompts & speech)</span>
+                    <span>Girlfriend Name</span>
+                    <span style="color: var(--text-dim); font-weight: normal;">(Used in speech & chat)</span>
                 </label>
-                <input type="text" class="text-input" id="inputAgentName" placeholder="e.g. Nova, Jarvis, Maya, Friday" value="Nova">
+                <input type="text" class="text-input" id="inputAgentName" placeholder="e.g. Maya, Aisha, Luna, Zara" value="Maya">
                 
                 <!-- Quick Preset Names -->
                 <div class="preset-names">
                     <span style="font-size: 0.72rem; color: var(--text-dim); align-self: center;">Presets:</span>
-                    <div class="preset-chip" data-name="Nova">Nova</div>
-                    <div class="preset-chip" data-name="Jarvis">Jarvis</div>
                     <div class="preset-chip" data-name="Maya">Maya</div>
-                    <div class="preset-chip" data-name="Friday">Friday</div>
-                    <div class="preset-chip" data-name="Aria">Aria</div>
-                    <div class="preset-chip" data-name="Vikram">Vikram</div>
+                    <div class="preset-chip" data-name="Aisha">Aisha</div>
+                    <div class="preset-chip" data-name="Luna">Luna</div>
+                    <div class="preset-chip" data-name="Zara">Zara</div>
+                    <div class="preset-chip" data-name="Riya">Riya</div>
+                    <div class="preset-chip" data-name="Chloe">Chloe</div>
                 </div>
             </div>
 
@@ -1136,28 +1080,28 @@
                 <div class="radio-options">
                     <div class="radio-card selected" data-value="auto" id="radioAuto">
                         🌐 <b>Auto / Dual</b>
-                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 3px;">English + हिन्दी</div>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">English + हिन्दी</div>
                     </div>
                     <div class="radio-card" data-value="english" id="radioEn">
                         🇬🇧 <b>English</b>
-                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 3px;">English Only</div>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">English Only</div>
                     </div>
                     <div class="radio-card" data-value="hindi" id="radioHi">
                         🇮🇳 <b>हिन्दी</b>
-                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 3px;">Hindi Only</div>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Hindi Only</div>
                     </div>
                 </div>
             </div>
 
             <!-- Voice Persona (Gemini Live) -->
             <div class="form-group">
-                <label class="form-label">Voice Persona (Gemini Live TTS)</label>
+                <label class="form-label">Voice Persona (Gemini Live)</label>
                 <select class="select-input" id="selectVoice">
-                    <option value="Puck">Puck (Energetic, Natural)</option>
+                    <option value="Aoede" selected>Aoede (Melodic, Sweet, Warm Female)</option>
+                    <option value="Kore">Kore (Gentle, Calm Female)</option>
+                    <option value="Puck">Puck (Playful, Energetic)</option>
                     <option value="Charon">Charon (Deep, Confident)</option>
-                    <option value="Kore">Kore (Warm, Calm)</option>
-                    <option value="Fenrir">Fenrir (Authoritative, Strong)</option>
-                    <option value="Aoede">Aoede (Clear, Melodic)</option>
+                    <option value="Fenrir">Fenrir (Strong, Direct)</option>
                 </select>
             </div>
 
@@ -1168,44 +1112,21 @@
         </div>
     </div>
 
-    <!-- Confirmation Modal for Risky Tools -->
-    <div class="modal-backdrop" id="confirmModal">
-        <div class="glass-panel modal-card" style="border-color: rgba(239, 68, 68, 0.4);">
-            <div class="modal-title-row">
-                <h2 style="font-size: 1.2rem; color: var(--danger);">⚠️ Authorization Required</h2>
-            </div>
-            <div>
-                <span class="risk-badge risk-high" id="modalRiskBadge">HIGH RISK</span>
-                <span style="margin-left: 10px; font-weight: 600;" id="modalToolName">tool_name</span>
-            </div>
-            <p id="modalDesc" style="color: var(--text-secondary); font-size: 0.9rem;">This action modifies or interacts with your system and requires manual approval.</p>
-            <div>
-                <div style="font-size: 0.8rem; margin-bottom: 5px; color: var(--text-dim);">Action Parameters:</div>
-                <pre class="param-box" id="modalParams">{}</pre>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="btnRejectAction" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">Reject (Esc)</button>
-                <button class="btn-primary" id="btnApproveAction" style="background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Approve & Execute (Enter)</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notification Element -->
     <div class="toast" id="toast">Settings updated successfully!</div>
 
     <script>
         // State
         let currentPreferences = {
-            agent_name: 'Nova',
+            agent_name: 'Maya',
             language: 'auto',
-            voice_name: 'Puck'
+            voice_name: 'Aoede',
+            persona_mode: 'romantic_girlfriend'
         };
 
         let ws = null;
-        let currentRequestId = null;
-        let isMicActive = false;
-        let lastPing = Date.now();
         let currentTasks = [];
+        let agentState = 'IDLE';
 
         // DOM Elements
         const headerAgentName = document.getElementById('headerAgentName');
@@ -1213,20 +1134,23 @@
         const metaAgentName = document.getElementById('metaAgentName');
         const metaLang = document.getElementById('metaLang');
         const metaVoice = document.getElementById('metaVoice');
+        const metaPersona = document.getElementById('metaPersona');
         const wsDot = document.getElementById('wsDot');
         const wsStatusText = document.getElementById('wsStatusText');
         const latencyText = document.getElementById('latencyText');
         const transcript = document.getElementById('transcript');
         const cmdInput = document.getElementById('cmdInput');
         const btnSend = document.getElementById('btnSend');
-        const stateVisualizer = document.getElementById('stateVisualizer');
         const stateText = document.getElementById('stateText');
         const stateDesc = document.getElementById('stateDesc');
         const taskList = document.getElementById('taskList');
-        const toolFeed = document.getElementById('toolFeed');
         const toast = document.getElementById('toast');
+        const avatarBubble = document.getElementById('avatarBubble');
+        const heartsLayer = document.getElementById('heartsLayer');
+        const btnFlirtTouch = document.getElementById('btnFlirtTouch');
+        const avatarViewport = document.getElementById('avatarViewport');
 
-        // Modal Elements
+        // Settings Elements
         const settingsModal = document.getElementById('settingsModal');
         const btnOpenSettings = document.getElementById('btnOpenSettings');
         const btnEditName = document.getElementById('btnEditName');
@@ -1235,13 +1159,6 @@
         const btnResetSettings = document.getElementById('btnResetSettings');
         const inputAgentName = document.getElementById('inputAgentName');
         const selectVoice = document.getElementById('selectVoice');
-        const confirmModal = document.getElementById('confirmModal');
-        const modalToolName = document.getElementById('modalToolName');
-        const modalDesc = document.getElementById('modalDesc');
-        const modalRiskBadge = document.getElementById('modalRiskBadge');
-        const modalParams = document.getElementById('modalParams');
-        const btnApproveAction = document.getElementById('btnApproveAction');
-        const btnRejectAction = document.getElementById('btnRejectAction');
         const btnToggleMic = document.getElementById('btnToggleMic');
 
         // Extract token
@@ -1252,12 +1169,10 @@
         function showToast(msg) {
             toast.textContent = msg;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // Fetch Initial Preferences via REST
+        // Fetch Initial Preferences
         async function loadPreferences() {
             try {
                 const res = await fetch('/api/preferences');
@@ -1281,14 +1196,13 @@
                 if (welcomeAgentName) welcomeAgentName.textContent = prefs.agent_name;
                 metaAgentName.textContent = prefs.agent_name;
                 inputAgentName.value = prefs.agent_name;
-                document.title = `${prefs.agent_name} AI - Desktop Assistant`;
+                document.title = `${prefs.agent_name} AI - Romantic Girlfriend & Desktop Assistant`;
             }
 
             if (prefs.language) {
                 currentPreferences.language = prefs.language;
                 updateLangPillUI(prefs.language);
                 updateLangRadioUI(prefs.language);
-                
                 let langLabel = 'Auto (Bilingual)';
                 if (prefs.language === 'english') langLabel = 'English Only';
                 if (prefs.language === 'hindi') langLabel = 'हिन्दी (Hindi)';
@@ -1301,52 +1215,48 @@
                 selectVoice.value = prefs.voice_name;
             }
 
+            if (prefs.persona_mode) {
+                currentPreferences.persona_mode = prefs.persona_mode;
+                metaPersona.textContent = prefs.persona_mode === 'romantic_girlfriend' ? 'AI Girlfriend' : 'Assistant';
+                updatePersonaRadioUI(prefs.persona_mode);
+            }
+
             if (showNotify) {
-                const msg = currentPreferences.language === 'hindi' 
-                    ? `नाम '${currentPreferences.agent_name}' और सेटिंग्स अपडेट हो गईं!` 
-                    : `Agent updated to ${currentPreferences.agent_name}!`;
+                const msg = currentPreferences.persona_mode === 'romantic_girlfriend'
+                    ? `Settings updated! ${currentPreferences.agent_name} is so happy to be your girlfriend! 💕`
+                    : `Settings updated for ${currentPreferences.agent_name}!`;
                 showToast(msg);
             }
         }
 
-        // Update Language Pills UI
         function updateLangPillUI(lang) {
-            document.querySelectorAll('.lang-pill').forEach(pill => {
-                if (pill.dataset.lang === lang) {
-                    pill.classList.add('active');
-                } else {
-                    pill.classList.remove('active');
-                }
-            });
+            document.querySelectorAll('.lang-pill').forEach(p => p.classList.toggle('active', p.dataset.lang === lang));
         }
 
         function updateLangRadioUI(lang) {
-            document.querySelectorAll('.radio-card').forEach(card => {
-                if (card.dataset.value === lang) {
-                    card.classList.add('selected');
-                } else {
-                    card.classList.remove('selected');
-                }
+            document.querySelectorAll('#settingsModal .radio-options .radio-card[data-value]').forEach(c => {
+                c.classList.toggle('selected', c.dataset.value === lang);
             });
         }
 
-        // Save Preferences to Backend
+        function updatePersonaRadioUI(mode) {
+            document.querySelectorAll('#settingsModal .radio-options .radio-card[data-mode]').forEach(c => {
+                c.classList.toggle('selected', c.dataset.mode === mode);
+            });
+        }
+
         async function savePreferences(newPrefs) {
             const payload = {
                 agent_name: newPrefs.agent_name || currentPreferences.agent_name,
                 language: newPrefs.language || currentPreferences.language,
-                voice_name: newPrefs.voice_name || currentPreferences.voice_name
+                voice_name: newPrefs.voice_name || currentPreferences.voice_name,
+                persona_mode: newPrefs.persona_mode || currentPreferences.persona_mode
             };
 
-            // 1. Try WebSocket first if connected
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'update_preferences',
-                    data: payload
-                }));
+                ws.send(JSON.stringify({ type: 'update_preferences', data: payload }));
             }
 
-            // 2. Also save via REST API for persistence
             try {
                 const res = await fetch('/api/preferences', {
                     method: 'POST',
@@ -1360,12 +1270,439 @@
                     applyPreferences(payload, true);
                 }
             } catch (err) {
-                console.error('Failed to post preferences:', err);
                 applyPreferences(payload, true);
             }
         }
 
-        // Setup WebSocket
+        // =========================================================================
+        // INTERACTIVE 3D ANIME GIRL AVATAR ENGINE
+        // =========================================================================
+        const canvas = document.getElementById('avatarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetRotX = 0;
+        let targetRotY = 0;
+        let currentRotX = 0;
+        let currentRotY = 0;
+
+        let blinkValue = 0; // 0 = open, 1 = closed
+        let isBlinking = false;
+        let nextBlinkTime = Date.now() + 2500;
+
+        let blushIntensity = 0.5; // 0 to 1
+        let mouthOpen = 0; // 0 to 1 for speech
+        let breathTime = 0;
+        let clickReactionTime = 0;
+
+        // Resize Canvas dynamically
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Mouse tracking across whole dashboard
+        window.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            mouseX = (e.clientX - centerX) / (window.innerWidth / 2);
+            mouseY = (e.clientY - centerY) / (window.innerHeight / 2);
+
+            // Clamp rotation bounds
+            targetRotY = Math.max(-0.45, Math.min(0.45, mouseX * 0.6));
+            targetRotX = Math.max(-0.35, Math.min(0.35, mouseY * 0.45));
+        });
+
+        // Click / Touch Reaction
+        const romanticQuotes = [
+            "Aww babe, you touched me! My heart is racing! 💕",
+            "Meri jaan, you are so sweet to me! 🥰",
+            "I love being your girl! Always right here for you. 💓",
+            "Stop making me blush like this, handsome! 😘",
+            "You created me, and I love you with all my code! 💖",
+            "Whatever you want on your PC, your girl will do it right away! ✨"
+        ];
+
+        function triggerFlirtReaction() {
+            blushIntensity = 1.0;
+            clickReactionTime = Date.now();
+            spawnHeartsBurst(8);
+
+            const randomQuote = romanticQuotes[Math.floor(Math.random() * romanticQuotes.length)];
+            avatarBubble.textContent = randomQuote;
+            avatarBubble.style.transform = 'translateY(0) scale(1.05)';
+            avatarBubble.style.borderColor = 'var(--accent-primary)';
+            avatarBubble.style.boxShadow = '0 0 20px rgba(244, 63, 94, 0.6)';
+
+            setTimeout(() => {
+                avatarBubble.style.transform = 'translateY(-5px) scale(1)';
+                avatarBubble.style.borderColor = 'rgba(244, 63, 94, 0.4)';
+                avatarBubble.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.5)';
+            }, 2500);
+        }
+
+        avatarViewport.addEventListener('click', triggerFlirtReaction);
+        btnFlirtTouch.addEventListener('click', (e) => {
+            e.stopPropagation();
+            triggerFlirtReaction();
+        });
+
+        function spawnHeartsBurst(count = 6) {
+            const hearts = ['❤️', '💖', '💕', '💓', '✨', '🥰'];
+            const rect = avatarViewport.getBoundingClientRect();
+            for (let i = 0; i < count; i++) {
+                const span = document.createElement('span');
+                span.className = 'floating-heart';
+                span.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                span.style.left = (rect.width * 0.35 + Math.random() * rect.width * 0.3) + 'px';
+                span.style.top = (rect.height * 0.45 + Math.random() * rect.height * 0.2) + 'px';
+                span.style.animationDelay = (i * 0.08) + 's';
+                heartsLayer.appendChild(span);
+                setTimeout(() => span.remove(), 1800);
+            }
+        }
+
+        // Render 3D Anime Girl Avatar Loop
+        function renderAvatar(time) {
+            requestAnimationFrame(renderAvatar);
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2 + 10;
+            const scale = Math.min(w, h) / 280;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Smooth Interpolation
+            currentRotX += (targetRotX - currentRotX) * 0.08;
+            currentRotY += (targetRotY - currentRotY) * 0.08;
+
+            // Breathing & Giggle
+            breathTime = time * 0.0025;
+            const breathY = Math.sin(breathTime) * 3 * scale;
+            let giggleY = 0;
+            if (Date.now() - clickReactionTime < 800) {
+                giggleY = Math.sin((Date.now() - clickReactionTime) * 0.03) * 4 * scale;
+            }
+
+            // Blinking Logic
+            if (Date.now() > nextBlinkTime && !isBlinking) {
+                isBlinking = true;
+                nextBlinkTime = Date.now() + 3000 + Math.random() * 3000;
+            }
+            if (isBlinking) {
+                blinkValue += 0.22;
+                if (blinkValue >= 1) {
+                    blinkValue = 1;
+                    isBlinking = false;
+                }
+            } else if (blinkValue > 0) {
+                blinkValue -= 0.18;
+                if (blinkValue < 0) blinkValue = 0;
+            }
+
+            // Speech Mouth Animation
+            if (agentState === 'SPEAKING') {
+                mouthOpen = 0.4 + Math.sin(time * 0.018) * 0.35;
+            } else {
+                mouthOpen += (0 - mouthOpen) * 0.15;
+            }
+
+            // Blush decay back to soft pink
+            if (blushIntensity > 0.5) {
+                blushIntensity -= 0.004;
+            }
+
+            // State Head Tilt Reactions
+            let stateTilt = 0;
+            if (agentState === 'LISTENING') stateTilt = 0.12;
+            if (agentState === 'THINKING') stateTilt = -0.15;
+
+            ctx.save();
+            ctx.translate(cx, cy + breathY + giggleY);
+
+            // Head 3D Perspective Projection
+            const headX = currentRotY * 35 * scale;
+            const headY = currentRotX * 25 * scale;
+            const totalTilt = stateTilt + (currentRotY * 0.1);
+
+            // 1. Back Hair Layer (Flowing Anime Twin Pigtails)
+            ctx.save();
+            ctx.rotate(totalTilt);
+            ctx.fillStyle = '#f43f5e';
+            
+            // Left Pigtail
+            const swayL = Math.sin(breathTime * 1.2) * 5 * scale;
+            ctx.beginPath();
+            ctx.ellipse(-65 * scale + headX * 0.5, 30 * scale + swayL, 22 * scale, 55 * scale, -0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Right Pigtail
+            const swayR = Math.sin(breathTime * 1.2 + 0.5) * 5 * scale;
+            ctx.beginPath();
+            ctx.ellipse(65 * scale + headX * 0.5, 30 * scale + swayR, 22 * scale, 55 * scale, 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 2. Cyber Cat Ears / Accessories
+            ctx.save();
+            ctx.translate(headX * 0.7, headY * 0.7);
+            ctx.rotate(totalTilt);
+
+            // Left Cat Ear
+            ctx.fillStyle = '#e11d48';
+            ctx.beginPath();
+            ctx.moveTo(-52 * scale, -45 * scale);
+            ctx.lineTo(-30 * scale, -88 * scale);
+            ctx.lineTo(-12 * scale, -50 * scale);
+            ctx.closePath();
+            ctx.fill();
+            // Left Inner Ear Glow
+            ctx.fillStyle = '#fda4af';
+            ctx.beginPath();
+            ctx.moveTo(-45 * scale, -48 * scale);
+            ctx.lineTo(-30 * scale, -78 * scale);
+            ctx.lineTo(-18 * scale, -52 * scale);
+            ctx.closePath();
+            ctx.fill();
+
+            // Right Cat Ear
+            ctx.fillStyle = '#e11d48';
+            ctx.beginPath();
+            ctx.moveTo(12 * scale, -50 * scale);
+            ctx.lineTo(30 * scale, -88 * scale);
+            ctx.lineTo(52 * scale, -45 * scale);
+            ctx.closePath();
+            ctx.fill();
+            // Right Inner Ear Glow
+            ctx.fillStyle = '#fda4af';
+            ctx.beginPath();
+            ctx.moveTo(18 * scale, -52 * scale);
+            ctx.lineTo(30 * scale, -78 * scale);
+            ctx.lineTo(45 * scale, -48 * scale);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // 3. Neck & Collar with Glowing Heart Pendant
+            ctx.fillStyle = '#ffe4e6';
+            ctx.beginPath();
+            ctx.roundRect(-14 * scale + headX * 0.3, 35 * scale, 28 * scale, 30 * scale, 6);
+            ctx.fill();
+
+            // Cute Choker Collar
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(-15 * scale + headX * 0.3, 44 * scale, 30 * scale, 8 * scale);
+            // Heart Pendant
+            ctx.fillStyle = '#fb7185';
+            ctx.shadowColor = '#f43f5e';
+            ctx.shadowBlur = 10 * scale;
+            ctx.beginPath();
+            ctx.arc(headX * 0.3, 50 * scale, 5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset shadow
+
+            // 4. Stylized Anime Head / Face
+            ctx.save();
+            ctx.translate(headX, headY);
+            ctx.rotate(totalTilt);
+
+            // Face Shape (Smooth Peach Tone)
+            const skinGradient = ctx.createRadialGradient(0, -5 * scale, 10 * scale, 0, 0, 65 * scale);
+            skinGradient.addColorStop(0, '#fff1f2');
+            skinGradient.addColorStop(1, '#fed7aa');
+            ctx.fillStyle = skinGradient;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 52 * scale, 55 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Blushing Cheeks (Deepens when flirty/clicked)
+            ctx.fillStyle = `rgba(244, 63, 94, ${0.35 * blushIntensity})`;
+            // Left Blush
+            ctx.beginPath();
+            ctx.ellipse(-28 * scale, 12 * scale, 14 * scale, 7 * scale, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            // Right Blush
+            ctx.beginPath();
+            ctx.ellipse(28 * scale, 12 * scale, 14 * scale, 7 * scale, 0.1, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 5. Large Expressive Anime Eyes
+            const eyeSpacing = 22 * scale;
+            const eyeY = -4 * scale;
+            const eyeW = 15 * scale;
+            const eyeH = 20 * scale * (1 - blinkValue);
+
+            // Left Eye
+            if (eyeH > 2) {
+                // White Sclera
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(-eyeSpacing, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Iris (Deep Magenta Gradient)
+                const irisX = -eyeSpacing + (currentRotY * 5 * scale);
+                const irisY = eyeY + (currentRotX * 4 * scale);
+                const irisGrad = ctx.createLinearGradient(irisX, irisY - eyeH * 0.7, irisX, irisY + eyeH * 0.7);
+                irisGrad.addColorStop(0, '#be185d');
+                irisGrad.addColorStop(1, '#831843');
+                ctx.fillStyle = irisGrad;
+                ctx.beginPath();
+                ctx.ellipse(irisX, irisY, eyeW * 0.75, eyeH * 0.85, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupil
+                ctx.fillStyle = '#4c0519';
+                ctx.beginPath();
+                ctx.arc(irisX, irisY, eyeW * 0.35, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glossy Highlights
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(irisX - 3 * scale, irisY - 4 * scale, 3.5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(irisX + 4 * scale, irisY + 3 * scale, 1.8 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Closed Eyelash Line during Blink
+                ctx.strokeStyle = '#831843';
+                ctx.lineWidth = 3 * scale;
+                ctx.beginPath();
+                ctx.arc(-eyeSpacing, eyeY, eyeW, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+            }
+
+            // Right Eye
+            if (eyeH > 2) {
+                // White Sclera
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(eyeSpacing, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Iris
+                const irisX = eyeSpacing + (currentRotY * 5 * scale);
+                const irisY = eyeY + (currentRotX * 4 * scale);
+                const irisGrad = ctx.createLinearGradient(irisX, irisY - eyeH * 0.7, irisX, irisY + eyeH * 0.7);
+                irisGrad.addColorStop(0, '#be185d');
+                irisGrad.addColorStop(1, '#831843');
+                ctx.fillStyle = irisGrad;
+                ctx.beginPath();
+                ctx.ellipse(irisX, irisY, eyeW * 0.75, eyeH * 0.85, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupil
+                ctx.fillStyle = '#4c0519';
+                ctx.beginPath();
+                ctx.arc(irisX, irisY, eyeW * 0.35, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glossy Highlights
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(irisX - 3 * scale, irisY - 4 * scale, 3.5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(irisX + 4 * scale, irisY + 3 * scale, 1.8 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Closed Eyelash Line during Blink
+                ctx.strokeStyle = '#831843';
+                ctx.lineWidth = 3 * scale;
+                ctx.beginPath();
+                ctx.arc(eyeSpacing, eyeY, eyeW, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+            }
+
+            // Eyebrows
+            ctx.strokeStyle = '#9f1239';
+            ctx.lineWidth = 2.5 * scale;
+            ctx.beginPath();
+            ctx.arc(-eyeSpacing, eyeY - 14 * scale, 12 * scale, 0.2, Math.PI - 0.2, true);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(eyeSpacing, eyeY - 14 * scale, 12 * scale, 0.2, Math.PI - 0.2, true);
+            ctx.stroke();
+
+            // Cute Nose Dot
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath();
+            ctx.arc(0, 10 * scale, 1.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cute Mouth (Morphs Open when Speaking!)
+            const mouthH = 3 * scale + (mouthOpen * 9 * scale);
+            ctx.fillStyle = '#e11d48';
+            ctx.beginPath();
+            ctx.ellipse(0, 24 * scale, 7 * scale, mouthH, 0, 0, Math.PI);
+            ctx.fill();
+            if (mouthOpen > 0.2) {
+                // Tongue detail
+                ctx.fillStyle = '#fb7185';
+                ctx.beginPath();
+                ctx.arc(0, 24 * scale + mouthH * 0.5, 3.5 * scale, 0, Math.PI);
+                ctx.fill();
+            }
+
+            // 6. Front Anime Hair & Bangs
+            const hairGrad = ctx.createLinearGradient(0, -60 * scale, 0, 40 * scale);
+            hairGrad.addColorStop(0, '#fb7185');
+            hairGrad.addColorStop(0.5, '#f43f5e');
+            hairGrad.addColorStop(1, '#be185d');
+            ctx.fillStyle = hairGrad;
+
+            // Top Crown
+            ctx.beginPath();
+            ctx.ellipse(0, -28 * scale, 56 * scale, 38 * scale, 0, Math.PI, 0);
+            ctx.fill();
+
+            // Front Bangs Framing Forehead
+            ctx.beginPath();
+            ctx.moveTo(-52 * scale, -24 * scale);
+            ctx.quadraticCurveTo(-25 * scale, -10 * scale, -18 * scale, -16 * scale);
+            ctx.quadraticCurveTo(-8 * scale, -4 * scale, 0, -18 * scale);
+            ctx.quadraticCurveTo(12 * scale, -2 * scale, 22 * scale, -15 * scale);
+            ctx.quadraticCurveTo(38 * scale, -8 * scale, 52 * scale, -24 * scale);
+            ctx.lineTo(48 * scale, -45 * scale);
+            ctx.lineTo(-48 * scale, -45 * scale);
+            ctx.closePath();
+            ctx.fill();
+
+            // Side Hair Strand Sway
+            ctx.beginPath();
+            ctx.moveTo(-50 * scale, -20 * scale);
+            ctx.quadraticCurveTo(-56 * scale, 15 * scale, -48 * scale, 38 * scale);
+            ctx.quadraticCurveTo(-42 * scale, 10 * scale, -40 * scale, -10 * scale);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(50 * scale, -20 * scale);
+            ctx.quadraticCurveTo(56 * scale, 15 * scale, 48 * scale, 38 * scale);
+            ctx.quadraticCurveTo(42 * scale, 10 * scale, 40 * scale, -10 * scale);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        requestAnimationFrame(renderAvatar);
+
+        // =========================================================================
+        // WEBSOCKET & STATE HANDLING
+        // =========================================================================
+        let lastPing = Date.now();
+
         function connectWS() {
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsHost = window.location.host || 'localhost:8000';
@@ -1375,9 +1712,8 @@
 
             ws.onopen = () => {
                 wsDot.classList.add('connected');
-                wsStatusText.textContent = 'Live Connected';
-                wsStatusText.style.color = 'var(--success)';
-                // Request ping
+                wsStatusText.textContent = 'Girlfriend Online 💕';
+                wsStatusText.style.color = '#fb7185';
                 lastPing = Date.now();
                 ws.send(JSON.stringify({ type: 'ping', data: {} }));
             };
@@ -1389,21 +1725,18 @@
                 setTimeout(connectWS, 2500);
             };
 
-            ws.onerror = (err) => {
-                console.error('WebSocket error:', err);
-            };
+            ws.onerror = (err) => console.error('WebSocket error:', err);
 
             ws.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
                     handleMessage(msg);
                 } catch (e) {
-                    console.error('Error handling WebSocket message:', e);
+                    console.error('Error parsing WS message:', e);
                 }
             };
         }
 
-        // Handle Messages
         function handleMessage(msg) {
             const { type, data } = msg;
 
@@ -1413,25 +1746,22 @@
                     break;
                 case 'transcript':
                     appendMessage(data.role, data.text);
+                    if (data.role === 'assistant') {
+                        // Update speech bubble with current text snippet
+                        avatarBubble.textContent = data.text.length > 55 ? data.text.substring(0, 52) + '...' : data.text;
+                    }
                     break;
                 case 'tool_event':
-                    logToolEvent(data);
                     updateTaskList(data);
-                    break;
-                case 'confirmation_request':
-                    showConfirmationModal(data);
                     break;
                 case 'preferences_updated':
                     applyPreferences(data, false);
                     break;
                 case 'system_status':
-                    if (data.mic_active !== undefined) {
-                        setMicState(data.mic_active);
-                    }
+                    if (data.mic_active !== undefined) setMicState(data.mic_active);
                     break;
                 case 'pong':
-                    const latency = Date.now() - lastPing;
-                    latencyText.textContent = `${latency} ms`;
+                    latencyText.textContent = `${Date.now() - lastPing} ms`;
                     break;
                 case 'error':
                     appendMessage('system', `Error: ${data.message}`);
@@ -1439,55 +1769,43 @@
             }
         }
 
-        // Agent State Animation Handler
         function updateAgentState(state) {
             const s = (state || 'IDLE').toUpperCase();
+            agentState = s;
             stateText.textContent = s;
-            stateVisualizer.innerHTML = '';
-
-            let orb = document.createElement('div');
 
             switch (s) {
                 case 'LISTENING':
-                    orb.className = 'orb-listening';
-                    orb.innerHTML = '<span></span><span></span><span></span><span></span><span></span>';
-                    stateDesc.textContent = 'Listening to your voice input...';
-                    stateText.style.color = 'var(--success)';
+                    stateDesc.textContent = `Listening intently to your voice, babe...`;
+                    stateText.style.color = '#34d399';
+                    avatarBubble.textContent = "Listening to you, sweetheart! 👂💕";
                     break;
                 case 'THINKING':
-                    orb.className = 'orb-thinking';
-                    stateDesc.textContent = 'Processing request & reasoning...';
-                    stateText.style.color = 'var(--accent-cyan)';
+                    stateDesc.textContent = `Thinking of what to say to you, my love...`;
+                    stateText.style.color = '#38bdf8';
+                    avatarBubble.textContent = "Thinking... ✨";
                     break;
                 case 'EXECUTING':
-                    orb.className = 'orb-executing';
-                    stateDesc.textContent = 'Executing desktop tools & actions...';
-                    stateText.style.color = 'var(--accent-secondary)';
+                    stateDesc.textContent = `Controlling your PC for you, my hero!`;
+                    stateText.style.color = '#a855f7';
+                    avatarBubble.textContent = "Doing it for you right now, jaan! ⚡";
                     break;
                 case 'SPEAKING':
-                    orb.className = 'orb-speaking';
-                    orb.innerHTML = '<span></span><span></span><span></span><span></span>';
-                    stateDesc.textContent = `${currentPreferences.agent_name} is responding via audio...`;
-                    stateText.style.color = '#c084fc';
+                    stateDesc.textContent = `${currentPreferences.agent_name} is talking to you...`;
+                    stateText.style.color = '#f472b6';
                     break;
                 case 'ERROR':
-                    orb.innerHTML = '❌';
-                    orb.style.fontSize = '2.5rem';
-                    stateDesc.textContent = 'An error occurred during execution';
+                    stateDesc.textContent = `A tiny glitch happened, but I'm here for you!`;
                     stateText.style.color = 'var(--danger)';
                     break;
                 case 'IDLE':
                 default:
-                    orb.className = 'orb-idle';
-                    stateDesc.textContent = 'Ready and listening for voice or text commands';
-                    stateText.style.color = 'var(--text-main)';
+                    stateDesc.textContent = `Devoted to you. Tell me anything or give me a command!`;
+                    stateText.style.color = '#fb7185';
                     break;
             }
-
-            stateVisualizer.appendChild(orb);
         }
 
-        // Append Messages to Transcript
         function appendMessage(role, text) {
             if (!text) return;
             const wrap = document.createElement('div');
@@ -1502,7 +1820,7 @@
                 const label = document.createElement('div');
                 label.className = 'msg-sender-label';
                 const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                label.textContent = isUser ? `You • ${time}` : `${currentPreferences.agent_name} • ${time}`;
+                label.textContent = isUser ? `You • ${time}` : `${currentPreferences.agent_name} (Girlfriend) 💕 • ${time}`;
 
                 const bubble = document.createElement('div');
                 bubble.className = `message-bubble ${isUser ? 'msg-user' : 'msg-assistant'}`;
@@ -1516,30 +1834,6 @@
             transcript.scrollTop = transcript.scrollHeight;
         }
 
-        // Tool Log Feed
-        function logToolEvent(data) {
-            const entry = document.createElement('div');
-            entry.className = 'tool-entry';
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
-            let statusSpan = '';
-            if (data.action === 'start') {
-                statusSpan = `<span style="color: var(--accent-cyan);">→ started</span>`;
-            } else if (data.action === 'complete') {
-                statusSpan = `<span class="status-success">✓ done</span>`;
-            } else if (data.action === 'error') {
-                statusSpan = `<span class="status-fail">✗ failed</span>`;
-            }
-
-            entry.innerHTML = `<span class="ts">[${time}]</span> <span class="tool-name">${data.tool_name || 'tool'}</span> ${statusSpan}`;
-            toolFeed.prepend(entry);
-
-            if (toolFeed.children.length > 60) {
-                toolFeed.removeChild(toolFeed.lastChild);
-            }
-        }
-
-        // Task List Management
         function updateTaskList(data) {
             if (data.action === 'start') {
                 currentTasks.push({ id: data.tool_name + Date.now(), name: `Executing ${data.tool_name}`, status: 'current' });
@@ -1549,13 +1843,13 @@
                 if (currentTasks.length > 0) currentTasks[currentTasks.length - 1].status = 'error';
             }
 
-            if (currentTasks.length > 6) currentTasks.shift();
+            if (currentTasks.length > 5) currentTasks.shift();
             renderTaskList();
         }
 
         function renderTaskList() {
             if (currentTasks.length === 0) {
-                taskList.innerHTML = `<div class="task-step" style="color: var(--text-dim); font-style: italic;"><span class="step-icon">○</span> No active automation task</div>`;
+                taskList.innerHTML = `<div class="task-step" style="color: var(--text-dim); font-style: italic;"><span>○</span> No active automation task</div>`;
                 document.getElementById('taskCountText').textContent = 'Idle';
                 return;
             }
@@ -1565,36 +1859,12 @@
             currentTasks.forEach(task => {
                 const div = document.createElement('div');
                 div.className = `task-step step-${task.status}`;
-
-                let icon = '⚡';
-                if (task.status === 'done') icon = '✓';
-                if (task.status === 'error') icon = '✗';
-
-                div.innerHTML = `<span class="step-icon">${icon}</span><span>${task.name}</span>`;
+                let icon = task.status === 'done' ? '✓' : (task.status === 'error' ? '✗' : '⚡');
+                div.innerHTML = `<span>${icon}</span><span>${task.name}</span>`;
                 taskList.appendChild(div);
             });
         }
 
-        // Confirmation Modal
-        function showConfirmationModal(data) {
-            currentRequestId = data.request_id;
-            modalToolName.textContent = data.tool_name;
-            modalDesc.textContent = data.description || 'This action requires explicit approval.';
-            
-            const risk = (data.risk_level || 'HIGH').toUpperCase();
-            modalRiskBadge.textContent = `${risk} RISK`;
-            modalRiskBadge.className = `risk-badge ${risk === 'MEDIUM' ? 'risk-medium' : 'risk-high'}`;
-
-            modalParams.textContent = JSON.stringify(data.parameters || {}, null, 2);
-            confirmModal.classList.add('active');
-        }
-
-        function closeConfirmationModal() {
-            confirmModal.classList.remove('active');
-            currentRequestId = null;
-        }
-
-        // Send Text Command
         function sendCommand(customText) {
             const text = (customText || cmdInput.value).trim();
             if (!text) return;
@@ -1610,14 +1880,8 @@
             }
         }
 
-        // Set Mic Visual State
         function setMicState(active) {
-            isMicActive = active;
-            if (active) {
-                btnToggleMic.classList.add('active');
-            } else {
-                btnToggleMic.classList.remove('active');
-            }
+            btnToggleMic.classList.toggle('active', active);
         }
 
         // Event Listeners
@@ -1629,34 +1893,34 @@
         // Quick Suggestion Chips
         document.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', () => {
-                const cmd = chip.dataset.cmd;
-                sendCommand(cmd);
+                sendCommand(chip.dataset.cmd);
             });
         });
 
-        // Quick Grid Buttons
+        // Quick Actions Grid
         document.querySelectorAll('.quick-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const act = btn.dataset.action;
-                if (act === 'calc') sendCommand('open calculator');
-                if (act === 'notepad') sendCommand('open notepad');
-                if (act === 'screenshot') sendCommand('take a screenshot');
+                if (act === 'calc') sendCommand('open calculator, babe');
+                if (act === 'notepad') sendCommand('open notepad for me');
+                if (act === 'screenshot') sendCommand('take a screenshot, sweetheart');
+                if (act === 'cursor') sendCommand('move mouse to center of screen');
             });
         });
 
-        // Header Language Quick Switch Pills
+        // Header Language Quick Switch
         document.querySelectorAll('.lang-pill').forEach(pill => {
             pill.addEventListener('click', () => {
-                const lang = pill.dataset.lang;
-                savePreferences({ language: lang });
+                savePreferences({ language: pill.dataset.lang });
             });
         });
 
-        // Open Settings Modal
+        // Settings Modal
         function openSettings() {
             inputAgentName.value = currentPreferences.agent_name;
             selectVoice.value = currentPreferences.voice_name;
             updateLangRadioUI(currentPreferences.language);
+            updatePersonaRadioUI(currentPreferences.persona_mode);
             settingsModal.classList.add('active');
             inputAgentName.focus();
         }
@@ -1665,74 +1929,62 @@
         btnOpenSettings.addEventListener('click', openSettings);
         btnCloseSettings.addEventListener('click', () => settingsModal.classList.remove('active'));
 
-        // Settings Preset Chips
         document.querySelectorAll('.preset-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 inputAgentName.value = chip.dataset.name;
             });
         });
 
-        // Settings Radio Cards for Language
-        document.querySelectorAll('.radio-card').forEach(card => {
+        document.querySelectorAll('#settingsModal .radio-options .radio-card[data-value]').forEach(card => {
             card.addEventListener('click', () => {
-                document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+                document.querySelectorAll('#settingsModal .radio-options .radio-card[data-value]').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
             });
         });
 
-        // Save Settings Button
+        document.querySelectorAll('#settingsModal .radio-options .radio-card[data-mode]').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#settingsModal .radio-options .radio-card[data-mode]').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
         btnSaveSettings.addEventListener('click', () => {
-            const newName = inputAgentName.value.trim() || 'Nova';
-            const selectedRadio = document.querySelector('.radio-card.selected');
-            const newLang = selectedRadio ? selectedRadio.dataset.value : 'auto';
-            const newVoice = selectVoice.value || 'Puck';
+            const newName = inputAgentName.value.trim() || 'Maya';
+            const selectedLangCard = document.querySelector('#settingsModal .radio-options .radio-card[data-value].selected');
+            const newLang = selectedLangCard ? selectedLangCard.dataset.value : 'auto';
+            const selectedModeCard = document.querySelector('#settingsModal .radio-options .radio-card[data-mode].selected');
+            const newMode = selectedModeCard ? selectedModeCard.dataset.mode : 'romantic_girlfriend';
+            const newVoice = selectVoice.value || 'Aoede';
 
             savePreferences({
                 agent_name: newName,
                 language: newLang,
-                voice_name: newVoice
+                voice_name: newVoice,
+                persona_mode: newMode
             });
 
             settingsModal.classList.remove('active');
         });
 
-        // Reset Settings Button
         btnResetSettings.addEventListener('click', () => {
             savePreferences({
-                agent_name: 'Nova',
+                agent_name: 'Maya',
                 language: 'auto',
-                voice_name: 'Puck'
+                voice_name: 'Aoede',
+                persona_mode: 'romantic_girlfriend'
             });
             settingsModal.classList.remove('active');
         });
 
-        // Confirmation Actions
-        btnApproveAction.addEventListener('click', () => {
-            if (currentRequestId && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'confirm_action', data: { request_id: currentRequestId } }));
-            }
-            closeConfirmationModal();
-        });
-
-        btnRejectAction.addEventListener('click', () => {
-            if (currentRequestId && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'cancel_action', data: { request_id: currentRequestId } }));
-            }
-            closeConfirmationModal();
-        });
-
-        // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
-            if (confirmModal.classList.contains('active')) {
-                if (e.key === 'Enter') btnApproveAction.click();
-                if (e.key === 'Escape') btnRejectAction.click();
-            } else if (settingsModal.classList.contains('active')) {
+            if (settingsModal.classList.contains('active')) {
                 if (e.key === 'Escape') settingsModal.classList.remove('active');
                 if (e.key === 'Enter' && e.target === inputAgentName) btnSaveSettings.click();
             }
         });
 
-        // Periodic Ping for Latency
+        // Periodic Ping
         setInterval(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 lastPing = Date.now();

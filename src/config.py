@@ -28,14 +28,15 @@ class Settings(BaseSettings):
     data_dir: Path = DATA_DIR
 
     # Gemini API & Live Model
-    agent_name: str = Field(default="Nova", validation_alias="AGENT_NAME")
+    agent_name: str = Field(default="Maya", validation_alias="AGENT_NAME")
+    persona_mode: str = Field(default="romantic_girlfriend", validation_alias="PERSONA_MODE")
     language_preference: str = Field(default="auto", validation_alias="LANGUAGE_PREFERENCE")  # auto, hindi, english
     gemini_api_key: str = Field(default="", validation_alias="GEMINI_API_KEY")
     gemini_live_model: str = Field(
         default="gemini-3.1-flash-live-preview",
         validation_alias="GEMINI_LIVE_MODEL"
     )
-    voice_name: str = Field(default="Puck", validation_alias="VOICE_NAME")  # Aoede, Charon, Fenrir, Kore, Puck
+    voice_name: str = Field(default="Aoede", validation_alias="VOICE_NAME")  # Aoede, Charon, Fenrir, Kore, Puck
 
     # Audio & Streaming
     audio_input_sample_rate: int = 16000
