@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova AI - Desktop Assistant</title>
+    <style>
+        :root {
+            --bg-start: #0a0a0f;
+            --bg-end: #1a1a2e;
+            --panel-bg: rgba(255, 255, 255, 0.05);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f0f0f0;
+            --text-dim: #a0a0a0;
+            --accent-blue: #4a90e2;
+            --accent-purple: #9b59b6;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Glassmorphism Panel Base */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--danger);
+            transition: background-color 0.3s ease;
+        }
+        .status-dot.connected { background-color: var(--success); }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Main Content Layout */
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Left Column: Transcript & Input */
+        .left-col {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .transcript-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .msg-user {
+            align-self: flex-start;
+            background: rgba(74, 144, 226, 0.2);
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg-assistant {
+            align-self: flex-end;
+            background: rgba(155, 89, 182, 0.2);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            border-bottom-right-radius: 4px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 12px 20px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-blue);
+        }
+
+        button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        button:hover { background: #357abd; }
+        
+        button.icon-btn {
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        button.icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        button.icon-btn.active { background: var(--success); }
+        button.icon-btn.danger { background: var(--danger); }
+
+        /* Right Column: State, Tasks, Tools */
+        .right-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 300px;
+        }
+
+        /* Agent State */
+        .state-panel {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .state-icon-container {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .state-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Task Panel */
+        .task-panel {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 8px;
+            margin-bottom: 5px;
+        }
+
+        .task-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            padding: 8px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.02);
+            animation: slideIn 0.3s ease;
+        }
+        .task-step .icon { width: 20px; text-align: center; font-weight: bold; }
+        .step-done .icon { color: var(--success); }
+        .step-current .icon { color: var(--accent-blue); }
+        .step-error .icon { color: var(--danger); }
+
+        /* Tools Panel */
+        .tools-panel {
+            padding: 15px;
+            max-height: 30%;
+            overflow-y: auto;
+        }
+        
+        .tool-log {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            font-family: monospace;
+            padding: 4px 0;
+        }
+
+        /* Footer */
+        footer {
+            padding: 10px 25px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            width: 450px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        .btn-approve { background: var(--success); }
+        .btn-approve:hover { background: #27ae60; }
+        .btn-reject { background: var(--danger); }
+        .btn-reject:hover { background: #c0392b; }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .risk-high { background: var(--danger); color: white; }
+        .risk-medium { background: var(--warning); color: white; }
+
+        pre.param-box {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        /* Floating Mic Status */
+        .floating-mic {
+            position: fixed;
+            bottom: 60px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        .floating-mic.listening {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: var(--success);
+            color: var(--success);
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: absolute;
+            top: 70px;
+            right: 25px;
+            width: 250px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+        }
+        .settings-panel.active { display: flex; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        
+        /* State Icons Animations */
+        .anim-idle {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            animation: pulse 2s infinite;
+        }
+        .anim-listening {
+            display: flex; gap: 4px; align-items: center; height: 40px;
+        }
+        .anim-listening span {
+            width: 6px; background: var(--success); border-radius: 3px;
+            animation: wave 1s infinite ease-in-out;
+        }
+        .anim-listening span:nth-child(2) { animation-delay: 0.1s; }
+        .anim-listening span:nth-child(3) { animation-delay: 0.2s; }
+        .anim-listening span:nth-child(4) { animation-delay: 0.3s; }
+        
+        .anim-thinking {
+            display: flex; gap: 8px;
+        }
+        .anim-thinking span {
+            width: 12px; height: 12px; border-radius: 50%; background: var(--accent-blue);
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .anim-thinking span:nth-child(1) { animation-delay: -0.32s; }
+        .anim-thinking span:nth-child(2) { animation-delay: -0.16s; }
+        
+        .anim-executing {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .anim-speaking {
+            display: flex; gap: 6px; align-items: center; height: 40px;
+        }
+        .anim-speaking span {
+            width: 8px; background: var(--accent-purple); border-radius: 4px;
+            animation: speakWave 0.8s infinite ease-in-out;
+        }
+        .anim-speaking span:nth-child(2) { animation-delay: 0.2s; }
+        .anim-speaking span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0.2); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
+        @keyframes speakWave { 0%, 100% { height: 15px; } 50% { height: 35px; } }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="status-dot" id="connStatus"></div>
+            Nova AI
+        </div>
+        <div class="header-controls">
+            <button class="icon-btn" id="btnToggleMic">🎙️</button>
+            <button class="icon-btn" id="btnSettings">⚙️</button>
+        </div>
+    </header>
+
+    <div class="glass-panel settings-panel" id="settingsPanel">
+        <h3 class="panel-title">Settings</h3>
+        <button id="btnClearHistory">Clear History</button>
+        <div style="font-size: 0.85rem; color: var(--text-dim);">
+            <p>WS Status: <span id="wsStateText">Disconnected</span></p>
+        </div>
+    </div>
+
+    <main>
+        <div class="left-col">
+            <div class="glass-panel transcript-area" id="transcript">
+                <!-- Messages go here -->
+            </div>
+            
+            <div class="glass-panel input-area">
+                <input type="text" id="cmdInput" placeholder="Type a command for Nova..." autocomplete="off">
+                <button id="btnSend">Send</button>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="glass-panel state-panel">
+                <div class="state-icon-container" id="stateIcon">
+                    <div class="anim-idle"></div>
+                </div>
+                <div class="state-text" id="stateText">IDLE</div>
+            </div>
+
+            <div class="glass-panel task-panel">
+                <div class="panel-title">Current Task</div>
+                <div id="taskList">
+                    <!-- Task steps go here -->
+                    <div class="task-step" style="color: var(--text-dim); font-style: italic;">No active tasks</div>
+                </div>
+            </div>
+
+            <div class="glass-panel tools-panel">
+                <div class="panel-title">Tool Activity</div>
+                <div id="toolFeed">
+                    <!-- Tool logs go here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div>Nova AI Desktop Assistant v1.0.0</div>
+        <div id="latencyDisplay">Latency: -- ms</div>
+    </footer>
+
+    <!-- Floating Mic Indicator -->
+    <div class="floating-mic" id="floatingMic">🎤</div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="glass-panel modal-content">
+            <h2 style="margin-bottom: 5px;">Action Required</h2>
+            <div>
+                <span class="risk-badge" id="modalRiskBadge">HIGH RISK</span>
+                <span style="margin-left: 10px; font-weight: 600;" id="modalToolName">tool_name</span>
+            </div>
+            <p id="modalDesc" style="color: var(--text-dim); font-size: 0.95rem;">Description goes here...</p>
+            
+            <div>
+                <div style="font-size: 0.85rem; margin-bottom: 5px; color: var(--text-dim);">Parameters:</div>
+                <pre class="param-box" id="modalParams">{}</pre>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-reject" id="btnReject">Reject (Esc)</button>
+                <button class="btn-approve" id="btnApprove">Approve (Enter)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const connStatus = document.getElementById('connStatus');
+        const transcript = document.getElementById('transcript');
+        const cmdInput = document.getElementById('cmdInput');
+        const btnSend = document.getElementById('btnSend');
+        const stateIcon = document.getElementById('stateIcon');
+        const stateText = document.getElementById('stateText');
+        const taskList = document.getElementById('taskList');
+        const toolFeed = document.getElementById('toolFeed');
+        const confirmModal = document.getElementById('confirmModal');
+        const floatingMic = document.getElementById('floatingMic');
+        const btnToggleMic = document.getElementById('btnToggleMic');
+        const btnSettings = document.getElementById('btnSettings');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const wsStateText = document.getElementById('wsStateText');
+        const latencyDisplay = document.getElementById('latencyDisplay');
+
+        // Modal Elements
+        const modalRiskBadge = document.getElementById('modalRiskBadge');
+        const modalToolName = document.getElementById('modalToolName');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalParams = document.getElementById('modalParams');
+        const btnApprove = document.getElementById('btnApprove');
+        const btnReject = document.getElementById('btnReject');
+
+        // State
+        let ws = null;
+        let currentRequestId = null;
+        let isMicActive = false;
+        let lastPing = 0;
+
+        // Extract token from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token') || 'dev_token'; // Fallback for dev
+
+        // Initialize WebSocket
+        function connectWS() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.host || 'localhost:8000';
+            const wsUrl = `${wsProtocol}//${wsHost}/ws?token=${token}`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                connStatus.classList.add('connected');
+                wsStateText.textContent = 'Connected';
+                wsStateText.style.color = 'var(--success)';
+            };
+
+            ws.onclose = () => {
+                connStatus.classList.remove('connected');
+                wsStateText.textContent = 'Disconnected';
+                wsStateText.style.color = 'var(--danger)';
+                setTimeout(connectWS, 3000); // Reconnect loop
+            };
+
+            ws.onerror = (err) => {
+                console.error("WS Error:", err);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    handleMessage(msg);
+                } catch (e) {
+                    console.error("Error parsing message:", e);
+                }
+            };
+        }
+
+        // Message Handlers
+        function handleMessage(msg) {
+            const { type, data } = msg;
+            
+            switch (type) {
+                case 'state_change':
+                    updateAgentState(data.state);
+                    break;
+                case 'transcript':
+                    appendMessage(data.role, data.text);
+                    break;
+                case 'tool_event':
+                    logToolEvent(data);
+                    updateTaskList(data);
+                    break;
+                case 'confirmation_request':
+                    showConfirmationModal(data);
+                    break;
+                case 'system_status':
+                    if (data.mic_active !== undefined) {
+                        setMicState(data.mic_active);
+                    }
+                    if (data.ping) {
+                        latencyDisplay.textContent = `Latency: ${Date.now() - data.ping} ms`;
+                    }
+                    break;
+                case 'error':
+                    appendMessage('system', `Error: ${data.message}`, true);
+                    break;
+            }
+        }
+
+        function updateAgentState(state) {
+            stateText.textContent = state;
+            stateIcon.innerHTML = ''; // Clear current animation
+
+            let animDiv = document.createElement('div');
+            
+            switch (state.toUpperCase()) {
+                case 'LISTENING':
+                    animDiv.className = 'anim-listening';
+                    animDiv.innerHTML = '<span></span><span></span><span></span><span></span>';
+                    break;
+                case 'THINKING':
+                    animDiv.className = 'anim-thinking';
+                    animDiv.innerHTML = '<span></span><span></span><span></span>';
+                    break;
+                case 'EXECUTING':
+                    animDiv.className = 'anim-executing';
+                    break;
+                case 'SPEAKING':
+                    animDiv.className = 'anim-speaking';
+                    animDiv.innerHTML = '<span></span><span></span><span></span>';
+                    break;
+                case 'ERROR':
+                    animDiv.innerHTML = '❌';
+                    animDiv.style.fontSize = '2rem';
+                    break;
+                case 'IDLE':
+                default:
+                    animDiv.className = 'anim-idle';
+                    break;
+            }
+            
+            stateIcon.appendChild(animDiv);
+        }
+
+        function appendMessage(role, text, isError = false) {
+            const div = document.createElement('div');
+            div.className = `message ${role === 'user' ? 'msg-user' : 'msg-assistant'}`;
+            if (isError) div.style.color = 'var(--danger)';
+            div.textContent = text;
+            transcript.appendChild(div);
+            transcript.scrollTop = transcript.scrollHeight;
+        }
+
+        function logToolEvent(data) {
+            const div = document.createElement('div');
+            div.className = 'tool-log';
+            const time = new Date().toLocaleTimeString();
+            let actionText = data.action === 'start' ? 'called' : (data.action === 'complete' ? 'completed' : 'failed');
+            div.textContent = `[${time}] ${data.tool_name} - ${actionText}`;
+            if (data.error) div.style.color = 'var(--danger)';
+            
+            toolFeed.prepend(div);
+            if (toolFeed.children.length > 50) {
+                toolFeed.removeChild(toolFeed.lastChild);
+            }
+        }
+        
+        let currentTasks = [];
+        function updateTaskList(data) {
+            if (data.action === 'start') {
+                currentTasks.push({ id: data.tool_name + Date.now(), name: `Running ${data.tool_name}`, status: 'current' });
+            } else if (data.action === 'complete') {
+                if (currentTasks.length > 0) currentTasks[currentTasks.length -1].status = 'done';
+            } else if (data.action === 'error') {
+                if (currentTasks.length > 0) currentTasks[currentTasks.length -1].status = 'error';
+            }
+            
+            if (currentTasks.length > 5) currentTasks.shift(); // Keep last 5
+            
+            renderTaskList();
+        }
+
+        function renderTaskList() {
+            if (currentTasks.length === 0) {
+                taskList.innerHTML = '<div class="task-step" style="color: var(--text-dim); font-style: italic;">No active tasks</div>';
+                return;
+            }
+            
+            taskList.innerHTML = '';
+            currentTasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = `task-step step-${task.status}`;
+                
+                let icon = '→';
+                if (task.status === 'done') icon = '✓';
+                if (task.status === 'error') icon = '✗';
+                
+                div.innerHTML = `<span class="icon">${icon}</span><span>${task.name}</span>`;
+                taskList.appendChild(div);
+            });
+        }
+
+        function showConfirmationModal(data) {
+            currentRequestId = data.request_id;
+            modalToolName.textContent = data.tool_name;
+            modalDesc.textContent = data.description || 'This action requires confirmation.';
+            
+            modalRiskBadge.textContent = (data.risk_level || 'HIGH').toUpperCase() + ' RISK';
+            if ((data.risk_level || '').toLowerCase() === 'medium') {
+                modalRiskBadge.className = 'risk-badge risk-medium';
+            } else {
+                modalRiskBadge.className = 'risk-badge risk-high';
+            }
+
+            modalParams.textContent = JSON.stringify(data.parameters || {}, null, 2);
+            confirmModal.classList.add('active');
+        }
+
+        function closeConfirmationModal() {
+            confirmModal.classList.remove('active');
+            currentRequestId = null;
+        }
+
+        // Send Command
+        function sendCommand() {
+            const text = cmdInput.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            cmdInput.value = '';
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'text_command',
+                    data: { text: text }
+                }));
+            }
+        }
+
+        // Event Listeners
+        btnSend.addEventListener('click', sendCommand);
+        cmdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+
+        btnSettings.addEventListener('click', () => {
+            settingsPanel.classList.toggle('active');
+        });
+
+        document.getElementById('btnClearHistory').addEventListener('click', () => {
+            fetch('/api/clear-history', { method: 'POST' })
+                .then(() => {
+                    transcript.innerHTML = '';
+                    settingsPanel.classList.remove('active');
+                })
+                .catch(err => console.error(err));
+        });
+
+        btnToggleMic.addEventListener('click', () => {
+            // Simulated toggle - in real app, send to server
+            setMicState(!isMicActive);
+        });
+
+        function setMicState(active) {
+            isMicActive = active;
+            if (active) {
+                btnToggleMic.classList.add('active');
+                floatingMic.classList.add('listening');
+            } else {
+                btnToggleMic.classList.remove('active');
+                floatingMic.classList.remove('listening');
+            }
+        }
+
+        // Modal Actions
+        btnApprove.addEventListener('click', () => {
+            if (currentRequestId && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'confirm_action', data: { request_id: currentRequestId } }));
+            }
+            closeConfirmationModal();
+        });
+
+        btnReject.addEventListener('click', () => {
+            if (currentRequestId && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'cancel_action', data: { request_id: currentRequestId } }));
+            }
+            closeConfirmationModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (confirmModal.classList.contains('active')) {
+                if (e.key === 'Enter') btnApprove.click();
+                if (e.key === 'Escape') btnReject.click();
+            }
+        });
+
+        // Init
+        connectWS();
+
+        // Simulate ping
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // optional ping logic here if server handles it
+            }
+        }, 30000);
+
+    </script>
+</body>
+</html>
