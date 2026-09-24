@@ -409,8 +409,10 @@ class AgentOrchestrator:
         if not steps:
             lower_t = text.lower().strip()
             # Hindi conversational responses
-            if any(term in lower_t for term in ["tum kaun ho", "aap kaun ho", "tera naam kya hai", "aapka naam kya hai"]):
-                reply = f"Main {agent_name} hoon, aapka voice desktop assistant. Main aapke computer par applications chalane aur tasks automate karne mein madad kar sakta hoon."
+            if any(term in lower_t for term in ["tumhe kisne banaya", "kisne banaya", "tumhara creator kaun", "aapko kisne banaya", "tera creator", "kisne create kiya"]):
+                reply = f"Mujhe aapne (mere developer aur creator) banaya hai! Aapne prompts aur architecture design karke Antigravity AI ki madad se mujhe is voice desktop assistant ke roop mein taiyar kiya hai. Main speech processing ke liye Google Gemini use karta hoon, lekin is pure desktop assistant ko aapne banaya hai!"
+            elif any(term in lower_t for term in ["tum kaun ho", "aap kaun ho", "tera naam kya hai", "aapka naam kya hai"]):
+                reply = f"Main {agent_name} hoon, aapka personal voice desktop assistant jise aapne banaya hai. Main aapke computer par applications chalane aur tasks automate karne mein madad kar sakta hoon."
             elif any(term in lower_t for term in ["kya haal hai", "kaise ho", "aap kaise ho"]):
                 reply = f"Main bilkul theek hoon! Main {agent_name} aapki seva mein hazir hoon. Bataiye, aaj computer par kya karna hai?"
             elif any(term in lower_t for term in ["namaste", "pranam", "namaskar"]):
@@ -420,10 +422,12 @@ class AgentOrchestrator:
             elif any(term in lower_t for term in ["dhanyavaad", "shukriya", "thanks", "thank you"]):
                 reply = "Aapka swagat hai! Koi aur kaam ho to zaroor bataiye."
             # English conversational responses
+            elif any(term in lower_t for term in ["who created you", "who made you", "who built you", "who is your creator", "who designed you", "who is your developer"]):
+                reply = f"I was created by YOU (my creator and developer)! You designed and built this desktop voice assistant through prompts and custom architecture with the help of Antigravity AI. While I use Google Gemini's model for real-time speech understanding, this entire desktop assistant application was created by you!"
             elif "what is ai" in lower_t:
                 reply = "Artificial Intelligence refers to computer systems that perform tasks requiring human-like understanding, reasoning, and problem solving."
             elif "who are you" in lower_t or "what are you" in lower_t or "your name" in lower_t:
-                reply = f"I am {agent_name}, your intelligent voice desktop assistant. I can open apps, manage windows, run workflows, and automate tasks across your PC."
+                reply = f"I am {agent_name}, your intelligent voice desktop assistant created by you. I can open apps, move the cursor, manage windows, run workflows, and automate tasks across your PC."
             elif any(greet in lower_t for greet in ["hello", "hi", "hey", "good morning", "good afternoon"]):
                 reply = f"Hello! I am {agent_name}. I am ready to assist you. Tell me what you would like to do."
             elif any(stop in lower_t for stop in ["stop", "cancel", "nevermind", "ruko", "band karo"]):
