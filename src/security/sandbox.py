@@ -65,9 +65,10 @@ class ExecutionSandbox:
                 return False, "Failed to parse command arguments."
             binary = os.path.basename(parts[0]).lower().replace(".exe", "").replace(".cmd", "").replace(".bat", "")
 
-            # Check if binary is in safe prefix list
-            if binary not in [p.lower() for p in cls.SAFE_COMMAND_PREFIXES]:
-                return False, f"Binary '{binary}' is not in the approved safe tool list."
+            # Check if binary is in safe prefix list (bypassed if full_computer_access is active)
+            if not getattr(settings, "full_computer_access", False):
+                if binary not in [p.lower() for p in cls.SAFE_COMMAND_PREFIXES]:
+                    return False, f"Binary '{binary}' is not in the approved safe tool list."
 
         except Exception as e:
             return False, f"Command syntax parsing error: {e}"

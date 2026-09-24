@@ -98,3 +98,22 @@ async def test_run_safe_command_tool_sandbox():
     params = RunSafeCommandInput(command="format C:")
     with pytest.raises(ValueError, match="Command blocked by sandbox"):
         await tool.validate(params)
+
+
+@pytest.mark.asyncio
+async def test_cursor_tools():
+    from src.tools.plugins.input_tools import GetCursorPositionTool, GetCursorPositionInput, MouseMoveTool, MouseMoveInput
+    pos_tool = GetCursorPositionTool()
+    pos_res = await pos_tool.execute(GetCursorPositionInput())
+    assert "cursor_x" in pos_res
+    assert "cursor_y" in pos_res
+    assert "screen_width" in pos_res
+    assert "screen_height" in pos_res
+
+    # Test moving mouse to safe position
+    move_tool = MouseMoveTool()
+    move_params = MouseMoveInput(x=100, y=100, duration=0.0)
+    move_res = await move_tool.execute(move_params)
+    assert move_res["target_x"] == 100
+    assert move_res["target_y"] == 100
+

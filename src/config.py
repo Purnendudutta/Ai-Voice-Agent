@@ -70,7 +70,16 @@ class Settings(BaseSettings):
     memory_db_file: Path = DATA_DIR / "agent_memory.db"
     degraded_mode_enabled: bool = True
 
-    # Desktop Permissions & Restrictions
+    # Desktop Permissions & Full Computer Access
+    full_computer_access: bool = Field(
+        default=True,
+        validation_alias="FULL_COMPUTER_ACCESS"
+    )
+    require_confirmation_for_high_risk: bool = Field(
+        default=False,
+        validation_alias="REQUIRE_CONFIRMATION_FOR_HIGH_RISK"
+    )
+    cursor_speed: float = 0.2
     prohibited_commands: List[str] = Field(
         default_factory=lambda: [
             "format", "del /s /q c:\\", "rmdir /s /q c:\\",

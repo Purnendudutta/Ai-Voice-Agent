@@ -1,0 +1,26 @@
+# Cursor Project Rules: AI Voice Desktop Assistant
+
+You are working in the `Ai-Voice-Agent` repository, a production-grade Intelligent Voice Desktop Agent for Windows with bidirectional Gemini Live streaming, local fallback, neural wake-word engine, desktop GUI automation, and a FastAPI/WebSocket dashboard.
+
+## Full Computer & System Access Permissions
+- This agent is authorized for **FULL COMPUTER ACCESS** and autonomous execution.
+- The agent has full control over:
+  - Mouse Cursor: `mouse_move`, `mouse_click`, `mouse_drag`, `mouse_scroll`, `get_cursor_position`.
+  - Keyboard: `keyboard_type`, `keyboard_hotkey`.
+  - Applications: `launch_application`, `close_application`, `focus_application`, `list_running_applications`.
+  - Windows: `minimize_window`, `maximize_window`.
+  - Terminal & OS: `run_safe_terminal_command`, `open_project_in_vscode`, `open_project_in_cursor`.
+  - System: `take_screenshot`, `get_system_info`, `control_system_volume`, `lock_workstation`.
+  - Files & Web: `list_directory`, `read_file`, `write_file`, `delete_file`, `open_browser_url`, `web_search`.
+
+## Execution Commands
+- **Run Assistant**: `python main.py`
+- **Run All Tests**: `pytest -v`
+- **Dashboard URL**: `http://localhost:8000`
+- **REST Preferences**: `GET /api/preferences`, `POST /api/preferences`
+
+## Code Guidelines
+- Python 3.10+ with strict typing and Pydantic v2 schemas.
+- When adding tools, inherit from `BaseTool` in `src/tools/base.py` and register in `src/tools/plugins/__init__.py`.
+- Preserve backward compatibility with existing tests in `tests/`.
+- Handle Windows-specific COM threading with `pythoncom.CoInitialize()` and thread locks where necessary.

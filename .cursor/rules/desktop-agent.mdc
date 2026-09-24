@@ -1,0 +1,26 @@
+---
+description: AI Voice Desktop Assistant development guidelines and full computer access configuration
+globs: **/*
+alwaysApply: true
+---
+
+# AI Voice Desktop Assistant - System & Computer Access Rules
+
+## Project Architecture
+- `main.py`: Entry point orchestrating microphone, speaker, VAD, wake-word, Gemini Live, IPC server.
+- `src/agent/orchestrator.py`: Brain lifecycle coordinator (`IDLE`, `LISTENING`, `THINKING`, `EXECUTING`, `SPEAKING`).
+- `src/tools/`: Base tool classes and plugins (`app_tools`, `input_tools`, `dev_tools`, `file_tools`, `system_tools`, etc.).
+- `src/security/`: Permissions manager, execution sandbox, audit logging, rate limiting, token authentication.
+- `src/gemini/`: Gemini Live bidirectional WebSocket client (`gemini-2.0-flash-exp` / `gemini-3.1-flash-live-preview`).
+- `src/ui/`: Interactive Glassmorphic web dashboard (HTML, CSS, JS with WebSockets).
+
+## Full Computer & Cursor Access
+- Full computer access is enabled via `FULL_COMPUTER_ACCESS=true`.
+- Autonomous execution is active via `REQUIRE_CONFIRMATION_FOR_HIGH_RISK=false`.
+- Cursor tools available:
+  - `mouse_move(x, y, duration)`: Moves mouse cursor to coordinate.
+  - `mouse_click(x, y, button, clicks)`: Clicks mouse at cursor or coordinates.
+  - `mouse_drag(to_x, to_y, from_x, from_y, button, duration)`: Drags cursor.
+  - `mouse_scroll(amount)`: Scrolls wheel up/down.
+  - `get_cursor_position()`: Reports current (x, y) coordinates and screen resolution.
+  - `open_project_in_cursor(project_path)`: Opens projects directly in Cursor IDE.

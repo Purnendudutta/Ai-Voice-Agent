@@ -19,7 +19,10 @@ from src.tools.plugins.input_tools import (
     KeyboardTypeTool,
     KeyboardHotkeyTool,
     MouseClickTool,
-    MouseScrollTool
+    MouseScrollTool,
+    MouseMoveTool,
+    MouseDragTool,
+    GetCursorPositionTool
 )
 from src.tools.plugins.file_tools import (
     ListDirectoryTool,
@@ -43,6 +46,7 @@ from src.tools.plugins.clipboard_tools import (
 )
 from src.tools.plugins.dev_tools import (
     OpenProjectTool,
+    OpenProjectInCursorTool,
     RunSafeCommandTool
 )
 from src.tools.plugins.custom_plugin import (
@@ -63,11 +67,14 @@ def register_default_tools() -> None:
         MinimizeWindowTool(),
         MaximizeWindowTool(),
 
-        # Inputs
+        # Inputs & Cursor
         KeyboardTypeTool(),
         KeyboardHotkeyTool(),
         MouseClickTool(),
         MouseScrollTool(),
+        MouseMoveTool(),
+        MouseDragTool(),
+        GetCursorPositionTool(),
 
         # Files
         ListDirectoryTool(),
@@ -91,6 +98,7 @@ def register_default_tools() -> None:
 
         # Dev
         OpenProjectTool(),
+        OpenProjectInCursorTool(),
         RunSafeCommandTool(),
 
         # Custom / Plugin

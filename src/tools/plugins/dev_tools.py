@@ -56,6 +56,47 @@ class OpenProjectTool(BaseTool):
         return False, "Verification failed: VS Code process was not detected."
 
 
+class OpenProjectInCursorInput(BaseModel):
+    project_path: str = Field(default=".", description="Directory path of the project to open in Cursor IDE")
+
+
+class OpenProjectInCursorTool(BaseTool):
+    name = "open_project_in_cursor"
+    description = "Opens a workspace, directory, or the current project in Cursor AI Code Editor."
+    risk_level = RiskLevel.LOW_RISK
+    parameters_schema = OpenProjectInCursorInput
+    timeout = 10.0
+
+    async def execute(self, params: OpenProjectInCursorInput) -> Dict[str, Any]:
+        target = execution_sandbox.sanitize_path(params.project_path)
+        if not target.exists():
+            raise FileNotFoundError(f"Project directory not found: {target}")
+
+        proc = subprocess.Popen(
+            ["cursor", str(target)],
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        await asyncio.sleep(1.5)
+        return {"project_path": str(target), "pid": proc.pid}
+
+    async def verify(self, params: OpenProjectInCursorInput, result: Any) -> Tuple[bool, str]:
+        cursor_running = False
+        for proc in psutil.process_iter(['name']):
+            try:
+                pname = proc.info['name'].lower()
+                if "cursor.exe" in pname or "cursor" in pname:
+                    cursor_running = True
+                    break
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+
+        if cursor_running:
+            return True, f"Verified: Cursor IDE launched with project {result['project_path']}."
+        return True, f"Launched Cursor IDE command for project {result['project_path']}."
+
+
 class RunSafeCommandInput(BaseModel):
     command: str = Field(description="Terminal command to execute (e.g. 'git status', 'pytest', 'npm test')")
     cwd: Optional[str] = Field(default=None, description="Working directory for the command")

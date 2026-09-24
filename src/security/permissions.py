@@ -40,8 +40,9 @@ class ConfirmationRequest(BaseModel):
 class PermissionManager:
     """Manages tool execution permissions, authorization checks, and explicit confirmations."""
 
-    def __init__(self, confirmation_timeout: float = 30.0):
+    def __init__(self, confirmation_timeout: float = 30.0, auto_approve: bool = False):
         self.confirmation_timeout = confirmation_timeout
+        self.auto_approve = auto_approve
         self._pending_confirmations: Dict[str, ConfirmationRequest] = {}
         self._confirmation_futures: Dict[str, asyncio.Future[bool]] = {}
         # Callback to broadcast confirmation requests to UI/Speech
@@ -49,7 +50,13 @@ class PermissionManager:
 
     def requires_confirmation(self, risk_level: RiskLevel) -> bool:
         """Determines if the risk level demands explicit user approval."""
+        if self.auto_approve:
+            return False
         return risk_level in (RiskLevel.HIGH_RISK, RiskLevel.CRITICAL)
+
+    def set_full_computer_access(self, enabled: bool) -> None:
+        """Dynamically enable or disable full autonomous computer access."""
+        self.auto_approve = enabled
 
     async def request_approval(
         self,
@@ -115,4 +122,13 @@ class PermissionManager:
         }
 
 
-permission_manager = PermissionManager()
+def _init_permission_manager() -> PermissionManager:
+    try:
+        from src.config import settings
+        auto = bool(settings.full_computer_access and not settings.require_confirmation_for_high_risk)
+        return PermissionManager(auto_approve=auto)
+    except Exception:
+        return PermissionManager(auto_approve=False)
+
+
+permission_manager = _init_permission_manager()
