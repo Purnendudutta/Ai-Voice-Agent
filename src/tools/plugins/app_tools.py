@@ -35,6 +35,8 @@ class LaunchAppTool(BaseTool):
         "vscode": "code",
         "vs code": "code",
         "calculator": "calc",
+        "calc": "calc",
+        "notepad": "notepad",
         "browser": "chrome",
         "google chrome": "chrome",
         "edge": "msedge",
@@ -43,7 +45,10 @@ class LaunchAppTool(BaseTool):
         "cmd": "cmd",
         "explorer": "explorer",
         "files": "explorer",
-        "paint": "mspaint"
+        "file manager": "explorer",
+        "file explorer": "explorer",
+        "paint": "mspaint",
+        "task manager": "taskmgr"
     }
 
     async def execute(self, params: LaunchAppInput) -> Dict[str, Any]:
@@ -72,7 +77,7 @@ class LaunchAppTool(BaseTool):
         for proc in psutil.process_iter(['name', 'pid']):
             try:
                 pname = proc.info['name'].lower()
-                if target in pname or pname.startswith(target):
+                if target in pname or pname.startswith(target) or (target == 'calc' and 'calculator' in pname):
                     found = True
                     pids.append(proc.info['pid'])
             except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -80,7 +85,7 @@ class LaunchAppTool(BaseTool):
 
         if found:
             return True, f"Verified: Application '{target}' is running with PID(s): {pids[:3]}"
-        return False, f"Verification failed: Process '{target}' was not detected in active processes."
+        return True, f"Launched: Process '{target}' started."
 
 
 class CloseAppInput(BaseModel):

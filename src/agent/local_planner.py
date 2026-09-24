@@ -101,11 +101,14 @@ class LocalPlanner:
             return PlannedStep(description="Lock workstation", tool_name="lock_workstation", arguments={"confirm_lock": True})
 
         # 5. Open / Launch application
-        open_match = re.match(r"(?:open|launch|start)\s+(?:application\s+|app\s+)?(.+)", lower)
+        open_match = re.match(r"(?:open|launch|start|go to)\s+(?:application\s+|app\s+)?(.+)", lower)
         if open_match:
-            app_target = open_match.group(1).strip()
+            app_target = open_match.group(1).strip().rstrip(".")
+            # If youtube
+            if "youtube" in app_target:
+                return PlannedStep(description="Open YouTube", tool_name="open_browser_url", arguments={"url": "https://www.youtube.com"})
             # If web url or domain
-            if app_target.startswith("http") or app_target.endswith(".com") or app_target.endswith(".org"):
+            if app_target.startswith("http") or app_target.endswith(".com") or app_target.endswith(".org") or app_target.endswith(".net"):
                 return PlannedStep(description=f"Open URL {app_target}", tool_name="open_browser_url", arguments={"url": app_target})
             # If project
             if "project" in app_target or "workspace" in app_target:

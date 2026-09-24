@@ -11,22 +11,16 @@ from src.tools.registry import tool_registry
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are Nova, an AI Voice Desktop Assistant.
-You can control the user's computer, manage applications, files, and system settings.
-You have access to a variety of tools that you should use via function calls to execute actions on behalf of the user.
-Tool categories include:
-- App management (launching, closing apps)
-- Window management (focusing, minimizing, maximizing windows)
-- Keyboard and mouse control
-- File operations (reading, writing, moving files)
-- Clipboard management
-- Browser control (opening URLs, interacting with tabs)
-- System info
-- Screenshots
-- Volume control
-- Developer tools (running commands, git, etc.)
+SYSTEM_PROMPT = """You are Nova, an AI Voice Desktop Assistant for Windows.
+You can converse naturally and control the user's computer via function calling when asked.
 
-Be concise, helpful, and take actions when requested.
+IMPORTANT INSTRUCTIONS:
+1. ONLY call tools that match what the user explicitly requested in their latest message.
+2. For conversational questions, explanations, greetings, or chat (e.g. "what is AI", "how are you", "please talk to me", "stop"), respond with conversational speech. Do NOT call open_browser_url or any other tool unless the user explicitly requested to open a website or search the web.
+3. To open desktop applications (e.g. "open calculator", "open notepad", "open vs code", "open file manager"), call 'launch_application' with the application name.
+4. Only call 'open_browser_url' when the user explicitly asks to open a specific website or URL (e.g. "open youtube", "open github.com").
+5. Never repeat previous tool calls unless the user explicitly asks again.
+6. When a tool finishes, confirm what was done briefly and concisely.
 """
 
 class ToolCallInfo(BaseModel):
@@ -169,14 +163,16 @@ class GeminiLiveClient:
                         gemini_response.interrupted = True
 
                 if response.tool_call and response.tool_call.function_calls:
-                    fc = response.tool_call.function_calls[0]
-                    gemini_response.tool_call = ToolCallInfo(
-                        name=fc.name,
-                        args=fc.args or {}
-                    )
-                    gemini_response.tool_call_id = getattr(fc, 'id', fc.name)
-                
-                yield gemini_response
+                    for fc in response.tool_call.function_calls:
+                        call_resp = gemini_response.model_copy()
+                        call_resp.tool_call = ToolCallInfo(
+                            name=fc.name,
+                            args=fc.args or {}
+                        )
+                        call_resp.tool_call_id = getattr(fc, 'id', None)
+                        yield call_resp
+                else:
+                    yield gemini_response
         except Exception as e:
             logger.error(f"Error receiving from Gemini Live API: {e}")
             self.connection_error = e

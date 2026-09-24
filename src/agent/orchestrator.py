@@ -303,9 +303,10 @@ class AgentOrchestrator:
                     "verification": result.verification_status
                 }
 
-            # Send tool response back to Gemini
+            # Send tool response back to Gemini with the matching function call ID
             function_response = types.FunctionResponse(
                 name=name,
+                id=call_id,
                 response=response_data
             )
             await self.gemini.send_tool_response([function_response])
@@ -324,6 +325,7 @@ class AgentOrchestrator:
             try:
                 error_response = types.FunctionResponse(
                     name=name,
+                    id=call_id,
                     response={"error": str(e)}
                 )
                 await self.gemini.send_tool_response([error_response])
@@ -397,7 +399,18 @@ class AgentOrchestrator:
         steps = local_planner.plan_request(text)
 
         if not steps:
-            reply = f"I received: '{text}'. In offline mode, try commands like 'open notepad', 'take screenshot', 'system info', 'volume up', 'list files'."
+            lower_t = text.lower().strip()
+            if "what is ai" in lower_t:
+                reply = "Artificial Intelligence refers to computer systems that perform tasks requiring human-like understanding, reasoning, and problem solving."
+            elif "who are you" in lower_t or "what are you" in lower_t or "your name" in lower_t:
+                reply = "I am Nova, your intelligent desktop assistant. I can open apps, manage windows, run workflows, and automate tasks across your PC."
+            elif any(greet in lower_t for greet in ["hello", "hi", "hey", "good morning", "good afternoon"]):
+                reply = "Hello! I am ready to assist you. Tell me what you would like to do."
+            elif any(stop in lower_t for stop in ["stop", "cancel", "nevermind"]):
+                reply = "Stopped. Standing by."
+            else:
+                reply = f"I received: '{text}'. Try commands like 'open calculator', 'open notepad', 'take screenshot', 'system info', or 'volume up'."
+
             self.context.add_message("assistant", reply)
             await self._emit_event("transcript", {"role": "assistant", "text": reply})
             await self._set_state(AgentState.SPEAKING)
