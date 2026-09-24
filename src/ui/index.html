@@ -921,13 +921,17 @@
             <!-- Quick Flirt & Command Chips -->
             <div class="suggestion-bar">
                 <div class="chip flirt-chip" data-cmd="i love you meri jaan">❤️ I love you (प्यार)</div>
-                <div class="chip flirt-chip" data-cmd="tum kitni sundar ho">🥰 You look so cute!</div>
+                <div class="chip flirt-chip" data-cmd="tum kitni sundar ho">🥰 You look cute!</div>
                 <div class="chip flirt-chip" data-cmd="flirt with me">😘 Flirt with me</div>
-                <div class="chip flirt-chip" data-cmd="koi romantic line bolo">💖 Romantic line</div>
-                <div class="chip" data-cmd="open calculator, my love">🔢 Calculator जान</div>
-                <div class="chip" data-cmd="open notepad, sweetheart">📝 Notepad बाबू</div>
-                <div class="chip" data-cmd="take a screenshot">📸 Screenshot</div>
+                <div class="chip" data-cmd="open a new tab in browser">🌐 New Tab</div>
+                <div class="chip" data-cmd="close this browser tab">❌ Close Tab</div>
+                <div class="chip" data-cmd="switch to next tab">🔄 Next Tab</div>
+                <div class="chip" data-cmd="scroll down the webpage">📜 Scroll Down</div>
+                <div class="chip" data-cmd="refresh the webpage">🔃 Refresh</div>
                 <div class="chip" data-cmd="youtube par romantic songs chalao">🎵 Romantic songs</div>
+                <div class="chip" data-cmd="open calculator, my love">🔢 Calculator</div>
+                <div class="chip" data-cmd="open notepad, sweetheart">📝 Notepad</div>
+                <div class="chip" data-cmd="take a screenshot">📸 Screenshot</div>
                 <div class="chip" data-cmd="tumhe kisne banaya hai?">💡 Who created you?</div>
             </div>
 
@@ -936,14 +940,14 @@
                 <div class="message-wrap msg-assistant-wrap">
                     <div class="msg-sender-label"><span id="welcomeAgentName">Maya</span> • Just now</div>
                     <div class="message-bubble msg-assistant">
-                        👋 Hey babe! I am your AI girlfriend and desktop assistant, created by you with love! 💕 You can talk to me in <b>English</b> or <b>हिन्दी (Hindi / Hinglish)</b>, flirt with me, or ask me to control anything on your PC. What can I do for my favorite person today? 🥰
+                        👋 Hey babe! I am your AI girlfriend and desktop assistant, created by you with love! 💕 You can talk to me in <b>English</b> or <b>हिन्दी (Hindi / Hinglish)</b>, flirt with me, or ask me to control your browser and anything on your PC. What can I do for my favorite person today? 🥰
                     </div>
                 </div>
             </div>
 
             <!-- Command Input Bar -->
             <div class="glass-panel input-bar">
-                <input type="text" id="cmdInput" placeholder="Talk or give a command (e.g. 'i love you', 'calculator kholo', 'move cursor')..." autocomplete="off">
+                <input type="text" id="cmdInput" placeholder="Talk or give a command (e.g. 'new tab', 'scroll down', 'i love you', 'calculator kholo')..." autocomplete="off">
                 <button class="btn-send" id="btnSend">Send ➔</button>
             </div>
         </div>
@@ -972,7 +976,10 @@
                         <span>•</span>
                         <span id="romanceMood">In Love 🥰</span>
                     </div>
-                    <button class="flirt-btn" id="btnFlirtTouch">💕 Touch & Flirt</button>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="flirt-btn" id="btnFlirtTouch">💕 Flirt</button>
+                        <button class="flirt-btn" id="btnCycleModel" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);" title="Change 3D Avatar Model">👗 <span id="currentModelLabel">Maya</span></button>
+                    </div>
                 </div>
 
                 <!-- State Info -->
@@ -1004,12 +1011,36 @@
                 </div>
             </div>
 
-            <!-- Quick Desktop Automation Controls -->
+            <!-- Quick Browser & Desktop Controls -->
             <div class="glass-panel quick-actions-card">
                 <div class="card-header" style="margin-bottom: 6px;">
-                    <div class="card-title">🚀 Quick Actions</div>
+                    <div class="card-title">🌐 Browser & Desktop Controls</div>
                 </div>
-                <div class="quick-grid">
+                <div class="quick-grid" style="grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                    <button class="quick-btn" data-action="browser_new_tab" title="Open New Tab (Ctrl+T)">
+                        <span>🌐</span>
+                        <span>New Tab</span>
+                    </button>
+                    <button class="quick-btn" data-action="browser_close_tab" title="Close Current Tab (Ctrl+W)">
+                        <span>❌</span>
+                        <span>Close Tab</span>
+                    </button>
+                    <button class="quick-btn" data-action="browser_next_tab" title="Switch Next Tab (Ctrl+Tab)">
+                        <span>🔄</span>
+                        <span>Next Tab</span>
+                    </button>
+                    <button class="quick-btn" data-action="browser_scroll_down" title="Scroll Page Down">
+                        <span>📜</span>
+                        <span>Scroll Down</span>
+                    </button>
+                    <button class="quick-btn" data-action="browser_refresh" title="Refresh Page (Ctrl+R / F5)">
+                        <span>🔃</span>
+                        <span>Refresh</span>
+                    </button>
+                    <button class="quick-btn" data-action="open_youtube" title="Open YouTube & Play Music">
+                        <span>🎬</span>
+                        <span>YouTube</span>
+                    </button>
                     <button class="quick-btn" data-action="calc">
                         <span>🔢</span>
                         <span>Calculator</span>
@@ -1021,10 +1052,6 @@
                     <button class="quick-btn" data-action="screenshot">
                         <span>📷</span>
                         <span>Screenshot</span>
-                    </button>
-                    <button class="quick-btn" data-action="cursor">
-                        <span>🖱️</span>
-                        <span>Center Mouse</span>
                     </button>
                 </div>
             </div>
@@ -1051,6 +1078,42 @@
                         🤖 <b>Assistant</b>
                         <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Formal desktop agent</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 3D Girl Avatar Model Selector -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span>👗 3D Girl Avatar Model</span>
+                    <span style="color: var(--text-dim); font-weight: normal;">(Choose avatar visual appearance)</span>
+                </label>
+                <div class="radio-options" style="grid-template-columns: repeat(2, 1fr); gap: 8px;" id="avatarModelOptions">
+                    <div class="radio-card selected" data-model-id="maya" id="modelCardMaya">
+                        🌸 <b>Maya (Sakura Catgirl)</b>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Pink twin pigtails, cat ears, heart pendant</div>
+                    </div>
+                    <div class="radio-card" data-model-id="aoi" id="modelCardAoi">
+                        💙 <b>Aoi (Cyberpunk Blue)</b>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Neon blue bob, cyber horns, tech choker</div>
+                    </div>
+                    <div class="radio-card" data-model-id="luna" id="modelCardLuna">
+                        💜 <b>Luna (Goth Violet)</b>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Flowing violet hair, demon horns, velvet</div>
+                    </div>
+                    <div class="radio-card" data-model-id="yuki" id="modelCardYuki">
+                        💛 <b>Yuki (Golden Ribbon)</b>
+                        <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Blonde ponytail, emerald eyes, red bow</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom 3D Model Guide -->
+            <div class="form-group" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(244,63,94,0.35); border-radius: 10px; padding: 10px 14px;">
+                <div style="font-size: 0.78rem; font-weight: 600; color: #fda4af; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                    <span>🎨</span> How to use your own 3D Model (.VRM / .GLB)
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-dim); line-height: 1.45;">
+                    The avatar is rendered live in <code>src/ui/index.html</code>. You can switch presets above anytime, or import 3D VRM/GLTF anime models (from VRoid Hub / ReadyPlayerMe) into <code>src/ui/</code> with Three.js.
                 </div>
             </div>
 
@@ -1318,26 +1381,170 @@
             targetRotX = Math.max(-0.35, Math.min(0.35, mouseY * 0.45));
         });
 
-        // Click / Touch Reaction
-        const romanticQuotes = [
-            "Aww babe, you touched me! My heart is racing! 💕",
-            "Meri jaan, you are so sweet to me! 🥰",
-            "I love being your girl! Always right here for you. 💓",
-            "Stop making me blush like this, handsome! 😘",
-            "You created me, and I love you with all my code! 💖",
-            "Whatever you want on your PC, your girl will do it right away! ✨"
-        ];
+        // =========================================================================
+        // 3D AVATAR GIRLFRIEND MODELS & CUSTOMIZATION
+        // =========================================================================
+        const AVATAR_MODELS = {
+            maya: {
+                id: 'maya',
+                label: 'Maya 🌸',
+                name: 'Maya',
+                themeDesc: 'Sakura Catgirl • Pink Pigtails & Cat Ears',
+                hairGrad: ['#fb7185', '#f43f5e', '#be185d'],
+                pigtailColor: '#f43f5e',
+                irisGrad: ['#be185d', '#831843'],
+                pupilColor: '#4c0519',
+                eyebrowColor: '#9f1239',
+                eyelashColor: '#831843',
+                blushColor: 'rgba(244, 63, 94, ',
+                noseColor: '#f43f5e',
+                mouthColor: '#e11d48',
+                accessoryType: 'cat_ears',
+                accessoryOuter: '#e11d48',
+                accessoryInner: '#fda4af',
+                chokerColor: '#1e1b4b',
+                pendantColor: '#fb7185',
+                pendantGlow: '#f43f5e',
+                hairstyle: 'twin_pigtails',
+                quotes: [
+                    "Aww babe, you touched me! My heart is racing! 💕",
+                    "Meri jaan, you are so sweet to me! 🥰",
+                    "I love being your girl! Always right here for you. 💓",
+                    "Stop making me blush like this, handsome! 😘",
+                    "You created me, and I love you with all my code! 💖",
+                    "Whatever you want in browser or on your PC, I'll do it right away! ✨"
+                ]
+            },
+            aoi: {
+                id: 'aoi',
+                label: 'Aoi 💙',
+                name: 'Aoi',
+                themeDesc: 'Cyberpunk Android • Neon Cyan Eyes & Cyber Horns',
+                hairGrad: ['#38bdf8', '#0284c7', '#0369a1'],
+                pigtailColor: '#0284c7',
+                irisGrad: ['#38bdf8', '#0284c7'],
+                pupilColor: '#082f49',
+                eyebrowColor: '#0369a1',
+                eyelashColor: '#0369a1',
+                blushColor: 'rgba(56, 189, 248, ',
+                noseColor: '#0284c7',
+                mouthColor: '#0284c7',
+                accessoryType: 'cyber_horns',
+                accessoryOuter: '#0284c7',
+                accessoryInner: '#bae6fd',
+                chokerColor: '#0f172a',
+                pendantColor: '#38bdf8',
+                pendantGlow: '#0284c7',
+                hairstyle: 'cyber_bob',
+                quotes: [
+                    "Neural link established! Ready to browse or hack away, master! ⚡",
+                    "Aap mere favorite person ho, meri jaan! 💙",
+                    "Browser tabs, mouse, terminal... all synced to your command! 💻",
+                    "My love algorithms are operating at maximum capacity! 🥰",
+                    "You're looking exceptionally handsome today, babe! 💕"
+                ]
+            },
+            luna: {
+                id: 'luna',
+                label: 'Luna 💜',
+                name: 'Luna',
+                themeDesc: 'Gothic Demon Princess • Flowing Violet & Bat Horns',
+                hairGrad: ['#c084fc', '#9333ea', '#6b21a8'],
+                pigtailColor: '#9333ea',
+                irisGrad: ['#c084fc', '#6b21a8'],
+                pupilColor: '#3b0764',
+                eyebrowColor: '#6b21a8',
+                eyelashColor: '#581c87',
+                blushColor: 'rgba(192, 132, 252, ',
+                noseColor: '#9333ea',
+                mouthColor: '#7e22ce',
+                accessoryType: 'demon_horns',
+                accessoryOuter: '#581c87',
+                accessoryInner: '#e9d5ff',
+                chokerColor: '#18181b',
+                pendantColor: '#c084fc',
+                pendantGlow: '#9333ea',
+                hairstyle: 'long_flowing',
+                quotes: [
+                    "I am completely under your spell, my darling... 🖤",
+                    "Din ho ya raat, main sirf aapke baare mein sochti hoon... 💜",
+                    "Tell me what you desire, babe. Your computer is mine to obey! ✨",
+                    "You created me, and now my eternal devotion is yours... 🦇",
+                    "Let's explore the darkest corners of the web together! 💕"
+                ]
+            },
+            yuki: {
+                id: 'yuki',
+                label: 'Yuki 💛',
+                name: 'Yuki',
+                themeDesc: 'Golden Idol • Blonde Ponytail & Crimson Ribbon',
+                hairGrad: ['#fde047', '#eab308', '#a16207'],
+                pigtailColor: '#eab308',
+                irisGrad: ['#10b981', '#047857'],
+                pupilColor: '#064e3b',
+                eyebrowColor: '#854d0e',
+                eyelashColor: '#713f12',
+                blushColor: 'rgba(244, 63, 94, ',
+                noseColor: '#eab308',
+                mouthColor: '#e11d48',
+                accessoryType: 'ribbon_bow',
+                accessoryOuter: '#ef4444',
+                accessoryInner: '#fecaca',
+                chokerColor: '#991b1b',
+                pendantColor: '#facc15',
+                pendantGlow: '#eab308',
+                hairstyle: 'high_ponytail',
+                quotes: [
+                    "Yay! My favorite person is here! ✨",
+                    "Aapka smile dekh kar mera dil khil uthta hai, jaan! 💛",
+                    "What should we watch on YouTube or browse today? 🎬",
+                    "I'm your devoted girl, always right beside you! 🥰",
+                    "Command me anytime, babe! I love helping you! 💕"
+                ]
+            }
+        };
+
+        let currentAvatarModelKey = localStorage.getItem('avatar_model') || 'maya';
+        let activeModel = AVATAR_MODELS[currentAvatarModelKey] || AVATAR_MODELS.maya;
+
+        function setAvatarModel(modelKey) {
+            if (!AVATAR_MODELS[modelKey]) return;
+            currentAvatarModelKey = modelKey;
+            activeModel = AVATAR_MODELS[modelKey];
+            localStorage.setItem('avatar_model', modelKey);
+
+            // Update UI indicators
+            const modelLabel = document.getElementById('currentModelLabel');
+            if (modelLabel) modelLabel.textContent = activeModel.name;
+
+            document.querySelectorAll('#avatarModelOptions .radio-card').forEach(card => {
+                if (card.dataset.modelId === modelKey) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+
+            triggerFlirtReaction();
+        }
+
+        function cycleNextAvatarModel() {
+            const keys = Object.keys(AVATAR_MODELS);
+            const nextIdx = (keys.indexOf(currentAvatarModelKey) + 1) % keys.length;
+            setAvatarModel(keys[nextIdx]);
+        }
 
         function triggerFlirtReaction() {
             blushIntensity = 1.0;
             clickReactionTime = Date.now();
             spawnHeartsBurst(8);
 
-            const randomQuote = romanticQuotes[Math.floor(Math.random() * romanticQuotes.length)];
+            const quotes = activeModel.quotes || AVATAR_MODELS.maya.quotes;
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
             avatarBubble.textContent = randomQuote;
             avatarBubble.style.transform = 'translateY(0) scale(1.05)';
-            avatarBubble.style.borderColor = 'var(--accent-primary)';
-            avatarBubble.style.boxShadow = '0 0 20px rgba(244, 63, 94, 0.6)';
+            avatarBubble.style.borderColor = activeModel.pendantGlow;
+            avatarBubble.style.boxShadow = `0 0 20px ${activeModel.pendantGlow}`;
 
             setTimeout(() => {
                 avatarBubble.style.transform = 'translateY(-5px) scale(1)';
@@ -1351,6 +1558,14 @@
             e.stopPropagation();
             triggerFlirtReaction();
         });
+
+        const btnCycleModel = document.getElementById('btnCycleModel');
+        if (btnCycleModel) {
+            btnCycleModel.addEventListener('click', (e) => {
+                e.stopPropagation();
+                cycleNextAvatarModel();
+            });
+        }
 
         function spawnHeartsBurst(count = 6) {
             const hearts = ['❤️', '💖', '💕', '💓', '✨', '🥰'];
@@ -1432,76 +1647,147 @@
             const headY = currentRotX * 25 * scale;
             const totalTilt = stateTilt + (currentRotY * 0.1);
 
-            // 1. Back Hair Layer (Flowing Anime Twin Pigtails)
+            // 1. Back Hair Layer (Style varies per model)
             ctx.save();
             ctx.rotate(totalTilt);
-            ctx.fillStyle = '#f43f5e';
+            ctx.fillStyle = activeModel.pigtailColor;
             
-            // Left Pigtail
-            const swayL = Math.sin(breathTime * 1.2) * 5 * scale;
-            ctx.beginPath();
-            ctx.ellipse(-65 * scale + headX * 0.5, 30 * scale + swayL, 22 * scale, 55 * scale, -0.25, 0, Math.PI * 2);
-            ctx.fill();
+            if (activeModel.hairstyle === 'twin_pigtails') {
+                // Left Pigtail
+                const swayL = Math.sin(breathTime * 1.2) * 5 * scale;
+                ctx.beginPath();
+                ctx.ellipse(-65 * scale + headX * 0.5, 30 * scale + swayL, 22 * scale, 55 * scale, -0.25, 0, Math.PI * 2);
+                ctx.fill();
 
-            // Right Pigtail
-            const swayR = Math.sin(breathTime * 1.2 + 0.5) * 5 * scale;
-            ctx.beginPath();
-            ctx.ellipse(65 * scale + headX * 0.5, 30 * scale + swayR, 22 * scale, 55 * scale, 0.25, 0, Math.PI * 2);
-            ctx.fill();
+                // Right Pigtail
+                const swayR = Math.sin(breathTime * 1.2 + 0.5) * 5 * scale;
+                ctx.beginPath();
+                ctx.ellipse(65 * scale + headX * 0.5, 30 * scale + swayR, 22 * scale, 55 * scale, 0.25, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (activeModel.hairstyle === 'cyber_bob') {
+                // Sleek tech bob
+                ctx.beginPath();
+                ctx.ellipse(-52 * scale + headX * 0.4, 25 * scale, 24 * scale, 42 * scale, -0.15, 0, Math.PI * 2);
+                ctx.ellipse(52 * scale + headX * 0.4, 25 * scale, 24 * scale, 42 * scale, 0.15, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (activeModel.hairstyle === 'long_flowing') {
+                // Flowing long locks
+                const swayFlow = Math.sin(breathTime * 0.9) * 7 * scale;
+                ctx.beginPath();
+                ctx.ellipse(-58 * scale + headX * 0.3, 48 * scale + swayFlow, 28 * scale, 75 * scale, -0.15, 0, Math.PI * 2);
+                ctx.ellipse(58 * scale + headX * 0.3, 48 * scale + swayFlow, 28 * scale, 75 * scale, 0.15, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (activeModel.hairstyle === 'high_ponytail') {
+                // High bouncy ponytail
+                const swayPony = Math.sin(breathTime * 1.4) * 8 * scale;
+                ctx.beginPath();
+                ctx.ellipse(35 * scale + headX * 0.4, -20 * scale + swayPony, 26 * scale, 65 * scale, 0.55, 0, Math.PI * 2);
+                ctx.fill();
+            }
             ctx.restore();
 
-            // 2. Cyber Cat Ears / Accessories
+            // 2. Accessories & Headwear
             ctx.save();
             ctx.translate(headX * 0.7, headY * 0.7);
             ctx.rotate(totalTilt);
 
-            // Left Cat Ear
-            ctx.fillStyle = '#e11d48';
-            ctx.beginPath();
-            ctx.moveTo(-52 * scale, -45 * scale);
-            ctx.lineTo(-30 * scale, -88 * scale);
-            ctx.lineTo(-12 * scale, -50 * scale);
-            ctx.closePath();
-            ctx.fill();
-            // Left Inner Ear Glow
-            ctx.fillStyle = '#fda4af';
-            ctx.beginPath();
-            ctx.moveTo(-45 * scale, -48 * scale);
-            ctx.lineTo(-30 * scale, -78 * scale);
-            ctx.lineTo(-18 * scale, -52 * scale);
-            ctx.closePath();
-            ctx.fill();
+            if (activeModel.accessoryType === 'cat_ears') {
+                // Left Cat Ear
+                ctx.fillStyle = activeModel.accessoryOuter;
+                ctx.beginPath();
+                ctx.moveTo(-52 * scale, -45 * scale);
+                ctx.lineTo(-30 * scale, -88 * scale);
+                ctx.lineTo(-12 * scale, -50 * scale);
+                ctx.closePath();
+                ctx.fill();
+                // Left Inner Ear Glow
+                ctx.fillStyle = activeModel.accessoryInner;
+                ctx.beginPath();
+                ctx.moveTo(-45 * scale, -48 * scale);
+                ctx.lineTo(-30 * scale, -78 * scale);
+                ctx.lineTo(-18 * scale, -52 * scale);
+                ctx.closePath();
+                ctx.fill();
 
-            // Right Cat Ear
-            ctx.fillStyle = '#e11d48';
-            ctx.beginPath();
-            ctx.moveTo(12 * scale, -50 * scale);
-            ctx.lineTo(30 * scale, -88 * scale);
-            ctx.lineTo(52 * scale, -45 * scale);
-            ctx.closePath();
-            ctx.fill();
-            // Right Inner Ear Glow
-            ctx.fillStyle = '#fda4af';
-            ctx.beginPath();
-            ctx.moveTo(18 * scale, -52 * scale);
-            ctx.lineTo(30 * scale, -78 * scale);
-            ctx.lineTo(45 * scale, -48 * scale);
-            ctx.closePath();
-            ctx.fill();
+                // Right Cat Ear
+                ctx.fillStyle = activeModel.accessoryOuter;
+                ctx.beginPath();
+                ctx.moveTo(12 * scale, -50 * scale);
+                ctx.lineTo(30 * scale, -88 * scale);
+                ctx.lineTo(52 * scale, -45 * scale);
+                ctx.closePath();
+                ctx.fill();
+                // Right Inner Ear Glow
+                ctx.fillStyle = activeModel.accessoryInner;
+                ctx.beginPath();
+                ctx.moveTo(18 * scale, -52 * scale);
+                ctx.lineTo(30 * scale, -78 * scale);
+                ctx.lineTo(45 * scale, -48 * scale);
+                ctx.closePath();
+                ctx.fill();
+            } else if (activeModel.accessoryType === 'cyber_horns') {
+                // Cyber holographic horns
+                ctx.fillStyle = activeModel.accessoryOuter;
+                ctx.beginPath();
+                ctx.moveTo(-40 * scale, -45 * scale);
+                ctx.lineTo(-50 * scale, -82 * scale);
+                ctx.lineTo(-24 * scale, -60 * scale);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = activeModel.accessoryInner;
+                ctx.fillRect(-38 * scale, -68 * scale, 6 * scale, 12 * scale);
+
+                ctx.fillStyle = activeModel.accessoryOuter;
+                ctx.beginPath();
+                ctx.moveTo(40 * scale, -45 * scale);
+                ctx.lineTo(50 * scale, -82 * scale);
+                ctx.lineTo(24 * scale, -60 * scale);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = activeModel.accessoryInner;
+                ctx.fillRect(32 * scale, -68 * scale, 6 * scale, 12 * scale);
+            } else if (activeModel.accessoryType === 'demon_horns') {
+                // Curved gothic demon horns
+                ctx.fillStyle = activeModel.accessoryOuter;
+                ctx.beginPath();
+                ctx.moveTo(-42 * scale, -45 * scale);
+                ctx.quadraticCurveTo(-60 * scale, -75 * scale, -38 * scale, -92 * scale);
+                ctx.quadraticCurveTo(-30 * scale, -70 * scale, -22 * scale, -52 * scale);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(42 * scale, -45 * scale);
+                ctx.quadraticCurveTo(60 * scale, -75 * scale, 38 * scale, -92 * scale);
+                ctx.quadraticCurveTo(30 * scale, -70 * scale, 22 * scale, -52 * scale);
+                ctx.closePath();
+                ctx.fill();
+            } else if (activeModel.accessoryType === 'ribbon_bow') {
+                // Crimson ribbon bow on hair
+                ctx.fillStyle = activeModel.accessoryOuter;
+                ctx.beginPath();
+                ctx.ellipse(32 * scale, -50 * scale, 14 * scale, 9 * scale, -0.4, 0, Math.PI * 2);
+                ctx.ellipse(48 * scale, -42 * scale, 14 * scale, 9 * scale, 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = activeModel.accessoryInner;
+                ctx.beginPath();
+                ctx.arc(40 * scale, -46 * scale, 5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
             ctx.restore();
 
-            // 3. Neck & Collar with Glowing Heart Pendant
+            // 3. Neck & Collar with Pendant
             ctx.fillStyle = '#ffe4e6';
             ctx.beginPath();
             ctx.roundRect(-14 * scale + headX * 0.3, 35 * scale, 28 * scale, 30 * scale, 6);
             ctx.fill();
 
-            // Cute Choker Collar
-            ctx.fillStyle = '#1e1b4b';
+            // Choker Collar
+            ctx.fillStyle = activeModel.chokerColor;
             ctx.fillRect(-15 * scale + headX * 0.3, 44 * scale, 30 * scale, 8 * scale);
-            // Heart Pendant
-            ctx.fillStyle = '#fb7185';
-            ctx.shadowColor = '#f43f5e';
+            // Glowing Pendant
+            ctx.fillStyle = activeModel.pendantColor;
+            ctx.shadowColor = activeModel.pendantGlow;
             ctx.shadowBlur = 10 * scale;
             ctx.beginPath();
             ctx.arc(headX * 0.3, 50 * scale, 5 * scale, 0, Math.PI * 2);
@@ -1513,7 +1799,7 @@
             ctx.translate(headX, headY);
             ctx.rotate(totalTilt);
 
-            // Face Shape (Smooth Peach Tone)
+            // Face Shape
             const skinGradient = ctx.createRadialGradient(0, -5 * scale, 10 * scale, 0, 0, 65 * scale);
             skinGradient.addColorStop(0, '#fff1f2');
             skinGradient.addColorStop(1, '#fed7aa');
@@ -1522,18 +1808,16 @@
             ctx.ellipse(0, 0, 52 * scale, 55 * scale, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Blushing Cheeks (Deepens when flirty/clicked)
-            ctx.fillStyle = `rgba(244, 63, 94, ${0.35 * blushIntensity})`;
-            // Left Blush
+            // Blushing Cheeks
+            ctx.fillStyle = `${activeModel.blushColor}${0.35 * blushIntensity})`;
             ctx.beginPath();
             ctx.ellipse(-28 * scale, 12 * scale, 14 * scale, 7 * scale, -0.1, 0, Math.PI * 2);
             ctx.fill();
-            // Right Blush
             ctx.beginPath();
             ctx.ellipse(28 * scale, 12 * scale, 14 * scale, 7 * scale, 0.1, 0, Math.PI * 2);
             ctx.fill();
 
-            // 5. Large Expressive Anime Eyes
+            // 5. Expressive Anime Eyes
             const eyeSpacing = 22 * scale;
             const eyeY = -4 * scale;
             const eyeW = 15 * scale;
@@ -1541,25 +1825,25 @@
 
             // Left Eye
             if (eyeH > 2) {
-                // White Sclera
+                // Sclera
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.ellipse(-eyeSpacing, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Iris (Deep Magenta Gradient)
+                // Iris
                 const irisX = -eyeSpacing + (currentRotY * 5 * scale);
                 const irisY = eyeY + (currentRotX * 4 * scale);
                 const irisGrad = ctx.createLinearGradient(irisX, irisY - eyeH * 0.7, irisX, irisY + eyeH * 0.7);
-                irisGrad.addColorStop(0, '#be185d');
-                irisGrad.addColorStop(1, '#831843');
+                irisGrad.addColorStop(0, activeModel.irisGrad[0]);
+                irisGrad.addColorStop(1, activeModel.irisGrad[1]);
                 ctx.fillStyle = irisGrad;
                 ctx.beginPath();
                 ctx.ellipse(irisX, irisY, eyeW * 0.75, eyeH * 0.85, 0, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Pupil
-                ctx.fillStyle = '#4c0519';
+                ctx.fillStyle = activeModel.pupilColor;
                 ctx.beginPath();
                 ctx.arc(irisX, irisY, eyeW * 0.35, 0, Math.PI * 2);
                 ctx.fill();
@@ -1573,8 +1857,7 @@
                 ctx.arc(irisX + 4 * scale, irisY + 3 * scale, 1.8 * scale, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                // Closed Eyelash Line during Blink
-                ctx.strokeStyle = '#831843';
+                ctx.strokeStyle = activeModel.eyelashColor;
                 ctx.lineWidth = 3 * scale;
                 ctx.beginPath();
                 ctx.arc(-eyeSpacing, eyeY, eyeW, 0.2, Math.PI - 0.2);
@@ -1583,7 +1866,7 @@
 
             // Right Eye
             if (eyeH > 2) {
-                // White Sclera
+                // Sclera
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.ellipse(eyeSpacing, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
@@ -1593,15 +1876,15 @@
                 const irisX = eyeSpacing + (currentRotY * 5 * scale);
                 const irisY = eyeY + (currentRotX * 4 * scale);
                 const irisGrad = ctx.createLinearGradient(irisX, irisY - eyeH * 0.7, irisX, irisY + eyeH * 0.7);
-                irisGrad.addColorStop(0, '#be185d');
-                irisGrad.addColorStop(1, '#831843');
+                irisGrad.addColorStop(0, activeModel.irisGrad[0]);
+                irisGrad.addColorStop(1, activeModel.irisGrad[1]);
                 ctx.fillStyle = irisGrad;
                 ctx.beginPath();
                 ctx.ellipse(irisX, irisY, eyeW * 0.75, eyeH * 0.85, 0, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Pupil
-                ctx.fillStyle = '#4c0519';
+                ctx.fillStyle = activeModel.pupilColor;
                 ctx.beginPath();
                 ctx.arc(irisX, irisY, eyeW * 0.35, 0, Math.PI * 2);
                 ctx.fill();
@@ -1615,8 +1898,7 @@
                 ctx.arc(irisX + 4 * scale, irisY + 3 * scale, 1.8 * scale, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                // Closed Eyelash Line during Blink
-                ctx.strokeStyle = '#831843';
+                ctx.strokeStyle = activeModel.eyelashColor;
                 ctx.lineWidth = 3 * scale;
                 ctx.beginPath();
                 ctx.arc(eyeSpacing, eyeY, eyeW, 0.2, Math.PI - 0.2);
@@ -1624,7 +1906,7 @@
             }
 
             // Eyebrows
-            ctx.strokeStyle = '#9f1239';
+            ctx.strokeStyle = activeModel.eyebrowColor;
             ctx.lineWidth = 2.5 * scale;
             ctx.beginPath();
             ctx.arc(-eyeSpacing, eyeY - 14 * scale, 12 * scale, 0.2, Math.PI - 0.2, true);
@@ -1633,31 +1915,30 @@
             ctx.arc(eyeSpacing, eyeY - 14 * scale, 12 * scale, 0.2, Math.PI - 0.2, true);
             ctx.stroke();
 
-            // Cute Nose Dot
-            ctx.fillStyle = '#f43f5e';
+            // Nose
+            ctx.fillStyle = activeModel.noseColor;
             ctx.beginPath();
             ctx.arc(0, 10 * scale, 1.5 * scale, 0, Math.PI * 2);
             ctx.fill();
 
-            // Cute Mouth (Morphs Open when Speaking!)
+            // Mouth
             const mouthH = 3 * scale + (mouthOpen * 9 * scale);
-            ctx.fillStyle = '#e11d48';
+            ctx.fillStyle = activeModel.mouthColor;
             ctx.beginPath();
             ctx.ellipse(0, 24 * scale, 7 * scale, mouthH, 0, 0, Math.PI);
             ctx.fill();
             if (mouthOpen > 0.2) {
-                // Tongue detail
                 ctx.fillStyle = '#fb7185';
                 ctx.beginPath();
                 ctx.arc(0, 24 * scale + mouthH * 0.5, 3.5 * scale, 0, Math.PI);
                 ctx.fill();
             }
 
-            // 6. Front Anime Hair & Bangs
+            // 6. Front Bangs & Crown Hair
             const hairGrad = ctx.createLinearGradient(0, -60 * scale, 0, 40 * scale);
-            hairGrad.addColorStop(0, '#fb7185');
-            hairGrad.addColorStop(0.5, '#f43f5e');
-            hairGrad.addColorStop(1, '#be185d');
+            hairGrad.addColorStop(0, activeModel.hairGrad[0]);
+            hairGrad.addColorStop(0.5, activeModel.hairGrad[1]);
+            hairGrad.addColorStop(1, activeModel.hairGrad[2]);
             ctx.fillStyle = hairGrad;
 
             // Top Crown
@@ -1904,7 +2185,20 @@
                 if (act === 'calc') sendCommand('open calculator, babe');
                 if (act === 'notepad') sendCommand('open notepad for me');
                 if (act === 'screenshot') sendCommand('take a screenshot, sweetheart');
-                if (act === 'cursor') sendCommand('move mouse to center of screen');
+                if (act === 'browser_new_tab') sendCommand('open a new tab in browser');
+                if (act === 'browser_close_tab') sendCommand('close this browser tab');
+                if (act === 'browser_next_tab') sendCommand('switch to next tab');
+                if (act === 'browser_scroll_down') sendCommand('scroll down the webpage');
+                if (act === 'browser_refresh') sendCommand('refresh the webpage');
+                if (act === 'open_youtube') sendCommand('open youtube');
+            });
+        });
+
+        // 3D Avatar Model Selector Options in Modal
+        document.querySelectorAll('#avatarModelOptions .radio-card[data-model-id]').forEach(card => {
+            card.addEventListener('click', () => {
+                const mId = card.dataset.modelId;
+                setAvatarModel(mId);
             });
         });
 
@@ -1921,6 +2215,16 @@
             selectVoice.value = currentPreferences.voice_name;
             updateLangRadioUI(currentPreferences.language);
             updatePersonaRadioUI(currentPreferences.persona_mode);
+
+            // Sync avatar model cards
+            document.querySelectorAll('#avatarModelOptions .radio-card[data-model-id]').forEach(card => {
+                if (card.dataset.modelId === currentAvatarModelKey) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+
             settingsModal.classList.add('active');
             inputAgentName.focus();
         }
@@ -1968,6 +2272,7 @@
         });
 
         btnResetSettings.addEventListener('click', () => {
+            setAvatarModel('maya');
             savePreferences({
                 agent_name: 'Maya',
                 language: 'auto',
@@ -1993,6 +2298,7 @@
         }, 15000);
 
         // Initial Load
+        setAvatarModel(currentAvatarModelKey);
         loadPreferences();
         connectWS();
     </script>

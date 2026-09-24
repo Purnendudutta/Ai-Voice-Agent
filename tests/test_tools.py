@@ -117,3 +117,37 @@ async def test_cursor_tools():
     assert move_res["target_x"] == 100
     assert move_res["target_y"] == 100
 
+
+@pytest.mark.asyncio
+async def test_browser_automation_tools(monkeypatch):
+    from src.tools.plugins.browser_tools import (
+        BrowserTabControlTool, BrowserTabActionInput,
+        BrowserScrollTool, BrowserScrollInput,
+        BrowserNavigateTool, BrowserNavigateInput,
+        WebSearchTool, WebSearchInput
+    )
+
+    # Mock pyautogui and webbrowser calls
+    monkeypatch.setattr("pyautogui.hotkey", lambda *args: None)
+    monkeypatch.setattr("pyautogui.scroll", lambda *args: None)
+    monkeypatch.setattr("pyautogui.press", lambda *args: None)
+    monkeypatch.setattr("pyautogui.write", lambda *args, **kwargs: None)
+    monkeypatch.setattr("webbrowser.open", lambda *args: True)
+
+    tab_tool = BrowserTabControlTool()
+    res = await tab_tool.execute(BrowserTabActionInput(action="new_tab"))
+    assert res["action"] == "new_tab"
+    assert res["shortcut_keys"] == ["ctrl", "t"]
+
+    scroll_tool = BrowserScrollTool()
+    res_scroll = await scroll_tool.execute(BrowserScrollInput(direction="down", amount=3))
+    assert res_scroll["direction"] == "down"
+
+    nav_tool = BrowserNavigateTool()
+    res_nav = await nav_tool.execute(BrowserNavigateInput(url="youtube.com"))
+    assert res_nav["url"] == "https://youtube.com"
+
+    search_tool = WebSearchTool()
+    res_yt = await search_tool.execute(WebSearchInput(query="romantic songs", engine="youtube"))
+    assert "youtube.com/results" in res_yt["search_url"]
+

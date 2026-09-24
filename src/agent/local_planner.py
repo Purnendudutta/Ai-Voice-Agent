@@ -152,13 +152,42 @@ class LocalPlanner:
             win_target = focus_match.group(1).strip()
             return PlannedStep(description=f"Focus window '{win_target}'", tool_name="focus_application", arguments={"window_title_keyword": win_target})
 
-        # 8. Web search
+        # 8. Web search & YouTube play
+        youtube_play_match = re.match(r"(?:play|search)\s+(.+?)\s+(?:on\s+youtube|in\s+youtube|youtube\s+par)$", lower)
+        hindi_youtube_match = re.match(r"(?:youtube\s+par\s+)?(.+?)\s+(?:chalao|play\s+karo|bajao)$", lower)
+        if youtube_play_match:
+            song_or_video = youtube_play_match.group(1).strip()
+            return PlannedStep(description=f"Play '{song_or_video}' on YouTube", tool_name="web_search", arguments={"query": song_or_video, "engine": "youtube"})
+        elif hindi_youtube_match and "youtube" in lower:
+            song_or_video = hindi_youtube_match.group(1).replace("youtube par", "").strip()
+            return PlannedStep(description=f"Play '{song_or_video}' on YouTube", tool_name="web_search", arguments={"query": song_or_video, "engine": "youtube"})
+
         search_match = re.match(r"(?:search|google|look up)\s+(?:for\s+)?(.+)", lower)
         if search_match:
             query = search_match.group(1).strip()
-            return PlannedStep(description=f"Search Google for '{query}'", tool_name="web_search", arguments={"query": query})
+            return PlannedStep(description=f"Search Google for '{query}'", tool_name="web_search", arguments={"query": query, "engine": "google"})
 
-        # 9. Keyboard type
+        # 9. Browser Tab Controls (English & Hindi)
+        if any(term in lower for term in ["new tab", "open tab", "naya tab", "create tab"]):
+            return PlannedStep(description="Open new browser tab (Ctrl+T)", tool_name="browser_tab_control", arguments={"action": "new_tab"})
+        if any(term in lower for term in ["close tab", "tab band karo", "tab close karo"]):
+            return PlannedStep(description="Close current browser tab (Ctrl+W)", tool_name="browser_tab_control", arguments={"action": "close_tab"})
+        if any(term in lower for term in ["next tab", "switch tab", "agla tab", "change tab"]):
+            return PlannedStep(description="Switch to next browser tab (Ctrl+Tab)", tool_name="browser_tab_control", arguments={"action": "next_tab"})
+        if any(term in lower for term in ["prev tab", "previous tab", "pichla tab"]):
+            return PlannedStep(description="Switch to previous browser tab (Ctrl+Shift+Tab)", tool_name="browser_tab_control", arguments={"action": "prev_tab"})
+        if any(term in lower for term in ["refresh", "reload", "refresh page", "reload karo"]):
+            return PlannedStep(description="Refresh current page (Ctrl+R)", tool_name="browser_tab_control", arguments={"action": "refresh"})
+        if any(term in lower for term in ["browser back", "go back", "back jao", "piche jao"]):
+            return PlannedStep(description="Navigate browser back (Alt+Left)", tool_name="browser_tab_control", arguments={"action": "back"})
+
+        # 10. Browser Scrolling (English & Hindi)
+        if any(term in lower for term in ["scroll down", "niche scroll", "page down", "scroll karo"]):
+            return PlannedStep(description="Scroll webpage down", tool_name="browser_scroll", arguments={"direction": "down", "amount": 5})
+        if any(term in lower for term in ["scroll up", "upar scroll", "page up"]):
+            return PlannedStep(description="Scroll webpage up", tool_name="browser_scroll", arguments={"direction": "up", "amount": 5})
+
+        # 11. Keyboard type
         type_match = re.match(r"(?:type|write|input)\s+['\"]?(.+?)['\"]?$", lower)
         if type_match:
             text_to_type = type_match.group(1).strip()

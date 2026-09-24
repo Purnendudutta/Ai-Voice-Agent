@@ -32,7 +32,10 @@ from src.tools.plugins.file_tools import (
 )
 from src.tools.plugins.browser_tools import (
     OpenUrlTool,
-    WebSearchTool
+    WebSearchTool,
+    BrowserTabControlTool,
+    BrowserScrollTool,
+    BrowserNavigateTool
 )
 from src.tools.plugins.system_tools import (
     TakeScreenshotTool,
@@ -82,9 +85,12 @@ def register_default_tools() -> None:
         WriteFileTool(),
         DeleteFileTool(),
 
-        # Browser
+        # Browser & Web Controls
         OpenUrlTool(),
         WebSearchTool(),
+        BrowserTabControlTool(),
+        BrowserScrollTool(),
+        BrowserNavigateTool(),
 
         # System
         TakeScreenshotTool(),
