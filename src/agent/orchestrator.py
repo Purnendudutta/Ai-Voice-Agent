@@ -74,6 +74,7 @@ class AgentOrchestrator:
         # Continuous conversation: after wake word, stay listening until long silence
         self._continuous_conversation = True
         self._speech_active = False
+        self._tool_active = False
 
     # ── State Management ──────────────────────────────────────────────
 
@@ -201,7 +202,7 @@ class AgentOrchestrator:
                             await self._emit_event("speech_detected", {})
 
                 # ── LISTENING state: stream audio to Gemini ──
-                if self.state in (AgentState.LISTENING, AgentState.SPEAKING):
+                if self.state in (AgentState.LISTENING, AgentState.SPEAKING) and not self._tool_active:
                     if self.gemini.is_connected:
                         try:
                             await self.gemini.send_audio(chunk)
@@ -266,6 +267,7 @@ class AgentOrchestrator:
 
                     # ── Tool call from Gemini ──
                     if response.tool_call:
+                        self._tool_active = True
                         await self._set_state(AgentState.EXECUTING)
                         await self._handle_tool_call(
                             name=response.tool_call.name,
@@ -284,7 +286,10 @@ class AgentOrchestrator:
             except asyncio.CancelledError:
                 raise
             except Exception as e:
-                logger.error(f"Response handler error: {e}", exc_info=True)
+                logger.warning(f"Gemini Live stream interrupted: {e}")
+                self.gemini.is_connected = False
+                if self.state in (AgentState.SPEAKING, AgentState.THINKING, AgentState.EXECUTING):
+                    await self._set_state(AgentState.IDLE)
                 await asyncio.sleep(1.0)
 
     # ── Tool Call Handler ─────────────────────────────────────────────
@@ -340,7 +345,8 @@ class AgentOrchestrator:
             await self._emit_event("tool_failed", {"name": name, "error": str(e)})
 
         finally:
-            await self._set_state(AgentState.LISTENING)
+            self._tool_active = False
+            await self._set_state(AgentState.THINKING)
 
     # ── Health Monitor Loop ───────────────────────────────────────────
 
