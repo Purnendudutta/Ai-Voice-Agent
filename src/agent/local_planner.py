@@ -72,41 +72,57 @@ class LocalPlanner:
     def _parse_single_command(self, text: str) -> Optional[PlannedStep]:
         lower = text.lower().strip()
 
-        # 1. Screenshot
-        if any(term in lower for term in ["screenshot", "screen capture", "capture screen"]):
+        # 1. Screenshot (English & Hindi)
+        if any(term in lower for term in [
+            "screenshot", "screen capture", "capture screen",
+            "screenshot lo", "photo lo", "screen capture karo", "screenshot kheencho"
+        ]):
             return PlannedStep(
-                description="Capture desktop screenshot",
+                description="Capture desktop screenshot / स्क्रीनशॉट लें",
                 tool_name="take_screenshot",
                 arguments={"include_base64": False}
             )
 
-        # 2. System info / specs / battery
-        if any(term in lower for term in ["system info", "system status", "battery", "cpu", "memory usage"]):
+        # 2. System info / specs / battery (English & Hindi)
+        if any(term in lower for term in [
+            "system info", "system status", "battery", "cpu", "memory usage",
+            "system info batao", "system status batao", "battery kitni hai", "cpu kitna hai", "ram kitni hai"
+        ]):
             return PlannedStep(
-                description="Query system hardware statistics",
+                description="Query system hardware statistics / सिस्टम जानकारी प्राप्त करें",
                 tool_name="get_system_info",
                 arguments={"detailed": False}
             )
 
-        # 3. Volume controls
-        if "volume up" in lower or "increase volume" in lower:
-            return PlannedStep(description="Increase system volume", tool_name="control_system_volume", arguments={"action": "up", "steps": 3})
-        if "volume down" in lower or "lower volume" in lower:
-            return PlannedStep(description="Decrease system volume", tool_name="control_system_volume", arguments={"action": "down", "steps": 3})
-        if "mute" in lower:
-            return PlannedStep(description="Toggle audio mute", tool_name="control_system_volume", arguments={"action": "mute", "steps": 1})
+        # 3. Volume controls (English & Hindi)
+        if any(term in lower for term in ["volume up", "increase volume", "volume badhao", "aawaz badhao", "awaz badhao"]):
+            return PlannedStep(description="Increase system volume / आवाज़ बढ़ाएं", tool_name="control_system_volume", arguments={"action": "up", "steps": 3})
+        if any(term in lower for term in ["volume down", "lower volume", "volume kam karo", "aawaz kam karo", "awaz kam karo"]):
+            return PlannedStep(description="Decrease system volume / आवाज़ कम करें", tool_name="control_system_volume", arguments={"action": "down", "steps": 3})
+        if any(term in lower for term in ["mute", "mute karo", "aawaz band karo", "awaz band karo"]):
+            return PlannedStep(description="Toggle audio mute / म्यूट करें", tool_name="control_system_volume", arguments={"action": "mute", "steps": 1})
 
-        # 4. Lock workstation
-        if "lock screen" in lower or "lock computer" in lower or "lock workstation" in lower:
-            return PlannedStep(description="Lock workstation", tool_name="lock_workstation", arguments={"confirm_lock": True})
+        # 4. Lock workstation (English & Hindi)
+        if any(term in lower for term in ["lock screen", "lock computer", "lock workstation", "screen lock karo", "computer lock karo", "pc lock karo"]):
+            return PlannedStep(description="Lock workstation / कंप्यूटर लॉक करें", tool_name="lock_workstation", arguments={"confirm_lock": True})
 
-        # 5. Open / Launch application
-        open_match = re.match(r"(?:open|launch|start|go to)\s+(?:application\s+|app\s+)?(.+)", lower)
-        if open_match:
-            app_target = open_match.group(1).strip().rstrip(".")
+        # 5. Open / Launch application (English: "open <app>", Hindi: "<app> kholo" or "kholo <app>")
+        # Check Hindi suffix pattern first (e.g. "calculator kholo", "notepad chalao", "youtube open karo")
+        hindi_open_suffix = re.match(r"(.+?)\s+(?:kholo|chalao|start karo|open karo|shuru karo)$", lower)
+        # English or Hindi prefix pattern (e.g. "open <app>", "kholo <app>", "chalao <app>", "go to <app>")
+        open_match = re.match(r"(?:open|launch|start|go to|kholo|chalao)\s+(?:application\s+|app\s+)?(.+)", lower)
+
+        target_candidate = None
+        if hindi_open_suffix:
+            target_candidate = hindi_open_suffix.group(1).strip().rstrip(".")
+        elif open_match:
+            target_candidate = open_match.group(1).strip().rstrip(".")
+
+        if target_candidate:
+            app_target = target_candidate
             # If youtube
             if "youtube" in app_target:
-                return PlannedStep(description="Open YouTube", tool_name="open_browser_url", arguments={"url": "https://www.youtube.com"})
+                return PlannedStep(description="Open YouTube / यूट्यूब खोलें", tool_name="open_browser_url", arguments={"url": "https://www.youtube.com"})
             # If web url or domain
             if app_target.startswith("http") or app_target.endswith(".com") or app_target.endswith(".org") or app_target.endswith(".net"):
                 return PlannedStep(description=f"Open URL {app_target}", tool_name="open_browser_url", arguments={"url": app_target})
@@ -116,13 +132,19 @@ class LocalPlanner:
                 path = path if path else "."
                 return PlannedStep(description=f"Open project {path} in VS Code", tool_name="open_project_in_vscode", arguments={"project_path": path})
 
-            return PlannedStep(description=f"Launch application '{app_target}'", tool_name="launch_application", arguments={"app_name": app_target})
+            return PlannedStep(description=f"Launch application '{app_target}' / '{app_target}' शुरू करें", tool_name="launch_application", arguments={"app_name": app_target})
 
-        # 6. Close / Kill application
-        close_match = re.match(r"(?:close|kill|terminate|stop)\s+(?:application\s+|app\s+)?(.+)", lower)
-        if close_match:
-            app_target = close_match.group(1).strip()
-            return PlannedStep(description=f"Close application '{app_target}'", tool_name="close_application", arguments={"app_name": app_target})
+        # 6. Close / Kill application (English & Hindi: "<app> band karo", "close <app>")
+        hindi_close_suffix = re.match(r"(.+?)\s+(?:band karo|close karo|hatao)$", lower)
+        close_match = re.match(r"(?:close|kill|terminate|stop|band karo)\s+(?:application\s+|app\s+)?(.+)", lower)
+        close_target = None
+        if hindi_close_suffix:
+            close_target = hindi_close_suffix.group(1).strip()
+        elif close_match:
+            close_target = close_match.group(1).strip()
+
+        if close_target:
+            return PlannedStep(description=f"Close application '{close_target}' / '{close_target}' बंद करें", tool_name="close_application", arguments={"app_name": close_target})
 
         # 7. Focus window
         focus_match = re.match(r"(?:focus|switch to|bring up)\s+(?:window\s+)?(.+)", lower)

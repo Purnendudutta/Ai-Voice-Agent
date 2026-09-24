@@ -3,21 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova AI - Desktop Assistant</title>
+    <title>AI Voice Desktop Assistant - Interactive Dashboard</title>
+    <!-- Google Fonts for English and Devanagari (Hindi) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-start: #0a0a0f;
-            --bg-end: #1a1a2e;
-            --panel-bg: rgba(255, 255, 255, 0.05);
-            --panel-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f0f0f0;
-            --text-dim: #a0a0a0;
-            --accent-blue: #4a90e2;
-            --accent-purple: #9b59b6;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --bg-base: #0a0c16;
+            --bg-gradient: radial-gradient(circle at 15% 20%, #171936 0%, #0c0e1a 50%, #07080f 100%);
+            --panel-bg: rgba(22, 27, 46, 0.65);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-border-glow: rgba(99, 102, 241, 0.3);
+            
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-dim: #64748b;
+            
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-gradient: linear-gradient(135deg, #6366f1, #a855f7);
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            
+            --font-main: 'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', Consolas, monospace;
         }
 
         * {
@@ -27,22 +41,38 @@
         }
 
         body {
-            font-family: var(--font-family);
-            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            font-family: var(--font-main);
+            background: var(--bg-gradient);
+            background-color: var(--bg-base);
             color: var(--text-main);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            user-select: none;
         }
 
-        /* Glassmorphism Panel Base */
+        /* Glassmorphism Classes */
         .glass-panel {
             background: var(--panel-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--panel-border);
-            border-radius: 12px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
         }
 
         /* Header */
@@ -50,525 +80,1316 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 25px;
-            background: rgba(0, 0, 0, 0.2);
+            padding: 12px 24px;
+            background: rgba(10, 12, 22, 0.85);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--panel-border);
+            z-index: 20;
         }
 
-        .brand {
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .agent-logo-orb {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 18px rgba(99, 102, 241, 0.5);
+            font-size: 1.25rem;
+            position: relative;
+        }
+
+        .agent-logo-orb::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 14px;
+            background: var(--accent-gradient);
+            opacity: 0.4;
+            filter: blur(6px);
+            z-index: -1;
+        }
+
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agent-name-row {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.5rem;
+        }
+
+        .agent-title {
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edit-name-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .edit-name-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: var(--accent-primary);
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        /* Header Controls */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Language Toggle Pills */
+        .lang-pill-container {
+            display: flex;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            padding: 3px;
+            border-radius: 20px;
+            gap: 3px;
+        }
+
+        .lang-pill {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 5px 12px;
+            font-size: 0.8rem;
             font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .lang-pill:hover {
+            color: var(--text-main);
+        }
+
+        .lang-pill.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Status Pills */
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background-color: var(--danger);
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
-        .status-dot.connected { background-color: var(--success); }
 
-        .header-controls {
+        .status-dot.connected {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            border-radius: 10px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        /* Main Content Layout */
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .icon-btn.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* Main Workspace */
         main {
             display: flex;
             flex: 1;
-            overflow: hidden;
-            padding: 20px;
+            padding: 18px 24px;
             gap: 20px;
+            overflow: hidden;
         }
 
-        /* Left Column: Transcript & Input */
+        /* Left Column: Chat, Voice Prompts & Suggestions */
         .left-col {
-            flex: 2;
+            flex: 1.8;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 14px;
+            min-width: 0;
         }
 
+        /* Quick Action Chips */
+        .suggestion-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+        }
+
+        .suggestion-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chip:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        /* Chat / Transcript */
         .transcript-area {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 14px;
+            scroll-behavior: smooth;
         }
 
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
+        .message-wrap {
+            display: flex;
+            flex-direction: column;
+            max-width: 82%;
+            animation: messageFadeIn 0.25s ease-out;
+        }
+
+        .msg-user-wrap {
+            align-self: flex-start;
+        }
+
+        .msg-assistant-wrap {
+            align-self: flex-end;
+        }
+
+        .msg-sender-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .msg-assistant-wrap .msg-sender-label {
+            justify-content: flex-end;
+            color: #a855f7;
+        }
+
+        .message-bubble {
+            padding: 12px 18px;
             border-radius: 18px;
-            line-height: 1.4;
-            animation: fadeIn 0.3s ease;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            user-select: text;
         }
 
         .msg-user {
-            align-self: flex-start;
-            background: rgba(74, 144, 226, 0.2);
-            border: 1px solid rgba(74, 144, 226, 0.3);
-            border-bottom-left-radius: 4px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-top-left-radius: 4px;
+            color: #f1f5f9;
         }
 
         .msg-assistant {
-            align-self: flex-end;
-            background: rgba(155, 89, 182, 0.2);
-            border: 1px solid rgba(155, 89, 182, 0.3);
-            border-bottom-right-radius: 4px;
+            background: rgba(139, 92, 246, 0.18);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-top-right-radius: 4px;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.1);
         }
 
-        .input-area {
+        .msg-system {
+            align-self: center;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            font-size: 0.82rem;
+            color: #fca5a5;
+            padding: 6px 14px;
+        }
+
+        @keyframes messageFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Input Bar */
+        .input-bar {
             display: flex;
+            align-items: center;
             gap: 10px;
-            padding: 15px;
+            padding: 10px 14px;
         }
 
-        input[type="text"] {
+        .input-bar input {
             flex: 1;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.25);
             border: 1px solid var(--panel-border);
-            border-radius: 20px;
-            padding: 12px 20px;
+            border-radius: 10px;
+            padding: 12px 18px;
             color: white;
-            font-size: 1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
             outline: none;
-            transition: border-color 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        input[type="text"]:focus {
-            border-color: var(--accent-blue);
+        .input-bar input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+            background: rgba(0, 0, 0, 0.4);
         }
 
-        button {
-            background: var(--accent-blue);
-            color: white;
+        .btn-send {
+            background: var(--accent-gradient);
             border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            cursor: pointer;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
             font-weight: 600;
-            transition: background 0.3s ease;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
-        button:hover { background: #357abd; }
-        
-        button.icon-btn {
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            padding: 0;
+        .btn-send:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Right Column: Status & Automation Center */
+        .right-col {
+            flex: 1.2;
             display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 330px;
+        }
+
+        /* State Card */
+        .state-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            background: rgba(255, 255, 255, 0.1);
-        }
-        button.icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
-        button.icon-btn.active { background: var(--success); }
-        button.icon-btn.danger { background: var(--danger); }
-
-        /* Right Column: State, Tasks, Tools */
-        .right-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-width: 300px;
-        }
-
-        /* Agent State */
-        .state-panel {
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .state-icon-container {
-            width: 80px;
-            height: 80px;
+        .state-card::before {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .state-visualizer {
+            width: 100px;
+            height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            margin-bottom: 12px;
+            z-index: 1;
         }
 
-        .state-text {
+        .state-title {
             font-size: 1.2rem;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 2px;
             text-transform: uppercase;
+            margin-bottom: 4px;
+            z-index: 1;
         }
 
-        /* Task Panel */
-        .task-panel {
-            padding: 15px;
-            flex: 1;
+        .state-desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            z-index: 1;
+        }
+
+        .persona-meta-pill {
+            margin-top: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 1;
+        }
+
+        /* Visualizer State Animations */
+        .orb-idle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.25);
+            border: 2px solid rgba(99, 102, 241, 0.6);
+            animation: pulseOrb 2.5s infinite ease-in-out;
+        }
+
+        .orb-listening {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            height: 45px;
+        }
+        .orb-listening span {
+            width: 5px;
+            background: var(--success);
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--success);
+            animation: listeningWave 1s infinite ease-in-out;
+        }
+        .orb-listening span:nth-child(2) { animation-delay: 0.15s; }
+        .orb-listening span:nth-child(3) { animation-delay: 0.3s; }
+        .orb-listening span:nth-child(4) { animation-delay: 0.45s; }
+        .orb-listening span:nth-child(5) { animation-delay: 0.6s; }
+
+        .orb-thinking {
+            width: 50px;
+            height: 50px;
+            border: 3px dashed var(--accent-cyan);
+            border-radius: 50%;
+            animation: rotateFast 2s linear infinite;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+        }
+
+        .orb-executing {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-secondary);
+            border-right-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: rotateFast 0.8s linear infinite;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .orb-speaking {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            height: 50px;
+        }
+        .orb-speaking span {
+            width: 7px;
+            background: linear-gradient(to top, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+            animation: speakingWave 0.75s infinite ease-in-out;
+        }
+        .orb-speaking span:nth-child(2) { animation-delay: 0.18s; }
+        .orb-speaking span:nth-child(3) { animation-delay: 0.36s; }
+        .orb-speaking span:nth-child(4) { animation-delay: 0.54s; }
+
+        @keyframes pulseOrb {
+            0% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { transform: scale(1.04); box-shadow: 0 0 0 16px rgba(99, 102, 241, 0); }
+            100% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        @keyframes listeningWave { 0%, 100% { height: 10px; } 50% { height: 42px; } }
+        @keyframes speakingWave { 0%, 100% { height: 14px; } 50% { height: 46px; } }
+        @keyframes rotateFast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Card Section Titles */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .card-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Task & Step Tracker */
+        .task-card {
+            padding: 16px 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            flex: 1;
+            min-height: 140px;
             overflow-y: auto;
-        }
-
-        .panel-title {
-            font-size: 1.1rem;
-            color: var(--text-dim);
-            border-bottom: 1px solid var(--panel-border);
-            padding-bottom: 8px;
-            margin-bottom: 5px;
         }
 
         .task-step {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 0.95rem;
-            padding: 8px;
-            border-radius: 6px;
-            background: rgba(255,255,255,0.02);
-            animation: slideIn 0.3s ease;
-        }
-        .task-step .icon { width: 20px; text-align: center; font-weight: bold; }
-        .step-done .icon { color: var(--success); }
-        .step-current .icon { color: var(--accent-blue); }
-        .step-error .icon { color: var(--danger); }
-
-        /* Tools Panel */
-        .tools-panel {
-            padding: 15px;
-            max-height: 30%;
-            overflow-y: auto;
-        }
-        
-        .tool-log {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            font-family: monospace;
-            padding: 4px 0;
+            font-size: 0.88rem;
+            padding: 9px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 6px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
         }
 
-        /* Footer */
-        footer {
-            padding: 10px 25px;
-            background: rgba(0, 0, 0, 0.3);
+        .task-step .step-icon {
+            width: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .step-current {
+            border-left-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.08);
+            color: #fff;
+        }
+        .step-current .step-icon { color: var(--accent-cyan); }
+
+        .step-done {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+            color: var(--text-secondary);
+        }
+        .step-done .step-icon { color: var(--success); }
+
+        .step-error {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+            color: #fca5a5;
+        }
+        .step-error .step-icon { color: var(--danger); }
+
+        /* Tool Activity Feed */
+        .tools-card {
+            padding: 16px 20px;
+            max-height: 160px;
             display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
+            flex-direction: column;
+        }
+
+        .tool-feed-scroll {
+            overflow-y: auto;
+            flex: 1;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .tool-entry {
+            display: flex;
+            gap: 8px;
+            padding: 3px 0;
             color: var(--text-dim);
         }
 
-        /* Modals */
-        .modal-overlay {
+        .tool-entry .ts { color: var(--text-dim); opacity: 0.7; }
+        .tool-entry .tool-name { color: var(--accent-cyan); font-weight: 500; }
+        .tool-entry .status-success { color: var(--success); }
+        .tool-entry .status-fail { color: var(--danger); }
+
+        /* Quick Automation Grid */
+        .quick-actions-card {
+            padding: 14px 20px;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 8px 6px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.35);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .quick-btn .btn-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Settings Drawer / Modal */
+        .modal-backdrop {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
+            inset: 0;
+            background: rgba(5, 7, 15, 0.75);
+            backdrop-filter: blur(8px);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 100;
+            animation: fadeIn 0.2s ease;
         }
-        .modal-overlay.active { display: flex; }
 
-        .modal-content {
-            width: 450px;
-            padding: 25px;
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-card {
+            width: 480px;
+            max-width: 90vw;
+            padding: 26px;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
-        
+
+        .modal-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .close-modal-btn:hover {
+            color: #fff;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .text-input {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .text-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .preset-names {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .preset-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-chip:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: #fff;
+            border-color: var(--accent-primary);
+        }
+
+        .radio-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .radio-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 10px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .radio-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .radio-card.selected {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent-primary);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .select-input {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .select-input option {
+            background: #111424;
+            color: white;
+        }
+
         .modal-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 15px;
+            gap: 10px;
+            margin-top: 10px;
         }
-        
-        .btn-approve { background: var(--success); }
-        .btn-approve:hover { background: #27ae60; }
-        .btn-reject { background: var(--danger); }
-        .btn-reject:hover { background: #c0392b; }
 
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--panel-border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 22px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        /* Safety Modal */
         .risk-badge {
             display: inline-block;
-            padding: 4px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         .risk-high { background: var(--danger); color: white; }
-        .risk-medium { background: var(--warning); color: white; }
+        .risk-medium { background: var(--warning); color: black; }
 
         pre.param-box {
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--panel-border);
+            padding: 12px;
+            border-radius: 8px;
             overflow-x: auto;
-            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #cbd5e1;
         }
 
-        /* Floating Mic Status */
-        .floating-mic {
+        /* Toast Notifications */
+        .toast {
             position: fixed;
-            bottom: 60px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            bottom: 24px;
+            right: 24px;
+            background: rgba(18, 22, 40, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 0.88rem;
+            color: white;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            border: 1px solid var(--panel-border);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-        .floating-mic.listening {
-            background: rgba(46, 204, 113, 0.2);
-            border-color: var(--success);
-            color: var(--success);
-            box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
         }
 
-        /* Settings Panel */
-        .settings-panel {
-            position: absolute;
-            top: 70px;
-            right: 25px;
-            width: 250px;
-            padding: 15px;
-            display: none;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 50;
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
         }
-        .settings-panel.active { display: flex; }
 
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        
-        /* State Icons Animations */
-        .anim-idle {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            animation: pulse 2s infinite;
-        }
-        .anim-listening {
-            display: flex; gap: 4px; align-items: center; height: 40px;
-        }
-        .anim-listening span {
-            width: 6px; background: var(--success); border-radius: 3px;
-            animation: wave 1s infinite ease-in-out;
-        }
-        .anim-listening span:nth-child(2) { animation-delay: 0.1s; }
-        .anim-listening span:nth-child(3) { animation-delay: 0.2s; }
-        .anim-listening span:nth-child(4) { animation-delay: 0.3s; }
-        
-        .anim-thinking {
-            display: flex; gap: 8px;
-        }
-        .anim-thinking span {
-            width: 12px; height: 12px; border-radius: 50%; background: var(--accent-blue);
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .anim-thinking span:nth-child(1) { animation-delay: -0.32s; }
-        .anim-thinking span:nth-child(2) { animation-delay: -0.16s; }
-        
-        .anim-executing {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: var(--accent-purple);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        .anim-speaking {
-            display: flex; gap: 6px; align-items: center; height: 40px;
-        }
-        .anim-speaking span {
-            width: 8px; background: var(--accent-purple); border-radius: 4px;
-            animation: speakWave 0.8s infinite ease-in-out;
-        }
-        .anim-speaking span:nth-child(2) { animation-delay: 0.2s; }
-        .anim-speaking span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0.2); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
-        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
-        @keyframes speakWave { 0%, 100% { height: 15px; } 50% { height: 35px; } }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <header>
-        <div class="brand">
-            <div class="status-dot" id="connStatus"></div>
-            Nova AI
+        <div class="brand-section">
+            <div class="agent-logo-orb">🤖</div>
+            <div class="brand-info">
+                <div class="agent-name-row">
+                    <h1 class="agent-title">
+                        <span id="headerAgentName" class="gradient-text">Nova</span>
+                        <span style="font-weight: 300; font-size: 0.95rem; color: var(--text-dim);">AI Desktop Agent</span>
+                    </h1>
+                    <button class="edit-name-btn" id="btnEditName" title="Change Agent Name & Persona">
+                        ✏️ Change Name
+                    </button>
+                </div>
+                <div class="subtitle" id="agentSubtitle">Bilingual Desktop Orchestrator (English + हिन्दी)</div>
+            </div>
         </div>
-        <div class="header-controls">
-            <button class="icon-btn" id="btnToggleMic">🎙️</button>
-            <button class="icon-btn" id="btnSettings">⚙️</button>
+
+        <div class="header-actions">
+            <!-- Language Quick Selector -->
+            <div class="lang-pill-container">
+                <button class="lang-pill active" data-lang="auto" id="pillAuto">🌐 Auto / दोनों</button>
+                <button class="lang-pill" data-lang="english" id="pillEn">EN English</button>
+                <button class="lang-pill" data-lang="hindi" id="pillHi">🇮🇳 हिन्दी</button>
+            </div>
+
+            <!-- WebSocket & Latency Status -->
+            <div class="status-pill">
+                <div class="status-dot" id="wsDot"></div>
+                <span id="wsStatusText">Connecting...</span>
+                <span style="color: var(--text-dim); margin-left: 2px;" id="latencyText">-- ms</span>
+            </div>
+
+            <!-- Mic Toggle Button -->
+            <button class="icon-btn" id="btnToggleMic" title="Toggle Microphone State">🎙️</button>
+
+            <!-- Settings Button -->
+            <button class="icon-btn" id="btnOpenSettings" title="Open Persona & Settings">⚙️</button>
         </div>
     </header>
 
-    <div class="glass-panel settings-panel" id="settingsPanel">
-        <h3 class="panel-title">Settings</h3>
-        <button id="btnClearHistory">Clear History</button>
-        <div style="font-size: 0.85rem; color: var(--text-dim);">
-            <p>WS Status: <span id="wsStateText">Disconnected</span></p>
-        </div>
-    </div>
-
+    <!-- Main Dashboard -->
     <main>
+        <!-- Left Side: Conversation & Command Center -->
         <div class="left-col">
-            <div class="glass-panel transcript-area" id="transcript">
-                <!-- Messages go here -->
+            <!-- Quick Suggestion / Action Chips -->
+            <div class="suggestion-bar">
+                <div class="chip" data-cmd="open calculator">🧮 Calculator (कैलकुलेटर)</div>
+                <div class="chip" data-cmd="open notepad">📝 Notepad (नोटपैड)</div>
+                <div class="chip" data-cmd="take a screenshot">📸 Screenshot (स्क्रीनशॉट)</div>
+                <div class="chip" data-cmd="system status batao">💻 System Info (सिस्टम स्थिति)</div>
+                <div class="chip" data-cmd="youtube par lo-fi songs chalao">🎵 Music on YouTube</div>
+                <div class="chip" data-cmd="tum kaun ho aur kya kar sakte ho?">❓ Who are you? (परिचय)</div>
             </div>
-            
-            <div class="glass-panel input-area">
-                <input type="text" id="cmdInput" placeholder="Type a command for Nova..." autocomplete="off">
-                <button id="btnSend">Send</button>
+
+            <!-- Conversation Transcript Area -->
+            <div class="glass-panel transcript-area" id="transcript">
+                <div class="message-wrap msg-assistant-wrap">
+                    <div class="msg-sender-label"><span id="welcomeAgentName">Nova</span> • Just now</div>
+                    <div class="message-bubble msg-assistant">
+                        👋 Namaste! I am your AI Desktop Assistant. You can speak to me in <b>English</b> or <b>हिन्दी (Hindi / Hinglish)</b>, or type any command below. How can I help you automate your desktop today?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command Input Bar -->
+            <div class="glass-panel input-bar">
+                <input type="text" id="cmdInput" placeholder="Type a command in English or Hindi (e.g. 'notepad kholo', 'take a screenshot')..." autocomplete="off">
+                <button class="btn-send" id="btnSend">Send ➔</button>
             </div>
         </div>
 
+        <!-- Right Side: Brain State & Desktop Automation Monitor -->
         <div class="right-col">
-            <div class="glass-panel state-panel">
-                <div class="state-icon-container" id="stateIcon">
-                    <div class="anim-idle"></div>
+            <!-- State Card -->
+            <div class="glass-panel state-card">
+                <div class="state-visualizer" id="stateVisualizer">
+                    <div class="orb-idle"></div>
                 </div>
-                <div class="state-text" id="stateText">IDLE</div>
+                <div class="state-title" id="stateText">IDLE</div>
+                <div class="state-desc" id="stateDesc">Ready and listening for voice or text commands</div>
+                <div class="persona-meta-pill" id="personaMetaPill">
+                    <span>🤖 <b id="metaAgentName">Nova</b></span>
+                    <span>•</span>
+                    <span id="metaLang">Auto (Bilingual)</span>
+                    <span>•</span>
+                    <span id="metaVoice">Puck</span>
+                </div>
             </div>
 
-            <div class="glass-panel task-panel">
-                <div class="panel-title">Current Task</div>
+            <!-- Current Tasks Tracker -->
+            <div class="glass-panel task-card">
+                <div class="card-header">
+                    <div class="card-title">⚡ Multi-Step Plan & Execution</div>
+                    <span style="font-size: 0.75rem; color: var(--text-dim);" id="taskCountText">Idle</span>
+                </div>
                 <div id="taskList">
-                    <!-- Task steps go here -->
-                    <div class="task-step" style="color: var(--text-dim); font-style: italic;">No active tasks</div>
+                    <div class="task-step" style="color: var(--text-dim); font-style: italic;">
+                        <span class="step-icon">○</span> No active automation task
+                    </div>
                 </div>
             </div>
 
-            <div class="glass-panel tools-panel">
-                <div class="panel-title">Tool Activity</div>
-                <div id="toolFeed">
-                    <!-- Tool logs go here -->
+            <!-- Tool Activity Log -->
+            <div class="glass-panel tools-card">
+                <div class="card-header">
+                    <div class="card-title">🛠️ Desktop Tool Stream</div>
+                </div>
+                <div class="tool-feed-scroll" id="toolFeed">
+                    <!-- Tool events appended here -->
+                    <div class="tool-entry"><span class="ts">[System]</span> Tool orchestrator initialized and ready.</div>
+                </div>
+            </div>
+
+            <!-- Quick Desktop Automation Controls -->
+            <div class="glass-panel quick-actions-card">
+                <div class="card-header" style="margin-bottom: 8px;">
+                    <div class="card-title">🚀 Quick Actions</div>
+                </div>
+                <div class="quick-grid">
+                    <button class="quick-btn" data-action="calc">
+                        <span class="btn-icon">🔢</span>
+                        <span>Calculator</span>
+                    </button>
+                    <button class="quick-btn" data-action="notepad">
+                        <span class="btn-icon">📄</span>
+                        <span>Notepad</span>
+                    </button>
+                    <button class="quick-btn" data-action="screenshot">
+                        <span class="btn-icon">📷</span>
+                        <span>Screenshot</span>
+                    </button>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer>
-        <div>Nova AI Desktop Assistant v1.0.0</div>
-        <div id="latencyDisplay">Latency: -- ms</div>
-    </footer>
-
-    <!-- Floating Mic Indicator -->
-    <div class="floating-mic" id="floatingMic">🎤</div>
-
-    <!-- Confirmation Modal -->
-    <div class="modal-overlay" id="confirmModal">
-        <div class="glass-panel modal-content">
-            <h2 style="margin-bottom: 5px;">Action Required</h2>
-            <div>
-                <span class="risk-badge" id="modalRiskBadge">HIGH RISK</span>
-                <span style="margin-left: 10px; font-weight: 600;" id="modalToolName">tool_name</span>
+    <!-- Settings / Change Agent Name Modal -->
+    <div class="modal-backdrop" id="settingsModal">
+        <div class="glass-panel modal-card">
+            <div class="modal-title-row">
+                <h2 style="font-size: 1.25rem;" class="gradient-text">Agent Persona Settings</h2>
+                <button class="close-modal-btn" id="btnCloseSettings">✕</button>
             </div>
-            <p id="modalDesc" style="color: var(--text-dim); font-size: 0.95rem;">Description goes here...</p>
-            
-            <div>
-                <div style="font-size: 0.85rem; margin-bottom: 5px; color: var(--text-dim);">Parameters:</div>
-                <pre class="param-box" id="modalParams">{}</pre>
+
+            <!-- Agent Name Input -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span>Assistant Name</span>
+                    <span style="color: var(--text-dim); font-weight: normal;">(Used in prompts & speech)</span>
+                </label>
+                <input type="text" class="text-input" id="inputAgentName" placeholder="e.g. Nova, Jarvis, Maya, Friday" value="Nova">
+                
+                <!-- Quick Preset Names -->
+                <div class="preset-names">
+                    <span style="font-size: 0.72rem; color: var(--text-dim); align-self: center;">Presets:</span>
+                    <div class="preset-chip" data-name="Nova">Nova</div>
+                    <div class="preset-chip" data-name="Jarvis">Jarvis</div>
+                    <div class="preset-chip" data-name="Maya">Maya</div>
+                    <div class="preset-chip" data-name="Friday">Friday</div>
+                    <div class="preset-chip" data-name="Aria">Aria</div>
+                    <div class="preset-chip" data-name="Vikram">Vikram</div>
+                </div>
+            </div>
+
+            <!-- Language Mode Selection -->
+            <div class="form-group">
+                <label class="form-label">Language Mode</label>
+                <div class="radio-options">
+                    <div class="radio-card selected" data-value="auto" id="radioAuto">
+                        🌐 <b>Auto / Dual</b>
+                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 3px;">English + हिन्दी</div>
+                    </div>
+                    <div class="radio-card" data-value="english" id="radioEn">
+                        🇬🇧 <b>English</b>
+                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 3px;">English Only</div>
+                    </div>
+                    <div class="radio-card" data-value="hindi" id="radioHi">
+                        🇮🇳 <b>हिन्दी</b>
+                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 3px;">Hindi Only</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice Persona (Gemini Live) -->
+            <div class="form-group">
+                <label class="form-label">Voice Persona (Gemini Live TTS)</label>
+                <select class="select-input" id="selectVoice">
+                    <option value="Puck">Puck (Energetic, Natural)</option>
+                    <option value="Charon">Charon (Deep, Confident)</option>
+                    <option value="Kore">Kore (Warm, Calm)</option>
+                    <option value="Fenrir">Fenrir (Authoritative, Strong)</option>
+                    <option value="Aoede">Aoede (Clear, Melodic)</option>
+                </select>
             </div>
 
             <div class="modal-actions">
-                <button class="btn-reject" id="btnReject">Reject (Esc)</button>
-                <button class="btn-approve" id="btnApprove">Approve (Enter)</button>
+                <button class="btn-secondary" id="btnResetSettings">Reset Defaults</button>
+                <button class="btn-primary" id="btnSaveSettings">Save & Apply Changes</button>
             </div>
         </div>
     </div>
 
+    <!-- Confirmation Modal for Risky Tools -->
+    <div class="modal-backdrop" id="confirmModal">
+        <div class="glass-panel modal-card" style="border-color: rgba(239, 68, 68, 0.4);">
+            <div class="modal-title-row">
+                <h2 style="font-size: 1.2rem; color: var(--danger);">⚠️ Authorization Required</h2>
+            </div>
+            <div>
+                <span class="risk-badge risk-high" id="modalRiskBadge">HIGH RISK</span>
+                <span style="margin-left: 10px; font-weight: 600;" id="modalToolName">tool_name</span>
+            </div>
+            <p id="modalDesc" style="color: var(--text-secondary); font-size: 0.9rem;">This action modifies or interacts with your system and requires manual approval.</p>
+            <div>
+                <div style="font-size: 0.8rem; margin-bottom: 5px; color: var(--text-dim);">Action Parameters:</div>
+                <pre class="param-box" id="modalParams">{}</pre>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btnRejectAction" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5;">Reject (Esc)</button>
+                <button class="btn-primary" id="btnApproveAction" style="background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Approve & Execute (Enter)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Element -->
+    <div class="toast" id="toast">Settings updated successfully!</div>
+
     <script>
-        // DOM Elements
-        const connStatus = document.getElementById('connStatus');
-        const transcript = document.getElementById('transcript');
-        const cmdInput = document.getElementById('cmdInput');
-        const btnSend = document.getElementById('btnSend');
-        const stateIcon = document.getElementById('stateIcon');
-        const stateText = document.getElementById('stateText');
-        const taskList = document.getElementById('taskList');
-        const toolFeed = document.getElementById('toolFeed');
-        const confirmModal = document.getElementById('confirmModal');
-        const floatingMic = document.getElementById('floatingMic');
-        const btnToggleMic = document.getElementById('btnToggleMic');
-        const btnSettings = document.getElementById('btnSettings');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const wsStateText = document.getElementById('wsStateText');
-        const latencyDisplay = document.getElementById('latencyDisplay');
-
-        // Modal Elements
-        const modalRiskBadge = document.getElementById('modalRiskBadge');
-        const modalToolName = document.getElementById('modalToolName');
-        const modalDesc = document.getElementById('modalDesc');
-        const modalParams = document.getElementById('modalParams');
-        const btnApprove = document.getElementById('btnApprove');
-        const btnReject = document.getElementById('btnReject');
-
         // State
+        let currentPreferences = {
+            agent_name: 'Nova',
+            language: 'auto',
+            voice_name: 'Puck'
+        };
+
         let ws = null;
         let currentRequestId = null;
         let isMicActive = false;
-        let lastPing = 0;
+        let lastPing = Date.now();
+        let currentTasks = [];
 
-        // Extract token from URL if present
+        // DOM Elements
+        const headerAgentName = document.getElementById('headerAgentName');
+        const welcomeAgentName = document.getElementById('welcomeAgentName');
+        const metaAgentName = document.getElementById('metaAgentName');
+        const metaLang = document.getElementById('metaLang');
+        const metaVoice = document.getElementById('metaVoice');
+        const wsDot = document.getElementById('wsDot');
+        const wsStatusText = document.getElementById('wsStatusText');
+        const latencyText = document.getElementById('latencyText');
+        const transcript = document.getElementById('transcript');
+        const cmdInput = document.getElementById('cmdInput');
+        const btnSend = document.getElementById('btnSend');
+        const stateVisualizer = document.getElementById('stateVisualizer');
+        const stateText = document.getElementById('stateText');
+        const stateDesc = document.getElementById('stateDesc');
+        const taskList = document.getElementById('taskList');
+        const toolFeed = document.getElementById('toolFeed');
+        const toast = document.getElementById('toast');
+
+        // Modal Elements
+        const settingsModal = document.getElementById('settingsModal');
+        const btnOpenSettings = document.getElementById('btnOpenSettings');
+        const btnEditName = document.getElementById('btnEditName');
+        const btnCloseSettings = document.getElementById('btnCloseSettings');
+        const btnSaveSettings = document.getElementById('btnSaveSettings');
+        const btnResetSettings = document.getElementById('btnResetSettings');
+        const inputAgentName = document.getElementById('inputAgentName');
+        const selectVoice = document.getElementById('selectVoice');
+        const confirmModal = document.getElementById('confirmModal');
+        const modalToolName = document.getElementById('modalToolName');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalRiskBadge = document.getElementById('modalRiskBadge');
+        const modalParams = document.getElementById('modalParams');
+        const btnApproveAction = document.getElementById('btnApproveAction');
+        const btnRejectAction = document.getElementById('btnRejectAction');
+        const btnToggleMic = document.getElementById('btnToggleMic');
+
+        // Extract token
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token') || 'dev_token'; // Fallback for dev
+        const token = urlParams.get('token') || 'dev_token';
 
-        // Initialize WebSocket
+        // Toast Helper
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Fetch Initial Preferences via REST
+        async function loadPreferences() {
+            try {
+                const res = await fetch('/api/preferences');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.preferences) {
+                        applyPreferences(data.preferences, false);
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not fetch preferences via REST:', e);
+            }
+        }
+
+        // Apply Preferences to UI
+        function applyPreferences(prefs, showNotify = true) {
+            if (!prefs) return;
+            if (prefs.agent_name) {
+                currentPreferences.agent_name = prefs.agent_name;
+                headerAgentName.textContent = prefs.agent_name;
+                if (welcomeAgentName) welcomeAgentName.textContent = prefs.agent_name;
+                metaAgentName.textContent = prefs.agent_name;
+                inputAgentName.value = prefs.agent_name;
+                document.title = `${prefs.agent_name} AI - Desktop Assistant`;
+            }
+
+            if (prefs.language) {
+                currentPreferences.language = prefs.language;
+                updateLangPillUI(prefs.language);
+                updateLangRadioUI(prefs.language);
+                
+                let langLabel = 'Auto (Bilingual)';
+                if (prefs.language === 'english') langLabel = 'English Only';
+                if (prefs.language === 'hindi') langLabel = 'हिन्दी (Hindi)';
+                metaLang.textContent = langLabel;
+            }
+
+            if (prefs.voice_name) {
+                currentPreferences.voice_name = prefs.voice_name;
+                metaVoice.textContent = prefs.voice_name;
+                selectVoice.value = prefs.voice_name;
+            }
+
+            if (showNotify) {
+                const msg = currentPreferences.language === 'hindi' 
+                    ? `नाम '${currentPreferences.agent_name}' और सेटिंग्स अपडेट हो गईं!` 
+                    : `Agent updated to ${currentPreferences.agent_name}!`;
+                showToast(msg);
+            }
+        }
+
+        // Update Language Pills UI
+        function updateLangPillUI(lang) {
+            document.querySelectorAll('.lang-pill').forEach(pill => {
+                if (pill.dataset.lang === lang) {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            });
+        }
+
+        function updateLangRadioUI(lang) {
+            document.querySelectorAll('.radio-card').forEach(card => {
+                if (card.dataset.value === lang) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        // Save Preferences to Backend
+        async function savePreferences(newPrefs) {
+            const payload = {
+                agent_name: newPrefs.agent_name || currentPreferences.agent_name,
+                language: newPrefs.language || currentPreferences.language,
+                voice_name: newPrefs.voice_name || currentPreferences.voice_name
+            };
+
+            // 1. Try WebSocket first if connected
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'update_preferences',
+                    data: payload
+                }));
+            }
+
+            // 2. Also save via REST API for persistence
+            try {
+                const res = await fetch('/api/preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    applyPreferences(data.preferences || payload, true);
+                } else {
+                    applyPreferences(payload, true);
+                }
+            } catch (err) {
+                console.error('Failed to post preferences:', err);
+                applyPreferences(payload, true);
+            }
+        }
+
+        // Setup WebSocket
         function connectWS() {
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsHost = window.location.host || 'localhost:8000';
             const wsUrl = `${wsProtocol}//${wsHost}/ws?token=${token}`;
-            
+
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                connStatus.classList.add('connected');
-                wsStateText.textContent = 'Connected';
-                wsStateText.style.color = 'var(--success)';
+                wsDot.classList.add('connected');
+                wsStatusText.textContent = 'Live Connected';
+                wsStatusText.style.color = 'var(--success)';
+                // Request ping
+                lastPing = Date.now();
+                ws.send(JSON.stringify({ type: 'ping', data: {} }));
             };
 
             ws.onclose = () => {
-                connStatus.classList.remove('connected');
-                wsStateText.textContent = 'Disconnected';
-                wsStateText.style.color = 'var(--danger)';
-                setTimeout(connectWS, 3000); // Reconnect loop
+                wsDot.classList.remove('connected');
+                wsStatusText.textContent = 'Disconnected';
+                wsStatusText.style.color = 'var(--danger)';
+                setTimeout(connectWS, 2500);
             };
 
             ws.onerror = (err) => {
-                console.error("WS Error:", err);
+                console.error('WebSocket error:', err);
             };
 
             ws.onmessage = (event) => {
@@ -576,15 +1397,15 @@
                     const msg = JSON.parse(event.data);
                     handleMessage(msg);
                 } catch (e) {
-                    console.error("Error parsing message:", e);
+                    console.error('Error handling WebSocket message:', e);
                 }
             };
         }
 
-        // Message Handlers
+        // Handle Messages
         function handleMessage(msg) {
             const { type, data } = msg;
-            
+
             switch (type) {
                 case 'state_change':
                     updateAgentState(data.state);
@@ -599,124 +1420,169 @@
                 case 'confirmation_request':
                     showConfirmationModal(data);
                     break;
+                case 'preferences_updated':
+                    applyPreferences(data, false);
+                    break;
                 case 'system_status':
                     if (data.mic_active !== undefined) {
                         setMicState(data.mic_active);
                     }
-                    if (data.ping) {
-                        latencyDisplay.textContent = `Latency: ${Date.now() - data.ping} ms`;
-                    }
+                    break;
+                case 'pong':
+                    const latency = Date.now() - lastPing;
+                    latencyText.textContent = `${latency} ms`;
                     break;
                 case 'error':
-                    appendMessage('system', `Error: ${data.message}`, true);
+                    appendMessage('system', `Error: ${data.message}`);
                     break;
             }
         }
 
+        // Agent State Animation Handler
         function updateAgentState(state) {
-            stateText.textContent = state;
-            stateIcon.innerHTML = ''; // Clear current animation
+            const s = (state || 'IDLE').toUpperCase();
+            stateText.textContent = s;
+            stateVisualizer.innerHTML = '';
 
-            let animDiv = document.createElement('div');
-            
-            switch (state.toUpperCase()) {
+            let orb = document.createElement('div');
+
+            switch (s) {
                 case 'LISTENING':
-                    animDiv.className = 'anim-listening';
-                    animDiv.innerHTML = '<span></span><span></span><span></span><span></span>';
+                    orb.className = 'orb-listening';
+                    orb.innerHTML = '<span></span><span></span><span></span><span></span><span></span>';
+                    stateDesc.textContent = 'Listening to your voice input...';
+                    stateText.style.color = 'var(--success)';
                     break;
                 case 'THINKING':
-                    animDiv.className = 'anim-thinking';
-                    animDiv.innerHTML = '<span></span><span></span><span></span>';
+                    orb.className = 'orb-thinking';
+                    stateDesc.textContent = 'Processing request & reasoning...';
+                    stateText.style.color = 'var(--accent-cyan)';
                     break;
                 case 'EXECUTING':
-                    animDiv.className = 'anim-executing';
+                    orb.className = 'orb-executing';
+                    stateDesc.textContent = 'Executing desktop tools & actions...';
+                    stateText.style.color = 'var(--accent-secondary)';
                     break;
                 case 'SPEAKING':
-                    animDiv.className = 'anim-speaking';
-                    animDiv.innerHTML = '<span></span><span></span><span></span>';
+                    orb.className = 'orb-speaking';
+                    orb.innerHTML = '<span></span><span></span><span></span><span></span>';
+                    stateDesc.textContent = `${currentPreferences.agent_name} is responding via audio...`;
+                    stateText.style.color = '#c084fc';
                     break;
                 case 'ERROR':
-                    animDiv.innerHTML = '❌';
-                    animDiv.style.fontSize = '2rem';
+                    orb.innerHTML = '❌';
+                    orb.style.fontSize = '2.5rem';
+                    stateDesc.textContent = 'An error occurred during execution';
+                    stateText.style.color = 'var(--danger)';
                     break;
                 case 'IDLE':
                 default:
-                    animDiv.className = 'anim-idle';
+                    orb.className = 'orb-idle';
+                    stateDesc.textContent = 'Ready and listening for voice or text commands';
+                    stateText.style.color = 'var(--text-main)';
                     break;
             }
-            
-            stateIcon.appendChild(animDiv);
+
+            stateVisualizer.appendChild(orb);
         }
 
-        function appendMessage(role, text, isError = false) {
-            const div = document.createElement('div');
-            div.className = `message ${role === 'user' ? 'msg-user' : 'msg-assistant'}`;
-            if (isError) div.style.color = 'var(--danger)';
-            div.textContent = text;
-            transcript.appendChild(div);
+        // Append Messages to Transcript
+        function appendMessage(role, text) {
+            if (!text) return;
+            const wrap = document.createElement('div');
+            
+            if (role === 'system') {
+                wrap.className = 'message-wrap msg-system';
+                wrap.textContent = text;
+            } else {
+                const isUser = role === 'user';
+                wrap.className = `message-wrap ${isUser ? 'msg-user-wrap' : 'msg-assistant-wrap'}`;
+
+                const label = document.createElement('div');
+                label.className = 'msg-sender-label';
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                label.textContent = isUser ? `You • ${time}` : `${currentPreferences.agent_name} • ${time}`;
+
+                const bubble = document.createElement('div');
+                bubble.className = `message-bubble ${isUser ? 'msg-user' : 'msg-assistant'}`;
+                bubble.textContent = text;
+
+                wrap.appendChild(label);
+                wrap.appendChild(bubble);
+            }
+
+            transcript.appendChild(wrap);
             transcript.scrollTop = transcript.scrollHeight;
         }
 
+        // Tool Log Feed
         function logToolEvent(data) {
-            const div = document.createElement('div');
-            div.className = 'tool-log';
-            const time = new Date().toLocaleTimeString();
-            let actionText = data.action === 'start' ? 'called' : (data.action === 'complete' ? 'completed' : 'failed');
-            div.textContent = `[${time}] ${data.tool_name} - ${actionText}`;
-            if (data.error) div.style.color = 'var(--danger)';
+            const entry = document.createElement('div');
+            entry.className = 'tool-entry';
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
-            toolFeed.prepend(div);
-            if (toolFeed.children.length > 50) {
+            let statusSpan = '';
+            if (data.action === 'start') {
+                statusSpan = `<span style="color: var(--accent-cyan);">→ started</span>`;
+            } else if (data.action === 'complete') {
+                statusSpan = `<span class="status-success">✓ done</span>`;
+            } else if (data.action === 'error') {
+                statusSpan = `<span class="status-fail">✗ failed</span>`;
+            }
+
+            entry.innerHTML = `<span class="ts">[${time}]</span> <span class="tool-name">${data.tool_name || 'tool'}</span> ${statusSpan}`;
+            toolFeed.prepend(entry);
+
+            if (toolFeed.children.length > 60) {
                 toolFeed.removeChild(toolFeed.lastChild);
             }
         }
-        
-        let currentTasks = [];
+
+        // Task List Management
         function updateTaskList(data) {
             if (data.action === 'start') {
-                currentTasks.push({ id: data.tool_name + Date.now(), name: `Running ${data.tool_name}`, status: 'current' });
+                currentTasks.push({ id: data.tool_name + Date.now(), name: `Executing ${data.tool_name}`, status: 'current' });
             } else if (data.action === 'complete') {
-                if (currentTasks.length > 0) currentTasks[currentTasks.length -1].status = 'done';
+                if (currentTasks.length > 0) currentTasks[currentTasks.length - 1].status = 'done';
             } else if (data.action === 'error') {
-                if (currentTasks.length > 0) currentTasks[currentTasks.length -1].status = 'error';
+                if (currentTasks.length > 0) currentTasks[currentTasks.length - 1].status = 'error';
             }
-            
-            if (currentTasks.length > 5) currentTasks.shift(); // Keep last 5
-            
+
+            if (currentTasks.length > 6) currentTasks.shift();
             renderTaskList();
         }
 
         function renderTaskList() {
             if (currentTasks.length === 0) {
-                taskList.innerHTML = '<div class="task-step" style="color: var(--text-dim); font-style: italic;">No active tasks</div>';
+                taskList.innerHTML = `<div class="task-step" style="color: var(--text-dim); font-style: italic;"><span class="step-icon">○</span> No active automation task</div>`;
+                document.getElementById('taskCountText').textContent = 'Idle';
                 return;
             }
-            
+
+            document.getElementById('taskCountText').textContent = `${currentTasks.length} task(s)`;
             taskList.innerHTML = '';
             currentTasks.forEach(task => {
                 const div = document.createElement('div');
                 div.className = `task-step step-${task.status}`;
-                
-                let icon = '→';
+
+                let icon = '⚡';
                 if (task.status === 'done') icon = '✓';
                 if (task.status === 'error') icon = '✗';
-                
-                div.innerHTML = `<span class="icon">${icon}</span><span>${task.name}</span>`;
+
+                div.innerHTML = `<span class="step-icon">${icon}</span><span>${task.name}</span>`;
                 taskList.appendChild(div);
             });
         }
 
+        // Confirmation Modal
         function showConfirmationModal(data) {
             currentRequestId = data.request_id;
             modalToolName.textContent = data.tool_name;
-            modalDesc.textContent = data.description || 'This action requires confirmation.';
+            modalDesc.textContent = data.description || 'This action requires explicit approval.';
             
-            modalRiskBadge.textContent = (data.risk_level || 'HIGH').toUpperCase() + ' RISK';
-            if ((data.risk_level || '').toLowerCase() === 'medium') {
-                modalRiskBadge.className = 'risk-badge risk-medium';
-            } else {
-                modalRiskBadge.className = 'risk-badge risk-high';
-            }
+            const risk = (data.risk_level || 'HIGH').toUpperCase();
+            modalRiskBadge.textContent = `${risk} RISK`;
+            modalRiskBadge.className = `risk-badge ${risk === 'MEDIUM' ? 'risk-medium' : 'risk-high'}`;
 
             modalParams.textContent = JSON.stringify(data.parameters || {}, null, 2);
             confirmModal.classList.add('active');
@@ -727,9 +1593,9 @@
             currentRequestId = null;
         }
 
-        // Send Command
-        function sendCommand() {
-            const text = cmdInput.value.trim();
+        // Send Text Command
+        function sendCommand(customText) {
+            const text = (customText || cmdInput.value).trim();
             if (!text) return;
 
             appendMessage('user', text);
@@ -743,73 +1609,139 @@
             }
         }
 
-        // Event Listeners
-        btnSend.addEventListener('click', sendCommand);
-        cmdInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendCommand();
-        });
-
-        btnSettings.addEventListener('click', () => {
-            settingsPanel.classList.toggle('active');
-        });
-
-        document.getElementById('btnClearHistory').addEventListener('click', () => {
-            fetch('/api/clear-history', { method: 'POST' })
-                .then(() => {
-                    transcript.innerHTML = '';
-                    settingsPanel.classList.remove('active');
-                })
-                .catch(err => console.error(err));
-        });
-
-        btnToggleMic.addEventListener('click', () => {
-            // Simulated toggle - in real app, send to server
-            setMicState(!isMicActive);
-        });
-
+        // Set Mic Visual State
         function setMicState(active) {
             isMicActive = active;
             if (active) {
                 btnToggleMic.classList.add('active');
-                floatingMic.classList.add('listening');
             } else {
                 btnToggleMic.classList.remove('active');
-                floatingMic.classList.remove('listening');
             }
         }
 
-        // Modal Actions
-        btnApprove.addEventListener('click', () => {
+        // Event Listeners
+        btnSend.addEventListener('click', () => sendCommand());
+        cmdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+
+        // Quick Suggestion Chips
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const cmd = chip.dataset.cmd;
+                sendCommand(cmd);
+            });
+        });
+
+        // Quick Grid Buttons
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const act = btn.dataset.action;
+                if (act === 'calc') sendCommand('open calculator');
+                if (act === 'notepad') sendCommand('open notepad');
+                if (act === 'screenshot') sendCommand('take a screenshot');
+            });
+        });
+
+        // Header Language Quick Switch Pills
+        document.querySelectorAll('.lang-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                const lang = pill.dataset.lang;
+                savePreferences({ language: lang });
+            });
+        });
+
+        // Open Settings Modal
+        function openSettings() {
+            inputAgentName.value = currentPreferences.agent_name;
+            selectVoice.value = currentPreferences.voice_name;
+            updateLangRadioUI(currentPreferences.language);
+            settingsModal.classList.add('active');
+            inputAgentName.focus();
+        }
+
+        btnEditName.addEventListener('click', openSettings);
+        btnOpenSettings.addEventListener('click', openSettings);
+        btnCloseSettings.addEventListener('click', () => settingsModal.classList.remove('active'));
+
+        // Settings Preset Chips
+        document.querySelectorAll('.preset-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                inputAgentName.value = chip.dataset.name;
+            });
+        });
+
+        // Settings Radio Cards for Language
+        document.querySelectorAll('.radio-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
+        // Save Settings Button
+        btnSaveSettings.addEventListener('click', () => {
+            const newName = inputAgentName.value.trim() || 'Nova';
+            const selectedRadio = document.querySelector('.radio-card.selected');
+            const newLang = selectedRadio ? selectedRadio.dataset.value : 'auto';
+            const newVoice = selectVoice.value || 'Puck';
+
+            savePreferences({
+                agent_name: newName,
+                language: newLang,
+                voice_name: newVoice
+            });
+
+            settingsModal.classList.remove('active');
+        });
+
+        // Reset Settings Button
+        btnResetSettings.addEventListener('click', () => {
+            savePreferences({
+                agent_name: 'Nova',
+                language: 'auto',
+                voice_name: 'Puck'
+            });
+            settingsModal.classList.remove('active');
+        });
+
+        // Confirmation Actions
+        btnApproveAction.addEventListener('click', () => {
             if (currentRequestId && ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'confirm_action', data: { request_id: currentRequestId } }));
             }
             closeConfirmationModal();
         });
 
-        btnReject.addEventListener('click', () => {
+        btnRejectAction.addEventListener('click', () => {
             if (currentRequestId && ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'cancel_action', data: { request_id: currentRequestId } }));
             }
             closeConfirmationModal();
         });
 
+        // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
             if (confirmModal.classList.contains('active')) {
-                if (e.key === 'Enter') btnApprove.click();
-                if (e.key === 'Escape') btnReject.click();
+                if (e.key === 'Enter') btnApproveAction.click();
+                if (e.key === 'Escape') btnRejectAction.click();
+            } else if (settingsModal.classList.contains('active')) {
+                if (e.key === 'Escape') settingsModal.classList.remove('active');
+                if (e.key === 'Enter' && e.target === inputAgentName) btnSaveSettings.click();
             }
         });
 
-        // Init
-        connectWS();
-
-        // Simulate ping
+        // Periodic Ping for Latency
         setInterval(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                // optional ping logic here if server handles it
+                lastPing = Date.now();
+                ws.send(JSON.stringify({ type: 'ping', data: {} }));
             }
-        }, 30000);
+        }, 15000);
 
+        // Initial Load
+        loadPreferences();
+        connectWS();
     </script>
 </body>
 </html>

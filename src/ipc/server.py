@@ -41,6 +41,12 @@ class ConfirmRequest(BaseModel):
     approved: bool = True
 
 
+class PreferencesRequest(BaseModel):
+    agent_name: Optional[str] = None
+    language: Optional[str] = None
+    voice_name: Optional[str] = None
+
+
 class IPCServer:
     """
     FastAPI-based IPC server providing real-time WebSocket communication
@@ -160,6 +166,24 @@ class IPCServer:
                 return {"context": {}}
             return {"context": self.orchestrator.get_context_summary()}
 
+        # ── REST: Preferences (Agent Name, Language, Voice) ──
+        @self.app.get("/api/preferences")
+        async def get_preferences():
+            if not self.orchestrator:
+                return {"preferences": {}}
+            return {"preferences": self.orchestrator.get_preferences()}
+
+        @self.app.post("/api/preferences")
+        async def update_preferences(req: PreferencesRequest):
+            if not self.orchestrator:
+                raise HTTPException(status_code=503, detail="Orchestrator not ready")
+            updated = await self.orchestrator.update_preferences(
+                agent_name=req.agent_name,
+                language=req.language,
+                voice_name=req.voice_name
+            )
+            return {"status": "updated", "preferences": updated}
+
         # ── REST: Generate auth token (for WebSocket auth) ──
         @self.app.get("/api/token")
         async def get_token():
@@ -210,6 +234,13 @@ class IPCServer:
                 request_id = data.get("request_id")
                 if request_id:
                     await self.orchestrator.handle_confirmation(request_id, False)
+
+            elif msg_type == "update_preferences" and self.orchestrator:
+                await self.orchestrator.update_preferences(
+                    agent_name=data.get("agent_name"),
+                    language=data.get("language"),
+                    voice_name=data.get("voice_name")
+                )
 
             elif msg_type == "ping":
                 await websocket.send_json({"type": "pong", "data": {}})

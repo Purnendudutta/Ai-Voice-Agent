@@ -18,6 +18,7 @@ from src.audio.speaker import SpeakerOutput
 from src.audio.vad import VoiceActivityDetector, VADEvent
 from src.audio.wake_word import WakeWordDetector
 from src.gemini.live_client import GeminiLiveClient
+from src.config import settings
 from src.tools.registry import tool_registry
 from src.security.permissions import permission_manager
 
@@ -140,7 +141,11 @@ class AgentOrchestrator:
             from src.config import settings
             if settings.gemini_api_key and settings.gemini_api_key != "your_gemini_api_key_here":
                 try:
-                    await self.gemini.connect()
+                    await self.gemini.connect(
+                        agent_name=self.context.get_agent_name(),
+                        language=self.context.get_language(),
+                        voice_name=self.context.user_preferences.get("voice_name", settings.voice_name)
+                    )
                     await self._emit_event("connection_status", {"status": "connected"})
                 except Exception as conn_err:
                     logger.warning(f"Could not connect to Gemini Live: {conn_err}. Operating in Local Degraded Mode.")
@@ -398,18 +403,33 @@ class AgentOrchestrator:
         await self._set_state(AgentState.THINKING)
         steps = local_planner.plan_request(text)
 
+        agent_name = self.context.get_agent_name()
+        lang_pref = self.context.get_language()
+
         if not steps:
             lower_t = text.lower().strip()
-            if "what is ai" in lower_t:
+            # Hindi conversational responses
+            if any(term in lower_t for term in ["tum kaun ho", "aap kaun ho", "tera naam kya hai", "aapka naam kya hai"]):
+                reply = f"Main {agent_name} hoon, aapka voice desktop assistant. Main aapke computer par applications chalane aur tasks automate karne mein madad kar sakta hoon."
+            elif any(term in lower_t for term in ["kya haal hai", "kaise ho", "aap kaise ho"]):
+                reply = f"Main bilkul theek hoon! Main {agent_name} aapki seva mein hazir hoon. Bataiye, aaj computer par kya karna hai?"
+            elif any(term in lower_t for term in ["namaste", "pranam", "namaskar"]):
+                reply = f"Namaste! Main {agent_name} hoon. Bataiye, main aapki kya madad karoon?"
+            elif any(term in lower_t for term in ["ai kya hota hai", "ai kya hai", "ai ke baare mein batao"]):
+                reply = "AI yani Artificial Intelligence computer systems ki vah takneek hai jo sochna, samajhna aur faisla lena seekhti hai."
+            elif any(term in lower_t for term in ["dhanyavaad", "shukriya", "thanks", "thank you"]):
+                reply = "Aapka swagat hai! Koi aur kaam ho to zaroor bataiye."
+            # English conversational responses
+            elif "what is ai" in lower_t:
                 reply = "Artificial Intelligence refers to computer systems that perform tasks requiring human-like understanding, reasoning, and problem solving."
             elif "who are you" in lower_t or "what are you" in lower_t or "your name" in lower_t:
-                reply = "I am Nova, your intelligent desktop assistant. I can open apps, manage windows, run workflows, and automate tasks across your PC."
+                reply = f"I am {agent_name}, your intelligent voice desktop assistant. I can open apps, manage windows, run workflows, and automate tasks across your PC."
             elif any(greet in lower_t for greet in ["hello", "hi", "hey", "good morning", "good afternoon"]):
-                reply = "Hello! I am ready to assist you. Tell me what you would like to do."
-            elif any(stop in lower_t for stop in ["stop", "cancel", "nevermind"]):
-                reply = "Stopped. Standing by."
+                reply = f"Hello! I am {agent_name}. I am ready to assist you. Tell me what you would like to do."
+            elif any(stop in lower_t for stop in ["stop", "cancel", "nevermind", "ruko", "band karo"]):
+                reply = "Stopped. Standing by / मैं रुक गया हूँ।"
             else:
-                reply = f"I received: '{text}'. Try commands like 'open calculator', 'open notepad', 'take screenshot', 'system info', or 'volume up'."
+                reply = f"I received: '{text}'. Try commands like 'open calculator', 'calculator kholo', 'open notepad', 'screenshot lo', 'system info', or 'volume badhao'."
 
             self.context.add_message("assistant", reply)
             await self._emit_event("transcript", {"role": "assistant", "text": reply})
@@ -456,12 +476,19 @@ class AgentOrchestrator:
                 })
                 break
 
+        is_hindi_prompt = any(hk in text.lower() for hk in ["kholo", "chalao", "batao", "karo", "lo", "band"]) or lang_pref == "hindi"
         if all_passed:
             self.context.complete_task()
             await self._emit_event("task_completed", {"success": True, "count": completed_count})
-            summary_speech = f"Successfully completed all {completed_count} actions."
+            if is_hindi_prompt:
+                summary_speech = f"Sabhi {completed_count} actions safaltaapoorvak poore ho gaye hain."
+            else:
+                summary_speech = f"Successfully completed all {completed_count} actions."
         else:
-            summary_speech = f"Action halted at step {idx + 1}: {steps[idx].description}."
+            if is_hindi_prompt:
+                summary_speech = f"Step {idx + 1} par samasya aayi: {steps[idx].description}."
+            else:
+                summary_speech = f"Action halted at step {idx + 1}: {steps[idx].description}."
 
         self.context.add_message("assistant", summary_speech)
         await self._emit_event("transcript", {"role": "assistant", "text": summary_speech})
@@ -478,6 +505,46 @@ class AgentOrchestrator:
         self.context.clear_conversation()
         await self._emit_event("history_cleared", {})
 
+    def get_preferences(self) -> Dict[str, Any]:
+        """Return current user preferences."""
+        return {
+            "agent_name": self.context.get_agent_name(),
+            "language": self.context.get_language(),
+            "voice_name": self.context.user_preferences.get("voice_name", settings.voice_name),
+        }
+
+    async def update_preferences(
+        self,
+        agent_name: Optional[str] = None,
+        language: Optional[str] = None,
+        voice_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Update agent name, language preference, or voice and broadcast to UI."""
+        if agent_name:
+            self.context.set_agent_name(agent_name)
+        if language:
+            self.context.set_language(language)
+        if voice_name:
+            self.context.user_preferences["voice_name"] = voice_name
+            self.context.save_preferences()
+
+        prefs = self.get_preferences()
+        await self._emit_event("preferences_updated", prefs)
+
+        # If Gemini is active, reconnect to apply new name/persona/language
+        if self.gemini.is_connected:
+            try:
+                await self.gemini.connect(
+                    agent_name=prefs["agent_name"],
+                    language=prefs["language"],
+                    voice_name=prefs["voice_name"]
+                )
+            except Exception as e:
+                logger.warning(f"Could not reconnect Gemini with new preferences: {e}")
+
+        logger.info(f"Preferences updated: {prefs}")
+        return prefs
+
     def get_state(self) -> str:
         """Return current agent state as string."""
         return self.state.name
@@ -491,6 +558,9 @@ class AgentOrchestrator:
             "mic_active": self.microphone.is_active,
             "speaker_playing": self.speaker.is_playing,
             "wake_word_enabled": self.wake_word.enabled,
+            "agent_name": self.context.get_agent_name(),
+            "language": self.context.get_language(),
+            "preferences": self.get_preferences(),
             "session": self.context.session_state,
         }
 

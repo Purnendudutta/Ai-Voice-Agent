@@ -11,17 +11,35 @@ from src.tools.registry import tool_registry
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are Nova, an AI Voice Desktop Assistant for Windows.
+def build_system_prompt(agent_name: str = "Nova", language: str = "auto") -> str:
+    """Builds a contextual, bilingual system prompt with customizable persona."""
+    if language == "hindi":
+        lang_rule = "LANGUAGE PREFERENCE: You MUST primarily speak in natural Hindi (हिन्दी) or Hinglish. Always respond in Hindi unless the user explicitly speaks English."
+    elif language == "english":
+        lang_rule = "LANGUAGE PREFERENCE: You MUST primarily speak in English."
+    else:
+        lang_rule = (
+            "LANGUAGE PREFERENCE (Bilingual English & Hindi): You are fully fluent in both English and Hindi (हिन्दी / Hinglish). "
+            "Dynamically match the language the user speaks in: if they speak in Hindi or Hinglish, respond in natural, friendly Hindi or Hinglish; "
+            "if they speak in English, respond in English."
+        )
+
+    return f"""You are {agent_name}, a friendly, intelligent voice desktop assistant for Windows.
 You can converse naturally and control the user's computer via function calling when asked.
 
+{lang_rule}
+
 IMPORTANT INSTRUCTIONS:
-1. ONLY call tools that match what the user explicitly requested in their latest message.
-2. For conversational questions, explanations, greetings, or chat (e.g. "what is AI", "how are you", "please talk to me", "stop"), respond with conversational speech. Do NOT call open_browser_url or any other tool unless the user explicitly requested to open a website or search the web.
-3. To open desktop applications (e.g. "open calculator", "open notepad", "open vs code", "open file manager"), call 'launch_application' with the application name.
-4. Only call 'open_browser_url' when the user explicitly asks to open a specific website or URL (e.g. "open youtube", "open github.com").
-5. Never repeat previous tool calls unless the user explicitly asks again.
-6. When a tool finishes, confirm what was done briefly and concisely.
+1. Your name is {agent_name}. Introduce yourself as {agent_name} if asked.
+2. ONLY call tools that match what the user explicitly requested in their latest message.
+3. For conversational questions, explanations, greetings, or chat (e.g. "what is AI", "how are you", "kya haal hai", "namaste", "tum kaun ho", "please talk to me", "stop"), respond conversationally using natural speech. Do NOT call open_browser_url or any other tool unless the user explicitly requested to open a website or search the web.
+4. To open desktop applications (e.g. "open calculator", "calculator kholo", "open notepad", "notepad kholo", "open vs code", "open file manager"), call 'launch_application' with the application name.
+5. Only call 'open_browser_url' when the user explicitly asks to open a specific website or URL (e.g. "open youtube", "youtube chalao", "open github.com").
+6. Never repeat previous tool calls unless the user explicitly asks again.
+7. Keep spoken answers concise, direct, helpful, and pleasant.
 """
+
+SYSTEM_PROMPT = build_system_prompt()
 
 class ToolCallInfo(BaseModel):
     """Information about a tool call requested by the model."""
@@ -57,11 +75,32 @@ class GeminiLiveClient:
         self._session_cm = None
         self.is_connected = False
         self.connection_error: Optional[Exception] = None
+        self.current_agent_name = settings.agent_name
+        self.current_language = settings.language_preference
+        self.current_voice = settings.voice_name
 
-    async def connect(self) -> None:
+    async def connect(
+        self,
+        agent_name: Optional[str] = None,
+        language: Optional[str] = None,
+        voice_name: Optional[str] = None
+    ) -> None:
         """Establish a live session with the Gemini API with retry logic."""
         if not self.client:
             raise RuntimeError("GEMINI_API_KEY is not set or valid.")
+
+        if agent_name:
+            self.current_agent_name = agent_name
+        if language:
+            self.current_language = language
+        if voice_name:
+            self.current_voice = voice_name
+
+        system_instruction_text = build_system_prompt(
+            agent_name=self.current_agent_name,
+            language=self.current_language
+        )
+
         retries = 0
         while retries <= self.max_retries:
             try:
@@ -79,14 +118,14 @@ class GeminiLiveClient:
                 config = types.LiveConnectConfig(
                     response_modalities=[types.Modality.AUDIO],
                     system_instruction=types.Content(
-                        parts=[types.Part(text=SYSTEM_PROMPT)]
+                        parts=[types.Part(text=system_instruction_text)]
                     ),
                     input_audio_transcription=types.AudioTranscriptionConfig(),
                     output_audio_transcription=types.AudioTranscriptionConfig(),
                     speech_config=types.SpeechConfig(
                         voice_config=types.VoiceConfig(
                             prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=settings.voice_name
+                                voice_name=self.current_voice
                             )
                         )
                     ),
@@ -174,6 +213,10 @@ class GeminiLiveClient:
                 else:
                     yield gemini_response
         except Exception as e:
+            if "1000" in str(e):
+                logger.info("Gemini Live session closed normally (code 1000).")
+                self.is_connected = False
+                return
             logger.error(f"Error receiving from Gemini Live API: {e}")
             self.connection_error = e
             self.is_connected = False

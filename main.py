@@ -65,6 +65,8 @@ def print_banner() -> None:
         masked = "****"
     else:
         masked = "[NOT CONFIGURED - DEGRADED MODE]"
+    print(f"  * Agent Name:       {settings.agent_name}")
+    print(f"  * Language:         {settings.language_preference}")
     print(f"  * API Key:          {masked}")
     print(f"  * Model:            {settings.gemini_live_model}")
     print(f"  * Voice:            {settings.voice_name}")

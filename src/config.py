@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     data_dir: Path = DATA_DIR
 
     # Gemini API & Live Model
+    agent_name: str = Field(default="Nova", validation_alias="AGENT_NAME")
+    language_preference: str = Field(default="auto", validation_alias="LANGUAGE_PREFERENCE")  # auto, hindi, english
     gemini_api_key: str = Field(default="", validation_alias="GEMINI_API_KEY")
     gemini_live_model: str = Field(
         default="gemini-3.1-flash-live-preview",

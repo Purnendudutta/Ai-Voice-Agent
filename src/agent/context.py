@@ -130,6 +130,28 @@ class ContextManager:
         except Exception as e:
             logger.error(f"Failed to save user preferences: {e}")
 
+    def get_agent_name(self) -> str:
+        """Get the current customized agent name."""
+        return self.user_preferences.get("agent_name", settings.agent_name)
+
+    def set_agent_name(self, name: str) -> None:
+        """Update and persist the agent name."""
+        clean_name = name.strip() or "Nova"
+        self.user_preferences["agent_name"] = clean_name
+        self.save_preferences()
+        logger.info(f"Agent name updated to: {clean_name}")
+
+    def get_language(self) -> str:
+        """Get preferred language (auto, hindi, english)."""
+        return self.user_preferences.get("language", settings.language_preference)
+
+    def set_language(self, lang: str) -> None:
+        """Update preferred language."""
+        clean_lang = lang.lower().strip() or "auto"
+        self.user_preferences["language"] = clean_lang
+        self.save_preferences()
+        logger.info(f"Language preference updated to: {clean_lang}")
+
     def load_preferences(self) -> None:
         """Load user preferences from disk."""
         if self.prefs_file.exists():
@@ -142,3 +164,11 @@ class ContextManager:
                 self.user_preferences = {}
         else:
             self.user_preferences = {}
+
+        # Set default values if not present
+        if "agent_name" not in self.user_preferences or not self.user_preferences["agent_name"]:
+            self.user_preferences["agent_name"] = settings.agent_name
+        if "language" not in self.user_preferences or not self.user_preferences["language"]:
+            self.user_preferences["language"] = settings.language_preference
+        if "voice_name" not in self.user_preferences:
+            self.user_preferences["voice_name"] = settings.voice_name
