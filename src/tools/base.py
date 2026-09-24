@@ -108,6 +108,20 @@ class BaseTool(abc.ABC):
             }
             if "enum" in prop_def:
                 item["enum"] = prop_def["enum"]
+
+            if gemini_type == "ARRAY":
+                raw_items = prop_def.get("items", {})
+                raw_item_type = raw_items.get("type", "string").upper()
+                if raw_item_type == "INTEGER":
+                    item_type = "INTEGER"
+                elif raw_item_type == "NUMBER":
+                    item_type = "NUMBER"
+                elif raw_item_type == "BOOLEAN":
+                    item_type = "BOOLEAN"
+                else:
+                    item_type = "STRING"
+                item["items"] = {"type": item_type}
+
             properties[prop_name] = item
 
         return {
