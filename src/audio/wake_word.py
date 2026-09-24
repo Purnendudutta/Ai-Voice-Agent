@@ -1,29 +1,43 @@
+"""
+Neural Wake Word Detection Module
+Uses OpenWakeWord with native ONNX Runtime for low-latency neural keyword spotting.
+"""
+
 import logging
 from typing import Optional
-from src.config import settings
 import numpy as np
+from src.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class WakeWordDetector:
     """
-    Detects wake words in streaming audio.
-    Uses openwakeword if available, otherwise falls back to a stub.
+    Detects wake words (e.g. 'Hey Jarvis') in streaming 16kHz PCM audio
+    using OpenWakeWord models on ONNX Runtime.
     """
-    
+
     def __init__(self, sensitivity: float = 0.65):
         self.sensitivity = sensitivity
         self._model = None
         self._enabled = False
-        
+
         try:
             import openwakeword
             from openwakeword.model import Model
-            
-            # Load default models
-            self._model = Model()
+            import openwakeword.utils
+
+            # Load ONNX-based wake word model
+            try:
+                self._model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
+            except Exception:
+                # If model files not yet downloaded, download and initialize
+                logger.info("Downloading neural wake word models (hey_jarvis)...")
+                openwakeword.utils.download_models(model_names=["hey_jarvis"])
+                self._model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
+
             self._enabled = True
-            logger.info("Successfully loaded openwakeword models.")
+            logger.info("Neural wake word detection active (model: 'Hey Jarvis' on ONNX Runtime).")
         except ImportError as e:
             logger.warning(f"Failed to import openwakeword ({e}). Wake word detection will be disabled.")
         except Exception as e:
@@ -38,26 +52,22 @@ class WakeWordDetector:
         """
         Processes a raw PCM audio chunk for wake word detection.
         Returns the name of the wake word if detected, otherwise None.
-        Expects 16000Hz, mono, 16-bit PCM audio.
+        Expects 16000Hz, mono, 16-bit signed integer PCM audio.
         """
         if not self._enabled or not self._model:
             return None
-            
+
         try:
-            # Convert raw bytes to int16 numpy array as expected by openwakeword
             audio_data = np.frombuffer(audio_bytes, dtype=np.int16)
-            
-            # Predict
             prediction = self._model.predict(audio_data)
-            
-            # Check scores
-            for mdl_name, scores in prediction.items():
-                if scores > self.sensitivity:
-                    logger.info(f"Wake word detected: {mdl_name} (score: {scores:.2f})")
+
+            for mdl_name, score in prediction.items():
+                if score > self.sensitivity:
+                    logger.info(f"Wake word detected: {mdl_name} (confidence: {score:.2f})")
                     return mdl_name
-                    
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error during wake word processing: {e}")
             return None
