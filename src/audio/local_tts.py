@@ -1,11 +1,13 @@
 """
 Local Text-to-Speech Engine
-Uses native Windows SAPI5 (via win32com) or pyttsx3 fallback to speak responses
-when offline or in degraded mode with zero latency and full thread safety.
+Uses Microsoft Edge Natural Neural TTS (edge-tts) for studio-grade human speech,
+with fallback to Windows SAPI5 (Microsoft Zira/David) only when offline.
 """
 
 import logging
 import asyncio
+import tempfile
+import os
 import threading
 from typing import Optional
 
@@ -13,45 +15,92 @@ logger = logging.getLogger("LocalTTS")
 
 
 class LocalTTS:
-    """Offline Text-to-Speech synthesizer using Windows SAPI5."""
+    """High-fidelity Text-to-Speech synthesizer using Microsoft Natural Neural Voices."""
 
-    def __init__(self, rate: int = 1, volume: int = 90):
-        self.rate = rate  # SAPI5 rate is -10 to +10 (0 or 1 is natural speed)
-        self.volume = volume  # 0 to 100
+    def __init__(self, rate: str = "+0%", volume: str = "+0%"):
+        self.rate = rate
+        self.volume = volume
         self._lock = threading.Lock()
 
-    async def speak(self, text: str) -> None:
-        """Speaks the text string asynchronously in a worker thread."""
-        if not text:
+    async def speak(self, text: str, gender: str = "female") -> None:
+        """Speaks the text string using Neural Edge TTS or SAPI fallback."""
+        if not text or not text.strip():
             return
-        await asyncio.to_thread(self._sync_speak, text)
 
-    def _sync_speak(self, text: str) -> None:
+        # 1. Try Microsoft Edge Natural Neural TTS (crystal clear human voice)
+        try:
+            import edge_tts
+            import miniaudio
+            import sounddevice as sd
+            import numpy as np
+
+            # Select high-quality natural neural voice
+            # Female: en-US-JennyNeural or hi-IN-SwaraNeural for sweet Indian/Hinglish warmth
+            # Male: en-US-GuyNeural or hi-IN-MadhurNeural
+            hindi_keywords = ["meri jaan", "babu", "kholo", "karo", "namaste", "aapka", "kya", "hoon", "shona", "sweetheart", "hai", "main"]
+            has_hindi = any(k in text.lower() for k in hindi_keywords)
+
+            if gender == "female":
+                voice = "hi-IN-SwaraNeural" if has_hindi else "en-US-JennyNeural"
+            else:
+                voice = "hi-IN-MadhurNeural" if has_hindi else "en-US-GuyNeural"
+
+            communicate = edge_tts.Communicate(text, voice)
+            with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+                tmp_path = f.name
+
+            try:
+                await communicate.save(tmp_path)
+                decoded = miniaudio.decode_file(tmp_path)
+                samples = np.frombuffer(decoded.samples, dtype=np.int16)
+                if decoded.nchannels > 1:
+                    samples = samples.reshape(-1, decoded.nchannels)
+
+                sd.play(samples, samplerate=decoded.sample_rate)
+                duration = len(samples) / decoded.sample_rate
+                await asyncio.sleep(duration + 0.1)
+                return
+            finally:
+                if os.path.exists(tmp_path):
+                    try:
+                        os.remove(tmp_path)
+                    except OSError:
+                        pass
+        except Exception as e:
+            logger.debug(f"Edge Neural TTS playback unavailable, falling back: {e}")
+
+        # 2. Offline fallback: Windows SAPI.SpVoice via COM
+        await asyncio.to_thread(self._sync_sapi_speak, text, gender)
+
+    def _sync_sapi_speak(self, text: str, gender: str = "female") -> None:
         with self._lock:
-            # 1. Native Windows SAPI.SpVoice via COM
             try:
                 import pythoncom
                 import win32com.client
                 pythoncom.CoInitialize()
                 speaker = win32com.client.Dispatch("SAPI.SpVoice")
-                speaker.Rate = self.rate
-                speaker.Volume = self.volume
+                speaker.Rate = 0
+                speaker.Volume = 90
+
+                voices = speaker.GetVoices()
+                target_voice = None
+                for i in range(voices.Count):
+                    v = voices.Item(i)
+                    desc = v.GetDescription().lower()
+                    if gender == "female" and ("zira" in desc or "female" in desc):
+                        target_voice = v
+                        break
+                    elif gender == "male" and ("david" in desc or "male" in desc):
+                        target_voice = v
+                        break
+
+                if target_voice:
+                    speaker.Voice = target_voice
+
                 speaker.Speak(text)
                 pythoncom.CoUninitialize()
-                return
             except Exception as e:
-                logger.debug(f"SAPI.SpVoice speak error: {e}")
-
-            # 2. Fallback to pyttsx3 fresh instance
-            try:
-                import pyttsx3
-                engine = pyttsx3.init()
-                engine.say(text)
-                engine.runAndWait()
-                engine.stop()
-                return
-            except Exception as e:
-                logger.error(f"TTS playback fallback error: {e}")
+                logger.error(f"SAPI speak error: {e}")
 
 
 local_tts = LocalTTS()

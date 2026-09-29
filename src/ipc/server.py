@@ -14,9 +14,9 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
@@ -46,6 +46,10 @@ class PreferencesRequest(BaseModel):
     language: Optional[str] = None
     voice_name: Optional[str] = None
     persona_mode: Optional[str] = None
+
+
+class MicToggleRequest(BaseModel):
+    muted: Optional[bool] = None
 
 
 class IPCServer:
@@ -89,6 +93,30 @@ class IPCServer:
             if index_file.exists():
                 return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
             return HTMLResponse(content="<h1>Nova AI</h1><p>UI not found.</p>")
+
+        # ── Serve UI static assets (png, jpg, svg, etc.) ──
+        @self.app.get("/{filename}.png")
+        async def serve_png(filename: str):
+            file_path = UI_DIR / f"{filename}.png"
+            if file_path.exists():
+                return FileResponse(file_path, media_type="image/png")
+            raise HTTPException(status_code=404, detail="Image not found")
+
+        @self.app.get("/{filename}.jpg")
+        async def serve_jpg(filename: str):
+            file_path = UI_DIR / f"{filename}.jpg"
+            if file_path.exists():
+                return FileResponse(file_path, media_type="image/jpeg")
+            raise HTTPException(status_code=404, detail="Image not found")
+
+        # ── REST: Toggle Microphone Mute ──
+        @self.app.post("/api/mic/toggle")
+        async def toggle_mic(req: Optional[MicToggleRequest] = None):
+            if not self.orchestrator:
+                raise HTTPException(status_code=503, detail="Orchestrator not ready")
+            muted = req.muted if req is not None else None
+            is_muted = self.orchestrator.toggle_mute(muted)
+            return {"muted": is_muted}
 
         # ── WebSocket endpoint ──
         @self.app.websocket("/ws")
@@ -244,6 +272,11 @@ class IPCServer:
                     voice_name=data.get("voice_name"),
                     persona_mode=data.get("persona_mode")
                 )
+
+            elif msg_type == "toggle_mic" and self.orchestrator:
+                muted = data.get("muted")
+                is_muted = self.orchestrator.toggle_mute(muted)
+                await websocket.send_json({"type": "mic_status", "data": {"muted": is_muted}})
 
             elif msg_type == "ping":
                 await websocket.send_json({"type": "pong", "data": {}})

@@ -24,18 +24,49 @@ class MicrophoneStream:
         self._stream: Optional[sd.InputStream] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._is_active = False
+        self._muted = False
 
     @property
     def is_active(self) -> bool:
         """Returns True if the microphone is currently capturing audio."""
         return self._is_active
 
+    @property
+    def is_muted(self) -> bool:
+        """Returns True if the microphone is muted."""
+        return self._muted
+
+    def set_muted(self, muted: bool):
+        """Enable or disable audio capture muting."""
+        self._muted = muted
+        if muted:
+            self.clear_queue()
+        logger.info(f"Microphone mute set to: {self._muted}")
+
+    def clear_queue(self):
+        """Drains any buffered chunks from the queue."""
+        while not self.queue.empty():
+            try:
+                self.queue.get_nowait()
+            except Exception:
+                break
+
+    def ensure_started(self):
+        """Ensure the microphone stream is running and healthy."""
+        if not self._is_active or self._stream is None or not getattr(self._stream, "active", False):
+            try:
+                self.stop()
+            except Exception:
+                pass
+            self.start()
+
+
     def _audio_callback(self, indata: np.ndarray, frames: int, time, status: sd.CallbackFlags):
         """Callback for sounddevice to process incoming audio chunks."""
         if status:
             logger.warning(f"Microphone status: {status}")
         
-        if self._is_active and self._loop:
+        if self._is_active and not self._muted and self._loop:
             # Convert to raw bytes (int16 little endian)
             raw_bytes = indata.tobytes()
             self._loop.call_soon_threadsafe(self.queue.put_nowait, raw_bytes)

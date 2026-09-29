@@ -151,3 +151,32 @@ async def test_browser_automation_tools(monkeypatch):
     res_yt = await search_tool.execute(WebSearchInput(query="romantic songs", engine="youtube"))
     assert "youtube.com/results" in res_yt["search_url"]
 
+
+@pytest.mark.asyncio
+async def test_launch_app_tool_aliases():
+    from src.tools.plugins.app_tools import LaunchAppTool, LaunchAppInput
+    tool = LaunchAppTool()
+    assert tool.APP_ALIASES["control panel"] == "control"
+    assert tool.APP_ALIASES["whatsapp"] == "whatsapp:"
+    assert tool.APP_ALIASES["settings"] == "ms-settings:"
+    assert tool.APP_ALIASES["calculator"] == "calc"
+
+    # Universal app resolution test
+    app_info = tool._find_system_app("control panel")
+    assert app_info is not None
+    assert "AppID" in app_info
+
+
+def test_persona_mode_system_prompts():
+    from src.gemini.live_client import build_system_prompt
+    romantic_prompt = build_system_prompt(persona_mode="romantic_girlfriend")
+    assert "DIRTY TALK" in romantic_prompt
+    assert "intimate" in romantic_prompt.lower()
+    assert "romantic" in romantic_prompt.lower()
+
+    formal_prompt = build_system_prompt(persona_mode="assistant")
+    assert "professional, formal" in formal_prompt.lower()
+    assert "DIRTY TALK" not in formal_prompt
+
+
+

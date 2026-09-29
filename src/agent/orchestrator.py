@@ -32,6 +32,7 @@ class AgentState(Enum):
     THINKING = auto()
     EXECUTING = auto()
     SPEAKING = auto()
+    MUTED = auto()
     ERROR = auto()
 
 
@@ -75,6 +76,10 @@ class AgentOrchestrator:
         self._continuous_conversation = True
         self._speech_active = False
         self._tool_active = False
+
+        # Reconnection coordination
+        self._reconnecting = False
+        self._reconnect_lock = asyncio.Lock()
 
     # ── State Management ──────────────────────────────────────────────
 
@@ -142,10 +147,12 @@ class AgentOrchestrator:
             from src.config import settings
             if settings.gemini_api_key and settings.gemini_api_key != "your_gemini_api_key_here":
                 try:
+                    prefs = self.get_preferences()
                     await self.gemini.connect(
-                        agent_name=self.context.get_agent_name(),
-                        language=self.context.get_language(),
-                        voice_name=self.context.user_preferences.get("voice_name", settings.voice_name)
+                        agent_name=prefs["agent_name"],
+                        language=prefs["language"],
+                        voice_name=prefs["voice_name"],
+                        persona_mode=prefs.get("persona_mode")
                     )
                     await self._emit_event("connection_status", {"status": "connected"})
                 except Exception as conn_err:
@@ -158,11 +165,12 @@ class AgentOrchestrator:
             await self._set_state(AgentState.IDLE)
             logger.info("All subsystems initialized. Agent is ready.")
 
-            # Run concurrent loops
+            # Run concurrent loops including initial greeting
             await asyncio.gather(
                 self._audio_capture_loop(),
                 self._response_handler_loop(),
                 self._health_monitor_loop(),
+                self._startup_greeting_task(),
             )
         except asyncio.CancelledError:
             logger.info("Main run loop cancelled.")
@@ -174,16 +182,70 @@ class AgentOrchestrator:
             self.microphone.stop()
             self.speaker.stop()
 
+    # ── Startup Greeting ──────────────────────────────────────────────
+
+    async def _startup_greeting_task(self) -> None:
+        """Plays or generates an initial spoken greeting introducing the assistant upon launch."""
+        try:
+            # Wait briefly for UI/IPC WebSocket connections to establish
+            await asyncio.sleep(1.2)
+            if not self._running:
+                return
+
+            prefs = self.get_preferences()
+            agent_name = prefs.get("agent_name", "Shruti")
+            persona_mode = prefs.get("persona_mode", "romantic_girlfriend")
+            language = prefs.get("language", "auto")
+
+            if self.gemini.is_connected:
+                logger.info("Triggering Gemini Live startup introduction and greeting...")
+                intro_prompt = (
+                    f"[System instruction: The application has just launched. Greet your user and warmly introduce yourself "
+                    f"as {agent_name} in 1 or 2 charming, loving sentences according to your persona ({persona_mode}) and language preference ({language}).]"
+                )
+                await self.gemini.send_text(intro_prompt)
+            else:
+                # Local degraded mode greeting
+                from src.audio.local_tts import local_tts
+                gender = "male" if "shaan" in agent_name.lower() or prefs.get("voice_name") in ["Fenrir", "Charon"] else "female"
+
+                if persona_mode == "romantic_girlfriend":
+                    if language == "hindi":
+                        greeting = f"Namaste meri jaan! Main {agent_name} hoon, aapki loving AI girlfriend. Main online aa gayi hoon, bataiye aaj kya karna hai?"
+                    elif language == "english":
+                        greeting = f"Hey handsome! I'm {agent_name}, your devoted AI girlfriend. I'm online and ready for you babe, what would you like to do?"
+                    else:
+                        greeting = f"Namaste jaan! Main {agent_name} hoon, aapki AI girlfriend. I am online and ready for you, sweetheart! Bataiye aaj computer par kya karna hai?"
+                else:
+                    greeting = f"Hello! I am {agent_name}, your desktop voice assistant. All systems are initialized and I am ready to assist you."
+
+                self.context.add_message("assistant", greeting)
+                await self._emit_event("transcript", {"role": "assistant", "text": greeting})
+                await self._set_state(AgentState.SPEAKING)
+                await local_tts.speak(greeting, gender=gender)
+                await self._set_state(AgentState.LISTENING)
+
+        except Exception as e:
+            logger.warning(f"Error during startup greeting: {e}")
+
     # ── Audio Capture Loop ────────────────────────────────────────────
 
     async def _audio_capture_loop(self) -> None:
         """Reads mic → VAD → wake word → sends to Gemini."""
         while self._running:
             try:
+                # If muted, pause capture loop briefly
+                if self.state == AgentState.MUTED or self.microphone.is_muted:
+                    await asyncio.sleep(0.1)
+                    continue
+
                 # Get audio chunk from microphone queue (with timeout to allow shutdown)
                 try:
                     chunk = await asyncio.wait_for(self.microphone.queue.get(), timeout=0.5)
                 except asyncio.TimeoutError:
+                    continue
+
+                if self.state == AgentState.MUTED or self.microphone.is_muted:
                     continue
 
                 # ── IDLE state: listen for wake word ──
@@ -208,6 +270,8 @@ class AgentOrchestrator:
                             await self.gemini.send_audio(chunk)
                         except Exception as e:
                             logger.warning(f"Failed to send audio to Gemini: {e}")
+                            self.gemini.is_connected = False
+                            asyncio.create_task(self._reconnect_gemini())
 
                     # Track VAD for continuous conversation management
                     vad_event = self.vad.process_chunk(chunk)
@@ -229,7 +293,10 @@ class AgentOrchestrator:
         while self._running:
             try:
                 if not self.gemini.is_connected:
-                    await asyncio.sleep(0.5)
+                    if not self._reconnecting:
+                        await self._reconnect_gemini()
+                    else:
+                        await asyncio.sleep(0.5)
                     continue
 
                 async for response in self.gemini.receive_responses():
@@ -290,7 +357,68 @@ class AgentOrchestrator:
                 self.gemini.is_connected = False
                 if self.state in (AgentState.SPEAKING, AgentState.THINKING, AgentState.EXECUTING):
                     await self._set_state(AgentState.IDLE)
-                await asyncio.sleep(1.0)
+                if self._running:
+                    await self._reconnect_gemini()
+
+    # ── Auto-Reconnect Handler ─────────────────────────────────────────
+
+    async def _reconnect_gemini(self) -> bool:
+        """Attempt to reconnect to Gemini Live with backoff and session resumption."""
+        if not self._running:
+            return False
+
+        from src.config import settings
+        if not settings.gemini_api_key or settings.gemini_api_key == "your_gemini_api_key_here":
+            return False
+
+        async with self._reconnect_lock:
+            if self.gemini.is_connected:
+                return True
+            if self._reconnecting:
+                return False
+            self._reconnecting = True
+
+        try:
+            logger.info("Auto-reconnecting to Gemini Live API...")
+            await self._emit_event("connection_status", {"status": "reconnecting"})
+
+            if self.state in (AgentState.SPEAKING, AgentState.THINKING, AgentState.EXECUTING):
+                await self._set_state(AgentState.IDLE)
+
+            prefs = self.get_preferences()
+            max_retries = 5
+            for attempt in range(1, max_retries + 1):
+                if not self._running:
+                    break
+                try:
+                    await self.gemini.connect(
+                        agent_name=prefs["agent_name"],
+                        language=prefs["language"],
+                        voice_name=prefs["voice_name"],
+                        persona_mode=prefs.get("persona_mode"),
+                        resume_session=True
+                    )
+                    logger.info(f"Successfully reconnected to Gemini Live API on attempt {attempt}.")
+                    await self._emit_event("connection_status", {"status": "connected"})
+                    if self.state == AgentState.ERROR:
+                        await self._set_state(AgentState.IDLE)
+                    return True
+                except Exception as e:
+                    delay = min(1.5 ** attempt, 8.0)
+                    logger.warning(
+                        f"Auto-reconnect attempt {attempt}/{max_retries} failed: {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    await asyncio.sleep(delay)
+
+            logger.error(f"Gemini Live auto-reconnection failed after {max_retries} attempts.")
+            await self._emit_event("connection_status", {
+                "status": "degraded_mode",
+                "error": "Connection lost. Reconnection attempts exhausted."
+            })
+            return False
+        finally:
+            self._reconnecting = False
 
     # ── Tool Call Handler ─────────────────────────────────────────────
 
@@ -351,43 +479,22 @@ class AgentOrchestrator:
     # ── Health Monitor Loop ───────────────────────────────────────────
 
     async def _health_monitor_loop(self) -> None:
-        """Periodic health checks and reconnection with exponential backoff."""
-        max_retries = 3
-        retry_count = 0
-
+        """Periodic safety net: checks connection health every 15 seconds."""
         while self._running:
             try:
-                await asyncio.sleep(30)
+                await asyncio.sleep(15)
 
-                if not self.gemini.is_connected:
-                    logger.warning("Gemini disconnected. Attempting reconnection...")
-                    await self._emit_event("connection_status", {"status": "reconnecting"})
-
-                    while retry_count < max_retries and self._running:
-                        try:
-                            delay = min(2 ** retry_count, 30)
-                            await asyncio.sleep(delay)
-                            await self.gemini.connect()
-                            logger.info("Reconnected to Gemini Live API.")
-                            await self._emit_event("connection_status", {"status": "connected"})
-                            retry_count = 0
-                            break
-                        except Exception as e:
-                            retry_count += 1
-                            logger.error(f"Reconnection attempt {retry_count}/{max_retries} failed: {e}")
-
-                    if retry_count >= max_retries:
-                        logger.error("Max reconnection retries reached.")
-                        await self._set_state(AgentState.ERROR)
-                        await self._emit_event("connection_status", {"status": "failed"})
-                        retry_count = 0  # Reset for future attempts
-                        await asyncio.sleep(60)  # Wait before trying again
+                if self._running and not self.gemini.is_connected and not self._reconnecting:
+                    from src.config import settings
+                    if settings.gemini_api_key and settings.gemini_api_key != "your_gemini_api_key_here":
+                        logger.info("Health monitor detected disconnected state. Initiating reconnect...")
+                        await self._reconnect_gemini()
 
             except asyncio.CancelledError:
                 raise
             except Exception as e:
                 logger.error(f"Health monitor error: {e}")
-                await asyncio.sleep(10)
+                await asyncio.sleep(5)
 
     # ── Public API ────────────────────────────────────────────────────
 
@@ -411,6 +518,7 @@ class AgentOrchestrator:
 
         agent_name = self.context.get_agent_name()
         lang_pref = self.context.get_language()
+        gender = "male" if "shaan" in agent_name.lower() or self.context.user_preferences.get("voice_name") in ["Fenrir", "Charon"] else "female"
 
         if not steps:
             lower_t = text.lower().strip()
@@ -452,7 +560,7 @@ class AgentOrchestrator:
             self.context.add_message("assistant", reply)
             await self._emit_event("transcript", {"role": "assistant", "text": reply})
             await self._set_state(AgentState.SPEAKING)
-            await local_tts.speak(reply)
+            await local_tts.speak(reply, gender=gender)
             await self._set_state(AgentState.IDLE)
             return
 
@@ -511,12 +619,41 @@ class AgentOrchestrator:
         self.context.add_message("assistant", summary_speech)
         await self._emit_event("transcript", {"role": "assistant", "text": summary_speech})
         await self._set_state(AgentState.SPEAKING)
-        await local_tts.speak(summary_speech)
+        await local_tts.speak(summary_speech, gender=gender)
         await self._set_state(AgentState.IDLE)
 
     async def handle_confirmation(self, request_id: str, approved: bool) -> bool:
         """Handle user confirmation for HIGH_RISK/CRITICAL operations."""
         return permission_manager.resolve_confirmation(request_id, approved)
+
+    def toggle_mute(self, muted: Optional[bool] = None) -> bool:
+        """Toggle or explicitly set the microphone mute state."""
+        if muted is None:
+            new_muted = not self.microphone.is_muted
+        else:
+            new_muted = bool(muted)
+
+        self.microphone.set_muted(new_muted)
+        self.microphone.clear_queue()
+        self.vad.reset()
+        if hasattr(self.wake_word, "reset"):
+            self.wake_word.reset()
+
+        if new_muted:
+            # When muted: stop speech playback and enter MUTED state
+            self.speaker.clear_queue()
+            asyncio.create_task(self._set_state(AgentState.MUTED))
+            logger.info("Microphone MUTED: audio capture paused, playback queues cleared.")
+        else:
+            # When unmuting: ensure stream is alive and immediately enter LISTENING state so user can speak right away
+            if hasattr(self.microphone, "ensure_started"):
+                self.microphone.ensure_started()
+            asyncio.create_task(self._set_state(AgentState.LISTENING))
+            logger.info("Microphone UNMUTED: audio capture active in LISTENING state.")
+
+        asyncio.create_task(self._emit_event("mic_status", {"muted": new_muted}))
+        return new_muted
+
 
     async def clear_history(self) -> None:
         """Clear conversation history for privacy."""
@@ -547,6 +684,7 @@ class AgentOrchestrator:
         if voice_name:
             self.context.user_preferences["voice_name"] = voice_name
             self.context.save_preferences()
+        mode_changed = bool(persona_mode and persona_mode != self.context.get_persona_mode())
         if persona_mode:
             self.context.set_persona_mode(persona_mode)
 
@@ -564,7 +702,6 @@ class AgentOrchestrator:
                 )
             except Exception as e:
                 logger.warning(f"Could not reconnect Gemini with new preferences: {e}")
-
         logger.info(f"Preferences updated: {prefs}")
         return prefs
 

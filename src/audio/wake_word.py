@@ -48,6 +48,14 @@ class WakeWordDetector:
         """Returns True if the neural wake word detector is successfully loaded."""
         return self._enabled
 
+    def reset(self) -> None:
+        """Resets the internal buffer of the wake word model."""
+        if self._model and hasattr(self._model, "reset"):
+            try:
+                self._model.reset()
+            except Exception as e:
+                logger.debug(f"Wake word reset error: {e}")
+
     def process_chunk(self, audio_bytes: bytes) -> Optional[str]:
         """
         Processes a raw PCM audio chunk for wake word detection.

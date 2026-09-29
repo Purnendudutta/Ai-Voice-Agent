@@ -3,2818 +3,1988 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shruti — Voice Desktop Assistant</title>
+    <title id="pageTitle">Shruti — AI Desktop Companion</title>
     <style>
-        /* =========================================================================
-           CSS VARIABLES & MULTI-THEME ARCHITECTURE
-           ========================================================================= */
+        /* =====================================================================
+           MULTI-THEME CSS VARIABLE ENGINE
+           ===================================================================== */
         :root {
-            /* Default Theme: Cyber Rose */
-            --bg-base: #0a0d14;
-            --bg-gradient: radial-gradient(circle at 50% 20%, #1a1024 0%, #0a0d14 70%, #06080d 100%);
-            --panel-bg: rgba(18, 22, 33, 0.75);
-            --panel-bg-solid: #121621;
+            --bg-base: #060913;
+            --bg-gradient: radial-gradient(ellipse at 35% 15%, #180922 0%, #060913 55%, #020408 100%);
+            --panel-bg: rgba(13, 18, 32, 0.82);
             --panel-border: rgba(244, 63, 94, 0.22);
-            --panel-border-hover: rgba(244, 63, 94, 0.45);
-            --panel-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
-            
-            --accent-primary: #f43f5e;
+            --panel-border-hover: rgba(244, 63, 94, 0.55);
+            --panel-shadow: 0 10px 36px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            --accent: #f43f5e;
             --accent-glow: #fb7185;
-            --accent-soft: rgba(244, 63, 94, 0.15);
-            --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #d946ef 100%);
-            
-            --text-main: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-dim: #64748b;
-            
+            --accent-soft: rgba(244, 63, 94, 0.14);
+            --accent-grad: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #d946ef 100%);
+            --text-1: #f8fafc;
+            --text-2: #94a3b8;
+            --text-3: #475569;
             --success: #10b981;
-            --success-glow: #34d399;
             --warning: #f59e0b;
             --danger: #ef4444;
             --info: #0ea5e9;
-
             --radius-sm: 8px;
             --radius-md: 14px;
-            --radius-lg: 20px;
+            --radius-lg: 22px;
             --radius-full: 9999px;
-
-            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --t: all 0.35s var(--ease);
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
         }
 
-        /* Theme: Midnight Sapphire */
         [data-theme="sapphire"] {
-            --bg-base: #060913;
-            --bg-gradient: radial-gradient(circle at 50% 20%, #0d1e38 0%, #060913 70%, #03050a 100%);
-            --panel-bg: rgba(13, 22, 41, 0.78);
-            --panel-bg-solid: #0d1629;
+            --bg-base: #020712;
+            --bg-gradient: radial-gradient(ellipse at 35% 15%, #081a38 0%, #020712 55%, #010309 100%);
+            --panel-bg: rgba(7, 18, 38, 0.84);
             --panel-border: rgba(14, 165, 233, 0.24);
-            --panel-border-hover: rgba(14, 165, 233, 0.5);
-            --accent-primary: #0ea5e9;
+            --panel-border-hover: rgba(14, 165, 233, 0.6);
+            --accent: #0ea5e9;
             --accent-glow: #38bdf8;
-            --accent-soft: rgba(14, 165, 233, 0.15);
-            --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #2563eb 100%);
+            --accent-soft: rgba(14, 165, 233, 0.14);
+            --accent-grad: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #2563eb 100%);
         }
-
-        /* Theme: Emerald Matrix */
         [data-theme="emerald"] {
-            --bg-base: #06110e;
-            --bg-gradient: radial-gradient(circle at 50% 20%, #0d281f 0%, #06110e 70%, #030806 100%);
-            --panel-bg: rgba(11, 28, 22, 0.78);
-            --panel-bg-solid: #0b1c16;
+            --bg-base: #020c08;
+            --bg-gradient: radial-gradient(ellipse at 35% 15%, #062215 0%, #020c08 55%, #010503 100%);
+            --panel-bg: rgba(6, 22, 15, 0.84);
             --panel-border: rgba(16, 185, 129, 0.24);
-            --panel-border-hover: rgba(16, 185, 129, 0.5);
-            --accent-primary: #10b981;
+            --panel-border-hover: rgba(16, 185, 129, 0.6);
+            --accent: #10b981;
             --accent-glow: #34d399;
-            --accent-soft: rgba(16, 185, 129, 0.15);
-            --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            --accent-soft: rgba(16, 185, 129, 0.14);
+            --accent-grad: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
         }
-
-        /* Theme: Amethyst Violet */
         [data-theme="amethyst"] {
-            --bg-base: #0d0917;
-            --bg-gradient: radial-gradient(circle at 50% 20%, #231238 0%, #0d0917 70%, #06040b 100%);
-            --panel-bg: rgba(22, 16, 36, 0.78);
-            --panel-bg-solid: #161024;
+            --bg-base: #070512;
+            --bg-gradient: radial-gradient(ellipse at 35% 15%, #190e34 0%, #070512 55%, #030208 100%);
+            --panel-bg: rgba(16, 12, 34, 0.84);
             --panel-border: rgba(168, 85, 247, 0.24);
-            --panel-border-hover: rgba(168, 85, 247, 0.5);
-            --accent-primary: #a855f7;
+            --panel-border-hover: rgba(168, 85, 247, 0.6);
+            --accent: #a855f7;
             --accent-glow: #c084fc;
-            --accent-soft: rgba(168, 85, 247, 0.15);
-            --accent-gradient: linear-gradient(135deg, #a855f7 0%, #8b5cf6 50%, #6366f1 100%);
+            --accent-soft: rgba(168, 85, 247, 0.14);
+            --accent-grad: linear-gradient(135deg, #a855f7 0%, #8b5cf6 50%, #6366f1 100%);
+        }
+        [data-theme="gold"] {
+            --bg-base: #0d0901;
+            --bg-gradient: radial-gradient(ellipse at 35% 15%, #241602 0%, #0d0901 55%, #060400 100%);
+            --panel-bg: rgba(24, 17, 5, 0.84);
+            --panel-border: rgba(234, 179, 8, 0.24);
+            --panel-border-hover: rgba(234, 179, 8, 0.6);
+            --accent: #eab308;
+            --accent-glow: #fbbf24;
+            --accent-soft: rgba(234, 179, 8, 0.14);
+            --accent-grad: linear-gradient(135deg, #eab308 0%, #d97706 50%, #b45309 100%);
         }
 
-        /* =========================================================================
+        /* =====================================================================
            GLOBAL RESET & LAYOUT
-           ========================================================================= */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
+           ===================================================================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
         body {
-            font-family: var(--font-family);
+            font-family: var(--font);
             background: var(--bg-base);
             background-image: var(--bg-gradient);
-            color: var(--text-main);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
+            color: var(--text-1);
             display: flex;
             flex-direction: column;
             line-height: 1.5;
             letter-spacing: -0.01em;
+            transition: background 0.5s, background-image 0.5s;
         }
 
-        /* Glassmorphism Surface Utility */
-        .glass-panel {
+        .glass {
             background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
             border: 1px solid var(--panel-border);
             border-radius: var(--radius-md);
             box-shadow: var(--panel-shadow);
-            transition: var(--transition-smooth);
+            transition: border-color 0.3s;
         }
+        .glass:hover { border-color: var(--panel-border-hover); }
 
-        .glass-panel:hover {
-            border-color: var(--panel-border-hover);
-        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-        /* =========================================================================
-           HEADER BAR
-           ========================================================================= */
+        /* =====================================================================
+           HEADER (NO LOGIN OPTIONS)
+           ===================================================================== */
         header {
-            height: 64px;
-            min-height: 64px;
-            padding: 0 24px;
+            height: 60px;
+            min-height: 60px;
+            padding: 0 22px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background: rgba(6, 9, 18, 0.94);
             border-bottom: 1px solid var(--panel-border);
-            background: rgba(10, 13, 20, 0.85);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(24px);
             z-index: 50;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .brand-logo-wrap {
+        .brand-wrap {
             display: flex;
             align-items: center;
             gap: 12px;
-            cursor: pointer;
         }
-
-        .brand-aura-orb {
-            width: 38px;
-            height: 38px;
+        .brand-orb {
+            width: 38px; height: 38px;
             border-radius: var(--radius-full);
-            background: var(--accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: var(--accent-grad);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.15rem; font-weight: 800; color: white;
             box-shadow: 0 0 20px var(--accent-soft);
-            color: white;
-            font-size: 1.15rem;
-            font-weight: 800;
-            position: relative;
+            position: relative; flex-shrink: 0;
+            animation: orbPulse 3.5s infinite ease-in-out;
         }
-
-        .brand-aura-orb::after {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            border-radius: var(--radius-full);
-            border: 1.5px solid var(--accent-glow);
-            opacity: 0.6;
-            animation: pulseAura 3s infinite ease-in-out;
+        @keyframes orbPulse {
+            0%, 100% { box-shadow: 0 0 16px var(--accent-soft); }
+            50% { box-shadow: 0 0 30px var(--accent-glow); }
         }
-
-        @keyframes pulseAura {
-            0%, 100% { transform: scale(1); opacity: 0.4; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+        .brand-info { display: flex; flex-direction: column; }
+        
+        #brandNameDisplay {
+            font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em;
+            background: var(--accent-grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            cursor: pointer; border-bottom: 1px dashed transparent;
+            transition: border-color 0.2s;
+            display: flex; align-items: center; gap: 7px;
         }
-
-        .brand-text-block {
-            display: flex;
-            flex-direction: column;
+        #brandNameDisplay:hover { border-color: var(--accent); }
+        #brandNameDisplay .edit-hint {
+            font-size: 0.65rem; -webkit-text-fill-color: var(--text-3);
+            background: none; font-weight: 400; opacity: 0; transition: opacity 0.2s;
         }
-
-        .brand-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        #brandNameDisplay:hover .edit-hint { opacity: 1; }
+        #brandNameInput {
+            font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em;
+            background: transparent; border: none; border-bottom: 2px solid var(--accent);
+            color: var(--accent-glow); outline: none; width: 140px; display: none;
         }
+        .brand-sub { font-size: 0.72rem; color: var(--text-2); font-weight: 500; }
 
-        .user-greeting {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
+        /* Header Right Controls */
+        .hdr-right { display: flex; align-items: center; gap: 12px; }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* State Indicator Badge */
-        .state-indicator-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .state-badge {
+            display: flex; align-items: center; gap: 8px;
             padding: 6px 14px;
-            border-radius: var(--radius-full);
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--panel-border);
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+            border-radius: var(--radius-full);
+            font-size: 0.74rem; font-weight: 700;
+            letter-spacing: 0.05em; text-transform: uppercase;
         }
-
-        .state-pulse-dot {
-            width: 8px;
-            height: 8px;
+        .pulse-dot {
+            width: 8px; height: 8px;
             border-radius: var(--radius-full);
             background: var(--success);
-            box-shadow: 0 0 10px var(--success-glow);
-            transition: var(--transition-smooth);
+            box-shadow: 0 0 10px var(--success);
+            transition: var(--t);
         }
 
-        /* Mic Toggle Button */
-        .header-icon-btn {
+        .icon-btn {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--panel-border);
-            color: var(--text-main);
+            color: var(--text-1);
             border-radius: var(--radius-md);
             padding: 8px 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition-smooth);
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: var(--t);
+            user-select: none;
+        }
+        .icon-btn:hover { background: var(--accent-soft); border-color: var(--accent); transform: translateY(-1px); }
+        .icon-btn.muted {
+            background: rgba(239, 68, 68, 0.16) !important;
+            border-color: var(--danger) !important;
+            color: #fca5a5 !important;
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.35) !important;
         }
 
-        .header-icon-btn:hover {
-            background: var(--accent-soft);
-            border-color: var(--accent-primary);
-            transform: translateY(-1px);
-        }
-
-        .header-icon-btn.muted {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: var(--danger);
-            color: #fca5a5;
-        }
-
-        /* Auth / Profile Pill */
-        .user-profile-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--panel-border);
-            border-radius: var(--radius-full);
-            padding: 4px 14px 4px 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            color: var(--text-main);
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-
-        .user-profile-btn:hover {
-            border-color: var(--accent-primary);
-            background: var(--accent-soft);
-        }
-
-        .user-avatar-circle {
-            width: 30px;
-            height: 30px;
-            border-radius: var(--radius-full);
-            background: var(--accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: white;
-            box-shadow: 0 0 10px var(--accent-soft);
-        }
-
-        /* =========================================================================
-           MAIN DASHBOARD CONTAINER (3 CORE AREAS)
-           ========================================================================= */
+        /* =====================================================================
+           MAIN CONTAINER
+           ===================================================================== */
         main {
             flex: 1;
             display: flex;
-            padding: 16px 20px 20px 20px;
-            gap: 18px;
-            height: calc(100vh - 64px);
+            padding: 14px 18px 16px;
+            gap: 16px;
+            height: calc(100vh - 60px);
             overflow: hidden;
             position: relative;
         }
 
-        /* =========================================================================
-           1. LEFT PANEL (Reminders, Daily Schedule, Recent Activity)
-           ========================================================================= */
+        /* =====================================================================
+           LEFT PANEL: EXPANDED REMINDERS & RECENT ACTIVITY
+           ===================================================================== */
         .left-panel {
-            width: 320px;
-            min-width: 320px;
-            max-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            height: 100%;
-            overflow: hidden;
+            width: 320px; min-width: 320px;
+            display: flex; flex-direction: column;
+            gap: 14px; height: 100%;
         }
 
-        .left-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        /* Reminders: Expanded to fill previous schedule space */
+        .reminders-card {
+            flex: 1.8;
             padding: 14px 16px;
+            display: flex; flex-direction: column;
             overflow: hidden;
-            border-radius: var(--radius-md);
+            position: relative;
         }
 
-        .card-header-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 6px;
+        /* Recent Activity: Compact bottom card */
+        .activity-card {
+            flex: 1;
+            padding: 14px 16px;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-hdr {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px; padding-bottom: 8px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
-
-        .card-header-title {
-            font-size: 0.82rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 7px;
+        .card-hdr-title {
+            font-size: 0.8rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--text-2); display: flex; align-items: center; gap: 7px;
         }
-
-        .card-header-badge {
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: var(--radius-full);
+        .card-hdr-controls {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .badge-pill {
+            font-size: 0.65rem; font-weight: 700;
+            padding: 2px 8px; border-radius: var(--radius-full);
+            background: var(--accent-soft); color: var(--accent-glow);
+        }
+        .btn-mini-add {
             background: var(--accent-soft);
+            border: 1px solid var(--panel-border);
             color: var(--accent-glow);
+            border-radius: var(--radius-sm);
+            padding: 3px 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--t);
+        }
+        .btn-mini-add:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-1px);
         }
 
-        .card-scroll-area {
+        /* Inline Reminder Quick Add Bar */
+        .rem-add-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .rem-input {
             flex: 1;
-            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-sm);
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            color: var(--text-1);
+            outline: none;
+            font-family: inherit;
+            transition: var(--t);
+        }
+        .rem-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-soft);
+        }
+        .btn-rem-save {
+            background: var(--accent-grad);
+            border: none;
+            color: white;
+            padding: 7px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--t);
+        }
+        .btn-rem-save:hover {
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .scroll-area {
+            flex: 1; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 8px; padding-right: 2px;
+        }
+
+        /* Clean Empty States */
+        .empty-placeholder {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            padding-right: 4px;
-        }
-
-        /* Reminders Items */
-        .reminder-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 10px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.025);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: var(--transition-smooth);
-            cursor: pointer;
-        }
-
-        .reminder-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .reminder-check {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            border: 1.5px solid var(--text-dim);
-            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.65rem;
-            color: transparent;
-            transition: var(--transition-smooth);
+            text-align: center;
+            padding: 18px 12px;
+            color: var(--text-3);
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            background: rgba(0, 0, 0, 0.15);
         }
+        .empty-icon { font-size: 1.5rem; margin-bottom: 5px; opacity: 0.65; }
+        .empty-placeholder p { font-size: 0.76rem; font-weight: 600; color: var(--text-2); margin-bottom: 3px; }
+        .empty-placeholder small { font-size: 0.66rem; color: var(--text-3); line-height: 1.35; }
 
-        .reminder-item.completed .reminder-check {
-            background: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-
-        .reminder-item.completed .reminder-title {
-            text-decoration: line-through;
-            color: var(--text-dim);
-        }
-
-        .reminder-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .reminder-title {
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .reminder-meta {
-            font-size: 0.68rem;
-            color: var(--text-dim);
-        }
-
-        /* Schedule Timeline */
-        .schedule-timeline-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
+        /* Reminder Item with Edit & Delete Actions */
+        .rem-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 8px 10px; border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: var(--t);
+            animation: fadeIn 0.35s ease;
             position: relative;
-            padding-bottom: 6px;
         }
+        .rem-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .rem-check {
+            width: 17px; height: 17px;
+            border-radius: 4px; border: 1.5px solid var(--text-3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.62rem; color: transparent; flex-shrink: 0;
+            cursor: pointer; transition: var(--t);
+        }
+        .rem-item.done .rem-check { background: var(--success); border-color: var(--success); color: white; }
+        .rem-item.done .rem-title { text-decoration: line-through; color: var(--text-3); }
+        .rem-body { flex: 1; min-width: 0; }
+        .rem-title { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rem-meta { font-size: 0.65rem; color: var(--text-3); }
 
-        .timeline-badge {
-            font-size: 0.68rem;
-            font-weight: 700;
+        /* Edit/Delete Action Buttons on Reminder */
+        .rem-actions {
+            display: flex; align-items: center; gap: 4px;
+            opacity: 0.7; transition: opacity 0.2s;
+        }
+        .rem-item:hover .rem-actions { opacity: 1; }
+        .btn-rem-action {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer; font-size: 0.75rem;
+            padding: 4px 6px; border-radius: 4px;
+            color: var(--text-2); transition: var(--t);
+            line-height: 1;
+        }
+        .btn-rem-action:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-1);
+        }
+        .btn-rem-action.delete:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+        .btn-rem-action.edit:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
             color: var(--accent-glow);
-            min-width: 58px;
-            padding-top: 1px;
         }
 
-        .timeline-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: var(--radius-full);
-            background: var(--accent-primary);
-            box-shadow: 0 0 8px var(--accent-primary);
-            margin-top: 6px;
-            position: relative;
+        /* Activity Rows */
+        .act-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 8px; border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.025); font-size: 0.73rem;
+            animation: fadeIn 0.35s ease;
+        }
+        .act-icon { font-size: 0.85rem; flex-shrink: 0; }
+        .act-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
+        .act-time { font-size: 0.63rem; color: var(--text-3); white-space: nowrap; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .timeline-content {
-            flex: 1;
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.025);
-            font-size: 0.76rem;
-        }
-
-        .timeline-title {
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .timeline-subtitle {
-            font-size: 0.66rem;
-            color: var(--text-dim);
-        }
-
-        /* Recent Activity */
-        .activity-entry {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.02);
-            font-size: 0.73rem;
-        }
-
-        .activity-icon {
-            font-size: 0.85rem;
-            opacity: 0.85;
-        }
-
-        .activity-desc {
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: var(--text-secondary);
-        }
-
-        .activity-time {
-            font-size: 0.64rem;
-            color: var(--text-dim);
-        }
-
-        /* =========================================================================
-           2. CENTER CHARACTER AREA (Dynamic Resize: Full Width vs Split)
-           ========================================================================= */
-        .center-character-area {
+        /* =====================================================================
+           CENTER CHARACTER AREA (EXPANDS TO FILL WHEN TASK IDLE)
+           ===================================================================== */
+        .center-area {
             flex: 1 1 0;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
             position: relative;
-            height: 100%;
-            overflow: hidden;
+            height: 100%; overflow: hidden;
             border-radius: var(--radius-lg);
-            background: radial-gradient(circle at 50% 40%, rgba(244, 63, 94, 0.05) 0%, rgba(10, 13, 20, 0.4) 80%);
             border: 1px solid var(--panel-border);
             box-shadow: var(--panel-shadow);
-            transition: var(--transition-smooth);
+            background: radial-gradient(ellipse at 50% 30%, var(--accent-soft) 0%, rgba(6, 9, 18, 0.75) 85%);
+            transition: var(--t);
+        }
+        body.task-active .center-area {
+            flex: 0 0 min(540px, 48vw);
         }
 
-        /* When task is active, center area adapts proportion */
-        body.task-active .center-character-area {
-            flex: 0 0 520px;
+        .glow-orb {
+            position: absolute;
+            width: 340px; height: 340px;
+            border-radius: var(--radius-full);
+            background: var(--accent);
+            filter: blur(120px); opacity: 0.12;
+            pointer-events: none; z-index: 1;
+            top: 20%; left: 50%;
+            transform: translate(-50%, -20%);
+            transition: var(--t);
         }
 
-        /* 3D Character Viewport */
-        .character-viewport {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .char-viewport {
+            flex: 1; position: relative; width: 100%;
+            overflow: hidden; display: flex;
+            align-items: flex-end; justify-content: center;
             cursor: pointer;
+            user-select: none;
         }
 
-        #companionCanvas {
-            width: 100%;
-            height: 100%;
+        /* Character Image (Female Shruti or Male Shaan) */
+        #companionImage {
+            height: 98%;
+            max-height: 98%;
+            width: auto;
+            max-width: 96%;
+            object-fit: contain;
+            object-position: center bottom;
             display: block;
+            filter: drop-shadow(0 0 32px var(--accent-soft)) brightness(1.03);
+            transform-origin: center bottom;
+            animation: charBreathe 4.5s ease-in-out infinite;
+            position: relative; z-index: 5;
+            transition: filter 0.5s, transform 0.2s;
         }
 
-        /* Floating interactive particle layer */
-        .particles-layer {
+        body.speaking #companionImage {
+            filter: drop-shadow(0 0 46px var(--accent-glow)) brightness(1.08);
+            animation: charTalk 4.5s ease-in-out infinite;
+        }
+        body.listening #companionImage {
+            filter: drop-shadow(0 0 40px rgba(16, 185, 129, 0.45)) brightness(1.05);
+        }
+        body.thinking #companionImage {
+            filter: drop-shadow(0 0 40px rgba(14, 165, 233, 0.45)) brightness(1.04);
+        }
+
+        @keyframes charBreathe {
+            0%, 100% { transform: scale(1) translateY(0) rotate(0deg); }
+            25% { transform: scale(1.008) translateY(-3px) rotate(0.25deg); }
+            50% { transform: scale(1.01) translateY(-4px) rotate(0deg); }
+            75% { transform: scale(1.006) translateY(-2px) rotate(-0.2deg); }
+        }
+        @keyframes charTalk {
+            0%, 100% { transform: scale(1) translateY(0) rotate(0deg); }
+            15% { transform: scale(1.012) translateY(-4px) rotate(0.35deg); }
+            35% { transform: scale(1.006) translateY(-2px) rotate(-0.25deg); }
+            55% { transform: scale(1.014) translateY(-5px) rotate(0.2deg); }
+            75% { transform: scale(1.008) translateY(-3px) rotate(-0.15deg); }
+        }
+
+        /* Reactive Glow Ring Aura */
+        .state-ring {
             position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 10;
-        }
-
-        .sparkle-heart {
-            position: absolute;
-            font-size: 1.2rem;
-            opacity: 1;
-            animation: floatSparkle 1.8s forwards cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes floatSparkle {
-            0% { transform: translateY(0) scale(0.6); opacity: 1; }
-            100% { transform: translateY(-90px) scale(1.4); opacity: 0; }
-        }
-
-        /* Ambient Character Glow */
-        .character-glow-orb {
-            position: absolute;
-            width: 320px;
-            height: 320px;
+            bottom: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 280px; height: 280px;
             border-radius: var(--radius-full);
-            background: var(--accent-primary);
-            filter: blur(120px);
-            opacity: 0.12;
+            border: 2px solid transparent;
+            z-index: 4;
             pointer-events: none;
-            z-index: 1;
-            transition: var(--transition-smooth);
+            transition: border-color 0.5s, box-shadow 0.5s;
+        }
+        body.speaking .state-ring {
+            border-color: var(--accent);
+            box-shadow: 0 0 45px var(--accent-soft), inset 0 0 35px var(--accent-soft);
+            animation: ringPulse 1.2s ease-in-out infinite;
+        }
+        body.listening .state-ring {
+            border-color: rgba(16, 185, 129, 0.45);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.25);
+            animation: ringPulse 1.8s ease-in-out infinite;
+        }
+        @keyframes ringPulse {
+            0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.04); }
         }
 
-        /* Bottom Interaction Deck (Clean Voice Deck under Character) */
-        .voice-interaction-deck {
-            position: relative;
-            z-index: 20;
-            padding: 14px 20px 16px 20px;
-            background: rgba(10, 13, 22, 0.88);
-            backdrop-filter: blur(24px);
+        .particles-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+        .sparkle {
+            position: absolute; font-size: 1.2rem;
+            animation: floatUp 1.6s forwards cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-90px) scale(1.6); opacity: 0; }
+        }
+
+        /* Bottom Voice Deck */
+        .voice-deck {
+            position: relative; z-index: 20;
+            padding: 12px 18px 14px;
+            background: rgba(6, 9, 18, 0.92);
+            backdrop-filter: blur(28px);
             border-top: 1px solid var(--panel-border);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            display: flex; flex-direction: column; gap: 9px;
         }
-
-        .voice-status-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+        .voice-row {
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 10px;
         }
-
-        /* Realtime Audio Waveform Canvas */
-        .waveform-canvas-box {
-            flex: 1;
-            height: 36px;
-            position: relative;
-            border-radius: var(--radius-sm);
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-        }
-
-        #waveformCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* State Badge in Deck */
-        .voice-state-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: var(--radius-full);
-            background: var(--accent-soft);
-            border: 1px solid var(--panel-border);
-            color: var(--accent-glow);
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        /* Live Spoken Transcript Pill */
-        .transcript-feedback-bar {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+        .wave-box {
+            flex: 1; height: 34px;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 7px 14px;
             border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 32px;
+            overflow: hidden; position: relative;
+            display: flex; align-items: center;
         }
-
-        .transcript-feedback-bar .transcript-speaker {
-            font-weight: 700;
+        #waveformCanvas { width: 100%; height: 100%; display: block; }
+        .voice-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: var(--radius-full);
+            background: var(--accent-soft);
+            border: 1px solid var(--panel-border);
             color: var(--accent-glow);
-            font-size: 0.75rem;
-        }
-
-        .transcript-feedback-bar .transcript-text {
-            color: var(--text-main);
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.04em; text-transform: uppercase;
             white-space: nowrap;
         }
-
-        /* Command Input Bar */
-        .command-input-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .btn-stop {
+            background: rgba(239, 68, 68, 0.14); border: 1px solid var(--danger);
+            color: #fca5a5; padding: 6px 12px; border-radius: var(--radius-sm);
+            font-size: 0.76rem; font-weight: 600; cursor: pointer;
+            transition: var(--t); display: none; align-items: center; gap: 4px;
         }
+        .btn-stop.show { display: flex; }
 
-        .command-input {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.4);
+        .transcript-bar {
+            font-size: 0.8rem; color: var(--text-2);
+            background: rgba(0, 0, 0, 0.32);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 7px 12px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; gap: 8px; min-height: 32px;
+        }
+        .t-speaker { font-weight: 700; color: var(--accent-glow); font-size: 0.76rem; white-space: nowrap; }
+        .t-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+        .cmd-row { display: flex; align-items: center; gap: 8px; }
+        .cmd-input {
+            flex: 1; background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--panel-border);
             border-radius: var(--radius-sm);
-            padding: 9px 14px;
-            color: var(--text-main);
-            font-size: 0.84rem;
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition-smooth);
+            padding: 9px 13px; color: var(--text-1);
+            font-size: 0.84rem; font-family: inherit; outline: none;
+            transition: var(--t);
         }
-
-        .command-input:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 16px var(--accent-soft);
+        .cmd-input:focus { border-color: var(--accent); box-shadow: 0 0 16px var(--accent-soft); }
+        .btn-send {
+            background: var(--accent-grad); border: none; color: white;
+            padding: 9px 18px; border-radius: var(--radius-sm);
+            font-size: 0.82rem; font-weight: 700; cursor: pointer;
+            transition: var(--t); display: flex; align-items: center; gap: 6px;
         }
+        .btn-send:hover { transform: translateY(-1px); box-shadow: 0 0 18px var(--accent-glow); }
 
-        .btn-send-cmd {
-            background: var(--accent-gradient);
-            border: none;
-            color: white;
-            padding: 9px 18px;
-            border-radius: var(--radius-sm);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-send-cmd:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 0 16px var(--accent-glow);
-        }
-
-        .btn-barge-in {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid var(--danger);
-            color: #fca5a5;
-            padding: 9px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            display: none;
-        }
-
-        .btn-barge-in.visible {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* =========================================================================
-           3. RIGHT TASK AREA (Dynamic: Normally Hidden, Appears during Task)
-           ========================================================================= */
-        .right-task-area {
-            width: 0;
-            min-width: 0;
-            opacity: 0;
-            transform: translateX(40px);
+        /* =====================================================================
+           RIGHT TASK AREA (SLIDES IN ONLY WHEN TASK ACTIVE)
+           ===================================================================== */
+        .right-panel {
+            width: 0; min-width: 0;
+            opacity: 0; transform: translateX(40px);
             pointer-events: none;
-            margin: 0;
-            padding: 0;
+            display: flex; flex-direction: column;
+            gap: 12px; height: 100%;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            height: 100%;
-            transition: var(--transition-smooth);
-            border-radius: var(--radius-md);
+            transition: var(--t);
         }
-
-        body.task-active .right-task-area {
-            width: 440px;
-            min-width: 440px;
-            opacity: 1;
-            transform: translateX(0);
+        body.task-active .right-panel {
+            width: 430px; min-width: 430px;
+            opacity: 1; transform: translateX(0);
             pointer-events: auto;
         }
 
-        .task-card-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 18px 20px;
+        .task-card {
+            flex: 1; padding: 16px 18px;
+            display: flex; flex-direction: column;
             overflow: hidden;
         }
-
-        .task-top-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+        .task-top {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 10px;
         }
-
-        .task-badge-active {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--accent-glow);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+        .task-label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.7rem; font-weight: 700;
+            color: var(--accent-glow); text-transform: uppercase; letter-spacing: 0.06em;
         }
-
+        .task-badge-ip {
+            font-size: 0.65rem; font-weight: 700;
+            padding: 2px 8px; border-radius: var(--radius-full);
+            background: rgba(16, 185, 129, 0.15); color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
         .task-timer {
-            font-size: 0.75rem;
-            font-family: monospace;
-            color: var(--text-dim);
-            background: rgba(0, 0, 0, 0.35);
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .task-title-text {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 12px;
-            line-height: 1.35;
-        }
-
-        /* Progress Bar */
-        .task-progress-box {
-            margin-bottom: 16px;
-        }
-
-        .progress-meta-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.74rem;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .progress-track {
-            height: 8px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: var(--radius-full);
-            overflow: hidden;
+            font-size: 0.74rem; font-family: monospace;
+            color: var(--text-2); background: rgba(0, 0, 0, 0.35);
+            padding: 3px 8px; border-radius: 4px;
             border: 1px solid rgba(255, 255, 255, 0.06);
-            position: relative;
         }
+        .task-title { font-size: 1.05rem; font-weight: 700; color: var(--text-1); margin-bottom: 12px; line-height: 1.35; }
 
+        .progress-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-2); margin-bottom: 6px; font-weight: 600; }
+        .progress-track { height: 7px; background: rgba(0, 0, 0, 0.4); border-radius: var(--radius-full); overflow: hidden; }
         .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--accent-gradient);
+            height: 100%; width: 0%;
+            background: var(--accent-grad);
             border-radius: var(--radius-full);
             box-shadow: 0 0 12px var(--accent-glow);
-            transition: width 0.3s ease;
+            transition: width 0.4s ease;
         }
 
-        /* Step List */
-        .task-steps-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-right: 4px;
-            margin-bottom: 12px;
-        }
-
-        .step-row-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.025);
+        .steps-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; padding-right: 3px; }
+        .step-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 9px 12px; border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: var(--transition-smooth);
+            transition: var(--t);
         }
-
-        .step-row-item.current {
-            background: var(--accent-soft);
-            border-color: var(--accent-primary);
-        }
-
-        .step-row-item.verified {
-            border-color: rgba(16, 185, 129, 0.3);
-            background: rgba(16, 185, 129, 0.06);
-        }
-
-        .step-row-item.failed {
-            border-color: rgba(239, 68, 68, 0.4);
-            background: rgba(239, 68, 68, 0.08);
-        }
-
-        .step-status-icon {
-            width: 20px;
-            height: 20px;
+        .step-item.running { background: var(--accent-soft); border-color: var(--accent); }
+        .step-item.done { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+        .step-icon {
+            width: 18px; height: 18px;
             border-radius: var(--radius-full);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            margin-top: 1px;
-            flex-shrink: 0;
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-dim);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.68rem; flex-shrink: 0; margin-top: 1px;
+            background: rgba(255, 255, 255, 0.08); color: var(--text-3);
         }
+        .step-item.running .step-icon { background: var(--accent); color: white; animation: orbPulse 1.2s infinite; }
+        .step-item.done .step-icon { background: var(--success); color: white; }
+        .step-info { flex: 1; min-width: 0; }
+        .step-name { font-size: 0.78rem; font-weight: 600; }
+        .step-cmd { font-size: 0.66rem; color: var(--text-3); font-family: monospace; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .step-row-item.current .step-status-icon {
-            background: var(--accent-primary);
-            color: white;
-            box-shadow: 0 0 10px var(--accent-glow);
-            animation: pulseAura 1.5s infinite;
-        }
-
-        .step-row-item.verified .step-status-icon {
-            background: var(--success);
-            color: white;
-        }
-
-        .step-row-item.failed .step-status-icon {
-            background: var(--danger);
-            color: white;
-        }
-
-        .step-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .step-title {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .step-detail {
-            font-size: 0.69rem;
-            color: var(--text-dim);
-            font-family: monospace;
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Console Output Box */
-        .terminal-console-box {
-            height: 90px;
-            background: #06080e;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .console-box {
+            height: 85px;
+            background: #03050a; border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: var(--radius-sm);
-            padding: 8px 10px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 0.68rem;
-            color: #38bdf8;
-            overflow-y: auto;
-            line-height: 1.4;
-            margin-bottom: 12px;
+            padding: 8px 10px; font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.68rem; color: #38bdf8;
+            overflow-y: auto; line-height: 1.45; margin-bottom: 10px;
         }
-
-        /* Verification Card */
-        .verification-badge-card {
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--success);
-            color: #6ee7b7;
-            font-size: 0.76rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .verify-box {
+            padding: 9px 13px; border-radius: var(--radius-sm);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7; font-size: 0.74rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
+        .verify-left { display: flex; align-items: center; gap: 7px; }
         .btn-task-action {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: var(--text-main);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.72rem;
-            cursor: pointer;
-            transition: var(--transition-smooth);
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
+            color: var(--text-1); padding: 4px 10px; border-radius: 4px;
+            font-size: 0.72rem; cursor: pointer; transition: var(--t);
         }
+        .btn-task-action:hover { background: var(--accent); border-color: var(--accent); color: white; }
 
-        .btn-task-action:hover {
-            background: var(--accent-primary);
-            border-color: var(--accent-glow);
-            color: white;
+        /* =====================================================================
+           SETTINGS MODAL
+           ===================================================================== */
+        .modal-bg {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(14px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; pointer-events: none;
+            transition: opacity 0.35s var(--ease);
         }
-
-        /* =========================================================================
-           MODALS (AUTHENTICATION & SETTINGS & PROFILE)
-           ========================================================================= */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(14px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: var(--transition-smooth);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-container {
-            width: 480px;
-            max-width: 95vw;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            background: var(--panel-bg-solid);
+        .modal-bg.open { opacity: 1; pointer-events: auto; }
+        .modal {
+            width: 520px; max-width: 95vw; max-height: 92vh;
+            background: #0d1222;
             border: 1px solid var(--panel-border);
             border-radius: var(--radius-lg);
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
-            overflow: hidden;
-            transform: scale(0.95) translateY(10px);
-            transition: var(--transition-smooth);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85);
+            display: flex; flex-direction: column; overflow: hidden;
+            transform: scale(0.94) translateY(12px);
+            transition: transform 0.35s var(--ease);
         }
-
-        .modal-overlay.active .modal-container {
-            transform: scale(1) translateY(0);
+        .modal-bg.open .modal { transform: scale(1) translateY(0); }
+        .modal-hdr {
+            padding: 16px 22px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         }
-
-        .modal-header-row {
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
         .modal-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.15rem; font-weight: 800;
+            background: var(--accent-grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-
-        .modal-close-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-dim);
-            font-size: 1.3rem;
-            cursor: pointer;
-            line-height: 1;
-            transition: var(--transition-smooth);
+        .close-btn {
+            background: transparent; border: none;
+            color: var(--text-3); font-size: 1.3rem; cursor: pointer;
+            transition: color 0.2s; line-height: 1;
         }
+        .close-btn:hover { color: var(--text-1); }
+        .modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
 
-        .modal-close-btn:hover {
-            color: var(--text-main);
+        .form-grp { margin-bottom: 16px; }
+        .form-lbl {
+            display: block; font-size: 0.76rem; font-weight: 700;
+            color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;
         }
-
-        .modal-body {
-            padding: 22px 24px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        /* Form Controls */
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
-        .form-input {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.35);
+        .form-inp {
+            width: 100%; background: rgba(0, 0, 0, 0.35);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: var(--radius-sm);
-            padding: 10px 14px;
-            font-size: 0.85rem;
-            color: var(--text-main);
-            outline: none;
-            font-family: inherit;
-            transition: var(--transition-smooth);
+            padding: 10px 12px; font-size: 0.85rem;
+            color: var(--text-1); outline: none; font-family: inherit;
+            transition: var(--t);
         }
+        .form-inp:focus { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-soft); }
+        .form-inp option { background: #0d1222; }
 
-        .form-input:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 12px var(--accent-soft);
-        }
-
-        .btn-submit-main {
-            width: 100%;
-            background: var(--accent-gradient);
-            border: none;
-            color: white;
-            padding: 11px;
-            border-radius: var(--radius-sm);
-            font-size: 0.88rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition-smooth);
+        .btn-primary {
+            width: 100%; background: var(--accent-grad);
+            border: none; color: white;
+            padding: 11px; border-radius: var(--radius-sm);
+            font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; transition: var(--t);
             margin-top: 10px;
-            box-shadow: 0 4px 16px var(--accent-soft);
+            box-shadow: 0 4px 18px var(--accent-soft);
         }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 26px var(--accent-glow); }
 
-        .btn-submit-main:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 22px var(--accent-glow);
-        }
-
-        /* Modal Tabs */
-        .modal-tabs {
-            display: flex;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            border-bottom: 2px solid transparent;
-        }
-
-        .modal-tab-btn.active {
-            color: var(--text-main);
-            border-bottom-color: var(--accent-primary);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        /* Radio Card Grids */
-        .radio-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .radio-option-card {
+        .r-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .r-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+        .r-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: var(--radius-sm);
-            padding: 12px;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            text-align: center;
+            padding: 11px 9px; cursor: pointer; text-align: center;
+            transition: var(--t);
+            user-select: none;
         }
+        .r-card:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.06); }
+        .r-card.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 16px var(--accent-soft); }
+        .r-card-title { font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .r-card-sub { font-size: 0.68rem; color: var(--text-3); margin-top: 3px; }
+        .theme-swatch { width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 5px; }
 
-        .radio-option-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .radio-option-card.selected {
-            border-color: var(--accent-primary);
-            background: var(--accent-soft);
-            box-shadow: 0 0 14px var(--accent-soft);
-        }
-
-        .card-opt-title {
-            font-size: 0.84rem;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .card-opt-desc {
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            margin-top: 3px;
-        }
-
-        /* 6-Digit OTP Box */
-        .otp-boxes-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            margin: 16px 0;
-        }
-
-        .otp-digit-input {
-            width: 52px;
-            height: 56px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: var(--radius-sm);
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--accent-glow);
-            outline: none;
-            transition: var(--transition-smooth);
-        }
-
-        .otp-digit-input:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 12px var(--accent-soft);
-        }
-
-        /* Toast Feedback Banner */
-        .toast-bubble {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            background: rgba(18, 22, 33, 0.95);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--accent-primary);
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+        /* Toast Feedback */
+        .toast {
+            position: fixed; bottom: 22px; left: 50%;
+            transform: translateX(-50%) translateY(70px);
+            background: rgba(13, 18, 34, 0.96);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7);
             border-radius: var(--radius-full);
-            padding: 10px 22px;
-            font-size: 0.84rem;
-            font-weight: 600;
-            color: white;
-            opacity: 0;
-            transition: var(--transition-smooth);
-            z-index: 200;
+            padding: 9px 22px; font-size: 0.84rem; font-weight: 600;
+            color: white; opacity: 0; transition: var(--t); z-index: 200;
             pointer-events: none;
         }
-
-        .toast-bubble.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     </style>
 </head>
 <body>
 
-    <!-- =========================================================================
-         HEADER
-         ========================================================================= -->
-    <header>
-        <div class="header-left">
-            <div class="brand-logo-wrap" id="btnBrandLogo" title="Shruti AI Desktop Assistant">
-                <div class="brand-aura-orb">S</div>
-                <div class="brand-text-block">
-                    <div class="brand-title">Shruti</div>
-                    <div class="user-greeting" id="headerGreetingText">Welcome, Alex</div>
-                </div>
+<!-- =====================================================================
+     HEADER (NO LOGIN OPTIONS)
+     ===================================================================== -->
+<header>
+    <div class="brand-wrap">
+        <div class="brand-orb" id="brandOrb">S</div>
+        <div class="brand-info">
+            <div id="brandNameDisplay">
+                <span id="brandNameText">Shruti</span>
+                <span class="edit-hint">✎ click to edit</span>
             </div>
-        </div>
-
-        <div class="header-right">
-            <!-- Listening / System State Indicator -->
-            <div class="state-indicator-badge">
-                <div class="state-pulse-dot" id="headerStateDot"></div>
-                <span id="headerStateText">Idle</span>
-            </div>
-
-            <!-- Mic Mute Toggle -->
-            <button class="header-icon-btn" id="btnHeaderMic" title="Toggle Microphone Mute">
-                <span id="headerMicIcon">🎙️</span>
-                <span id="headerMicLabel">Mic Active</span>
-            </button>
-
-            <!-- Settings Button -->
-            <button class="header-icon-btn" id="btnOpenSettings" title="Companion & System Settings">
-                <span>⚙️</span>
-                <span>Settings</span>
-            </button>
-
-            <!-- Auth / Profile Button -->
-            <button class="user-profile-btn" id="btnHeaderAuth">
-                <div class="user-avatar-circle" id="headerAvatarCircle">AM</div>
-                <span id="headerProfileName">Alex Mercer</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- =========================================================================
-         MAIN WORKSPACE (LEFT PANEL, CENTER CHARACTER, RIGHT TASK AREA)
-         ========================================================================= -->
-    <main id="mainContainer">
-
-        <!-- 1. LEFT PANEL -->
-        <aside class="left-panel">
-            
-            <!-- Reminders Card -->
-            <div class="glass-panel left-card">
-                <div class="card-header-bar">
-                    <div class="card-header-title">
-                        <span>⏰</span>
-                        <span>Reminders</span>
-                    </div>
-                    <span class="card-header-badge" id="reminderCountBadge">3 Active</span>
-                </div>
-                <div class="card-scroll-area" id="remindersList">
-                    <div class="reminder-item" data-id="1">
-                        <div class="reminder-check">✓</div>
-                        <div class="reminder-content">
-                            <div class="reminder-title">Review Q4 automation test runs</div>
-                            <div class="reminder-meta">Today • 10:30 AM</div>
-                        </div>
-                    </div>
-                    <div class="reminder-item" data-id="2">
-                        <div class="reminder-check">✓</div>
-                        <div class="reminder-content">
-                            <div class="reminder-title">Verify Gemini Live bidirectional audio</div>
-                            <div class="reminder-meta">Today • 02:00 PM</div>
-                        </div>
-                    </div>
-                    <div class="reminder-item" data-id="3">
-                        <div class="reminder-check">✓</div>
-                        <div class="reminder-content">
-                            <div class="reminder-title">Update GitHub project documentation</div>
-                            <div class="reminder-meta">Tomorrow • 09:00 AM</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Daily Schedule Card -->
-            <div class="glass-panel left-card">
-                <div class="card-header-bar">
-                    <div class="card-header-title">
-                        <span>📅</span>
-                        <span>Daily Schedule</span>
-                    </div>
-                    <span style="font-size: 0.68rem; color: var(--text-dim);" id="scheduleDateText">Today</span>
-                </div>
-                <div class="card-scroll-area" id="scheduleList">
-                    <div class="schedule-timeline-item">
-                        <div class="timeline-badge">09:30 AM</div>
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">Desktop Agent Architecture Review</div>
-                            <div class="timeline-subtitle">Completed • Standup</div>
-                        </div>
-                    </div>
-                    <div class="schedule-timeline-item">
-                        <div class="timeline-badge">01:15 PM</div>
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">PyTest Verification & Sandbox Execution</div>
-                            <div class="timeline-subtitle">In Progress • System</div>
-                        </div>
-                    </div>
-                    <div class="schedule-timeline-item">
-                        <div class="timeline-badge">04:00 PM</div>
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-title">Live Voice & Companion Interaction Test</div>
-                            <div class="timeline-subtitle">Upcoming • Production</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity Card -->
-            <div class="glass-panel left-card">
-                <div class="card-header-bar">
-                    <div class="card-header-title">
-                        <span>⚡</span>
-                        <span>Recent Activity</span>
-                    </div>
-                    <div class="state-pulse-dot" style="background: var(--info); box-shadow: 0 0 8px var(--info);"></div>
-                </div>
-                <div class="card-scroll-area" id="activityList">
-                    <div class="activity-entry">
-                        <span class="activity-icon">✓</span>
-                        <span class="activity-desc">Executed test suite (30 passed)</span>
-                        <span class="activity-time">6m ago</span>
-                    </div>
-                    <div class="activity-entry">
-                        <span class="activity-icon">🌐</span>
-                        <span class="activity-desc">Browser Tab: Google Search opened</span>
-                        <span class="activity-time">18m ago</span>
-                    </div>
-                    <div class="activity-entry">
-                        <span class="activity-icon">⌨️</span>
-                        <span class="activity-desc">Keyboard command verified</span>
-                        <span class="activity-time">42m ago</span>
-                    </div>
-                    <div class="activity-entry">
-                        <span class="activity-icon">🎙️</span>
-                        <span class="activity-desc">Microphone stream initialized</span>
-                        <span class="activity-time">1h ago</span>
-                    </div>
-                </div>
-            </div>
-
-        </aside>
-
-        <!-- 2. CENTER CHARACTER AREA -->
-        <section class="center-character-area" id="centerCharacterArea">
-            <div class="character-glow-orb" id="characterAmbientGlow"></div>
-
-            <!-- 3D Human / Anime Companion Canvas (No text overlays on top) -->
-            <div class="character-viewport" id="companionViewport" title="Click to interact with your companion">
-                <canvas id="companionCanvas"></canvas>
-                <div class="particles-layer" id="particlesLayer"></div>
-            </div>
-
-            <!-- Voice Interaction Deck (At Bottom) -->
-            <div class="voice-interaction-deck">
-                <div class="voice-status-row">
-                    <!-- Real-time Audio Waveform Visualizer -->
-                    <div class="waveform-canvas-box" title="Real-time Audio Waveform">
-                        <canvas id="waveformCanvas"></canvas>
-                    </div>
-
-                    <!-- Assistant State Tag -->
-                    <div class="voice-state-pill" id="voiceStatePill">
-                        <span id="voiceStateDot">●</span>
-                        <span id="voiceStateLabel">Ready / Idle</span>
-                    </div>
-
-                    <!-- Interrupt / Barge-in Button -->
-                    <button class="btn-barge-in" id="btnBargeIn" title="Interrupt current speech or execution">
-                        <span>⏹</span>
-                        <span>Stop</span>
-                    </button>
-                </div>
-
-                <!-- Real-time Spoken Transcript Feedback -->
-                <div class="transcript-feedback-bar" id="transcriptFeedbackBar">
-                    <span class="transcript-speaker" id="transcriptSpeakerLabel">Shruti:</span>
-                    <span class="transcript-text" id="transcriptTextContent">"Hello Alex! I am listening. Say a command or ask me to automate anything."</span>
-                </div>
-
-                <!-- Command Input Row -->
-                <div class="command-input-row">
-                    <input type="text" class="command-input" id="cmdTextInput" placeholder="Type a task command (e.g. 'Open VS Code and run tests', 'Search YouTube')..." autocomplete="off">
-                    <button class="btn-send-cmd" id="btnSendCmd">
-                        <span>Execute</span>
-                        <span>➔</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. RIGHT TASK AREA (Dynamically Appears during Tasks) -->
-        <aside class="right-task-area" id="rightTaskArea">
-            <div class="glass-panel task-card-main">
-                <div class="task-top-bar">
-                    <div class="task-badge-active">
-                        <span style="font-size: 0.9rem;">⚡</span>
-                        <span>Execution Pipeline</span>
-                    </div>
-                    <div class="task-timer" id="taskTimer">00:00.0</div>
-                </div>
-
-                <div class="task-title-text" id="activeTaskTitle">
-                    Multi-Step Desktop Automation
-                </div>
-
-                <!-- Progress Section -->
-                <div class="task-progress-box">
-                    <div class="progress-meta-row">
-                        <span id="taskProgressStepLabel">Step 1 of 4: Initializing</span>
-                        <span id="taskProgressPercent">25%</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" id="taskProgressFill" style="width: 25%;"></div>
-                    </div>
-                </div>
-
-                <!-- Individual Task Steps List -->
-                <div class="task-steps-list" id="taskStepsContainer">
-                    <!-- Populated dynamically via JavaScript -->
-                </div>
-
-                <!-- Live Execution Console -->
-                <div class="terminal-console-box" id="taskTerminalConsole">
-                    [System] Initializing execution sandbox...<br>
-                    [Orchestrator] Security risk verification: LOW_RISK approved.<br>
-                </div>
-
-                <!-- Verification & Result Box -->
-                <div class="verification-badge-card" id="taskVerificationBox">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="verificationStatusIcon">⏳</span>
-                        <span id="verificationStatusText">Awaiting step verification...</span>
-                    </div>
-                    <button class="btn-task-action" id="btnDismissTask">Close</button>
-                </div>
-            </div>
-        </aside>
-
-    </main>
-
-    <!-- =========================================================================
-         SETTINGS & COMPANION PERSONALIZATION MODAL
-         ========================================================================= -->
-    <div class="modal-overlay" id="settingsModalOverlay">
-        <div class="modal-container">
-            <div class="modal-header-row">
-                <h3 class="modal-title">Assistant & Companion Settings</h3>
-                <button class="modal-close-btn" id="btnCloseSettings">✕</button>
-            </div>
-
-            <div class="modal-body">
-                <!-- 1. Companion Gender Selection -->
-                <div class="form-group">
-                    <label class="form-label">1. Companion Persona</label>
-                    <div class="radio-grid-2" id="companionGenderOptions">
-                        <div class="radio-option-card selected" data-companion-gender="female">
-                            <div class="card-opt-title">👩 Female (Shruti)</div>
-                            <div class="card-opt-desc">Warm, elegant & expressive voice</div>
-                        </div>
-                        <div class="radio-option-card" data-companion-gender="male">
-                            <div class="card-opt-title">👨 Male (Shaan)</div>
-                            <div class="card-opt-desc">Sharp, confident & deep voice</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Companion Style -->
-                <div class="form-group">
-                    <label class="form-label">2. Presentation & Interaction Style</label>
-                    <div class="radio-grid-2" style="grid-template-columns: repeat(3, 1fr);" id="companionStyleOptions">
-                        <div class="radio-option-card" data-companion-style="formal">
-                            <div class="card-opt-title">👔 Formal</div>
-                            <div class="card-opt-desc">Professional suit</div>
-                        </div>
-                        <div class="radio-option-card" data-companion-style="friendly">
-                            <div class="card-opt-title">☕ Friendly</div>
-                            <div class="card-opt-desc">Casual comfort</div>
-                        </div>
-                        <div class="radio-option-card selected" data-companion-style="romantic">
-                            <div class="card-opt-title">💖 Romantic</div>
-                            <div class="card-opt-desc">Sweet & devoted</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Dashboard Theme -->
-                <div class="form-group">
-                    <label class="form-label">3. Dashboard Theme / Color Scheme</label>
-                    <div class="radio-grid-2" id="themeOptions">
-                        <div class="radio-option-card selected" data-theme-name="rose">
-                            <div class="card-opt-title" style="color: #fb7185;">🌸 Cyber Rose</div>
-                            <div class="card-opt-desc">Vibrant dark futuristic rose</div>
-                        </div>
-                        <div class="radio-option-card" data-theme-name="sapphire">
-                            <div class="card-opt-title" style="color: #38bdf8;">💎 Midnight Sapphire</div>
-                            <div class="card-opt-desc">Deep cyber blue & cyan</div>
-                        </div>
-                        <div class="radio-option-card" data-theme-name="emerald">
-                            <div class="card-opt-title" style="color: #34d399;">🌿 Emerald Matrix</div>
-                            <div class="card-opt-desc">Obsidian & neon mint</div>
-                        </div>
-                        <div class="radio-option-card" data-theme-name="amethyst">
-                            <div class="card-opt-title" style="color: #c084fc;">🔮 Amethyst Violet</div>
-                            <div class="card-opt-desc">Royal purple & lilac glow</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Voice Type Selection & Preview -->
-                <div class="form-group">
-                    <label class="form-label">4. Voice Type & Audio Model</label>
-                    <div style="display: flex; gap: 10px;">
-                        <select class="form-input" id="voiceSelect" style="flex: 1;">
-                            <option value="Aoede" selected>Aoede — Female (Melodic & Warm)</option>
-                            <option value="Kore">Kore — Female (Gentle & Calm)</option>
-                            <option value="Fenrir">Fenrir — Male (Deep & Confident)</option>
-                            <option value="Puck">Puck — Male (Energetic & Friendly)</option>
-                        </select>
-                        <button class="header-icon-btn" id="btnPreviewVoice" style="white-space: nowrap;">
-                            <span>🔊</span>
-                            <span>Preview</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 5. User Configurable Name -->
-                <div class="form-group">
-                    <label class="form-label">5. Your Display Name (Used in Greetings & Prompts)</label>
-                    <input type="text" class="form-input" id="inputUserName" value="Alex Mercer" placeholder="Your name...">
-                </div>
-
-                <button class="btn-submit-main" id="btnSaveSettings">Apply & Save Settings</button>
-            </div>
+            <input id="brandNameInput" type="text" value="Shruti" maxlength="20">
+            <div class="brand-sub" id="headerSub">Your AI Desktop Companion</div>
         </div>
     </div>
 
-    <!-- =========================================================================
-         AUTHENTICATION MODAL (SIGN IN, REGISTER, FORGOT PASS, OTP)
-         ========================================================================= -->
-    <div class="modal-overlay" id="authModalOverlay">
-        <div class="modal-container" style="width: 440px;">
-            <div class="modal-header-row">
-                <h3 class="modal-title" id="authModalTitle">Account Authentication</h3>
-                <button class="modal-close-btn" id="btnCloseAuth">✕</button>
+    <div class="hdr-right">
+        <div class="state-badge">
+            <div class="pulse-dot" id="stateDot"></div>
+            <span id="stateText">Ready</span>
+        </div>
+        <button class="icon-btn" id="btnMic">
+            <span id="micIcon">🎙️</span>
+            <span id="micLabel">Mic Active</span>
+        </button>
+        <button class="icon-btn" id="btnSettings">⚙️ Settings</button>
+    </div>
+</header>
+
+<!-- =====================================================================
+     MAIN LAYOUT
+     ===================================================================== -->
+<main id="mainWrap">
+
+    <!-- LEFT PANEL: EXPANDED REMINDERS & RECENT ACTIVITY -->
+    <aside class="left-panel">
+
+        <!-- Expanded Reminders Container -->
+        <div class="glass reminders-card">
+            <div class="card-hdr">
+                <div class="card-hdr-title">⏰ Reminders</div>
+                <div class="card-hdr-controls">
+                    <span class="badge-pill" id="remBadge">0 Active</span>
+                    <button class="btn-mini-add" id="btnToggleAddRem" title="Add reminder">+ Add</button>
+                </div>
             </div>
 
-            <!-- Auth View Tabs -->
-            <div class="modal-tabs">
-                <button class="modal-tab-btn active" data-auth-tab="login" id="tabBtnLogin">Sign In</button>
-                <button class="modal-tab-btn" data-auth-tab="register" id="tabBtnRegister">Create Account</button>
+            <!-- Quick Add Reminder Input Bar -->
+            <div class="rem-add-bar" id="remAddBar" style="display:none;">
+                <input type="text" id="remInput" class="rem-input" placeholder="Type a reminder (e.g. 'Submit project at 5 PM')...">
+                <button class="btn-rem-save" id="btnSaveRem">Save</button>
             </div>
 
-            <div class="modal-body">
-                <!-- 1. SIGN IN VIEW -->
-                <form id="viewLogin">
-                    <div class="form-group">
-                        <label class="form-label">Email or Phone</label>
-                        <input type="text" class="form-input" id="loginEmail" placeholder="alex.mercer@example.com" value="alex.mercer@example.com" required>
-                    </div>
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between;">
-                            <label class="form-label">Password</label>
-                            <a href="#" id="linkForgotPassword" style="font-size: 0.74rem; color: var(--accent-glow); text-decoration: none;">Forgot?</a>
-                        </div>
-                        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" value="password123" required>
-                    </div>
-                    <button type="submit" class="btn-submit-main" id="btnSubmitLogin">Sign In to Shruti</button>
-                </form>
-
-                <!-- 2. REGISTER VIEW -->
-                <form id="viewRegister" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-input" id="regName" placeholder="e.g. Alex Mercer" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" class="form-input" id="regEmail" placeholder="name@domain.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Mobile Number</label>
-                        <input type="tel" class="form-input" id="regPhone" placeholder="+1 (555) 019-2834" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-input" id="regPassword" placeholder="Minimum 8 characters" required>
-                    </div>
-                    <button type="submit" class="btn-submit-main" id="btnSubmitRegister">Send Verification Code</button>
-                </form>
-
-                <!-- 3. FORGOT PASSWORD VIEW -->
-                <form id="viewForgot" style="display: none;">
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 14px;">
-                        Enter your registered email address or mobile number to receive a 6-digit verification code.
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email or Mobile</label>
-                        <input type="text" class="form-input" id="forgotTarget" placeholder="alex.mercer@example.com" required>
-                    </div>
-                    <button type="submit" class="btn-submit-main" id="btnSubmitForgot">Send OTP Code</button>
-                    <div style="text-align: center; margin-top: 12px;">
-                        <a href="#" id="linkBackToLogin" style="font-size: 0.74rem; color: var(--text-dim); text-decoration: none;">← Back to Sign In</a>
-                    </div>
-                </form>
-
-                <!-- 4. OTP VERIFICATION VIEW -->
-                <form id="viewOtp" style="display: none;">
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 6px;">
-                        Enter the 6-digit verification code sent to your registered contact.
-                    </div>
-                    <div class="otp-boxes-row">
-                        <input type="text" maxlength="1" class="otp-digit-input" autofocus>
-                        <input type="text" maxlength="1" class="otp-digit-input">
-                        <input type="text" maxlength="1" class="otp-digit-input">
-                        <input type="text" maxlength="1" class="otp-digit-input">
-                        <input type="text" maxlength="1" class="otp-digit-input">
-                        <input type="text" maxlength="1" class="otp-digit-input">
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 12px;">
-                        <span>Code expires in: <b id="otpTimerText" style="color: var(--accent-glow);">01:30</b></span>
-                        <a href="#" id="linkResendOtp" style="color: var(--accent-glow); text-decoration: none;">Resend Code</a>
-                    </div>
-                    <button type="submit" class="btn-submit-main" id="btnSubmitOtp">Verify & Complete Sign In</button>
-                </form>
-
-                <!-- 5. PASSWORD RESET VIEW -->
-                <form id="viewResetPassword" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">New Password</label>
-                        <input type="password" class="form-input" id="resetNewPass" placeholder="Enter new password" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-input" id="resetConfirmPass" placeholder="Confirm new password" required>
-                    </div>
-                    <button type="submit" class="btn-submit-main" id="btnSubmitResetPass">Update Password & Sign In</button>
-                </form>
+            <div class="scroll-area" id="remList">
+                <div class="empty-placeholder" id="remEmpty">
+                    <span class="empty-icon">🔔</span>
+                    <p>No active reminders</p>
+                    <small>Click '+ Add' above or ask the assistant by voice.</small>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Toast Notification Element -->
-    <div class="toast-bubble" id="toastBubble">Notification</div>
-
-    <!-- =========================================================================
-         SCRIPT LOGIC: 3D COMPANION, VOICE WAVEFORM, DYNAMIC TASKS, AUTH & SETTINGS
-         ========================================================================= -->
-    <script>
-        // =========================================================================
-        // APPLICATION STATE & STORAGE
-        // =========================================================================
-        const AppState = {
-            authenticated: true,
-            user: {
-                name: localStorage.getItem('shruti_user_name') || 'Alex Mercer',
-                email: localStorage.getItem('shruti_user_email') || 'alex.mercer@example.com',
-                initials: 'AM'
-            },
-            companion: {
-                gender: localStorage.getItem('shruti_comp_gender') || 'female', // 'female' (Shruti) or 'male' (Shaan)
-                style: localStorage.getItem('shruti_comp_style') || 'romantic',   // 'formal', 'friendly', 'romantic'
-                theme: localStorage.getItem('shruti_theme') || 'rose',           // 'rose', 'sapphire', 'emerald', 'amethyst'
-                voice: localStorage.getItem('shruti_voice') || 'Aoede'
-            },
-            agent: {
-                name: 'Shruti',
-                state: 'IDLE', // 'IDLE', 'LISTENING', 'THINKING', 'EXECUTING', 'SPEAKING', 'ERROR', 'MUTED'
-                isMuted: false,
-                currentTask: null
-            }
-        };
-
-        // DOM Elements
-        const mainContainer = document.getElementById('mainContainer');
-        const headerStateDot = document.getElementById('headerStateDot');
-        const headerStateText = document.getElementById('headerStateText');
-        const headerGreetingText = document.getElementById('headerGreetingText');
-        const headerAvatarCircle = document.getElementById('headerAvatarCircle');
-        const headerProfileName = document.getElementById('headerProfileName');
-        const btnHeaderMic = document.getElementById('btnHeaderMic');
-        const headerMicIcon = document.getElementById('headerMicIcon');
-        const headerMicLabel = document.getElementById('headerMicLabel');
-        const voiceStatePill = document.getElementById('voiceStatePill');
-        const voiceStateLabel = document.getElementById('voiceStateLabel');
-        const voiceStateDot = document.getElementById('voiceStateDot');
-        const btnBargeIn = document.getElementById('btnBargeIn');
-        const transcriptSpeakerLabel = document.getElementById('transcriptSpeakerLabel');
-        const transcriptTextContent = document.getElementById('transcriptTextContent');
-        const cmdTextInput = document.getElementById('cmdTextInput');
-        const btnSendCmd = document.getElementById('btnSendCmd');
-        const toastBubble = document.getElementById('toastBubble');
-
-        // Right Task Elements
-        const rightTaskArea = document.getElementById('rightTaskArea');
-        const activeTaskTitle = document.getElementById('activeTaskTitle');
-        const taskTimer = document.getElementById('taskTimer');
-        const taskProgressStepLabel = document.getElementById('taskProgressStepLabel');
-        const taskProgressPercent = document.getElementById('taskProgressPercent');
-        const taskProgressFill = document.getElementById('taskProgressFill');
-        const taskStepsContainer = document.getElementById('taskStepsContainer');
-        const taskTerminalConsole = document.getElementById('taskTerminalConsole');
-        const taskVerificationBox = document.getElementById('taskVerificationBox');
-        const verificationStatusIcon = document.getElementById('verificationStatusIcon');
-        const verificationStatusText = document.getElementById('verificationStatusText');
-        const btnDismissTask = document.getElementById('btnDismissTask');
-
-        // Modals
-        const settingsModalOverlay = document.getElementById('settingsModalOverlay');
-        const btnOpenSettings = document.getElementById('btnOpenSettings');
-        const btnCloseSettings = document.getElementById('btnCloseSettings');
-        const authModalOverlay = document.getElementById('authModalOverlay');
-        const btnHeaderAuth = document.getElementById('btnHeaderAuth');
-        const btnCloseAuth = document.getElementById('btnCloseAuth');
-
-        // =========================================================================
-        // NOTIFICATIONS / TOAST
-        // =========================================================================
-        function showToast(message, duration = 3000) {
-            toastBubble.textContent = message;
-            toastBubble.classList.add('show');
-            setTimeout(() => toastBubble.classList.remove('show'), duration);
-        }
-
-        // =========================================================================
-        // THEME & COMPANION PERSONALIZATION ENGINE
-        // =========================================================================
-        function applyTheme(themeName) {
-            AppState.companion.theme = themeName;
-            localStorage.setItem('shruti_theme', themeName);
-            if (themeName === 'rose') {
-                document.documentElement.removeAttribute('data-theme');
-            } else {
-                document.documentElement.setAttribute('data-theme', themeName);
-            }
-
-            document.querySelectorAll('#themeOptions .radio-option-card').forEach(card => {
-                card.classList.toggle('selected', card.dataset.themeName === themeName);
-            });
-        }
-
-        function setCompanionPersonalization(gender, style, voice) {
-            AppState.companion.gender = gender;
-            AppState.companion.style = style;
-            if (voice) AppState.companion.voice = voice;
-
-            localStorage.setItem('shruti_comp_gender', gender);
-            localStorage.setItem('shruti_comp_style', style);
-            if (voice) localStorage.setItem('shruti_voice', voice);
-
-            // Update companion name
-            AppState.agent.name = (gender === 'female') ? 'Shruti' : 'Shaan';
-            document.querySelector('.brand-title').textContent = AppState.agent.name;
-            transcriptSpeakerLabel.textContent = `${AppState.agent.name}:`;
-
-            // Sync settings UI radio cards
-            document.querySelectorAll('#companionGenderOptions .radio-option-card').forEach(c => {
-                c.classList.toggle('selected', c.dataset.companionGender === gender);
-            });
-            document.querySelectorAll('#companionStyleOptions .radio-option-card').forEach(c => {
-                c.classList.toggle('selected', c.dataset.companionStyle === style);
-            });
-            if (voice) {
-                const voiceSelect = document.getElementById('voiceSelect');
-                if (voiceSelect) voiceSelect.value = voice;
-            }
-        }
-
-        function updateGreeting() {
-            const hour = new Date().getHours();
-            let timeGreeting = "Good evening";
-            if (hour < 12) timeGreeting = "Good morning";
-            else if (hour < 17) timeGreeting = "Good afternoon";
-
-            const firstName = AppState.user.name.split(' ')[0] || 'User';
-            headerGreetingText.textContent = `${timeGreeting}, ${firstName}`;
-            headerProfileName.textContent = AppState.user.name;
-
-            const initials = AppState.user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AM';
-            headerAvatarCircle.textContent = initials;
-        }
-
-        // =========================================================================
-        // 3D COMPANION CANVAS ENGINE (Female "Shruti" & Male "Shaan")
-        // =========================================================================
-        const companionCanvas = document.getElementById('companionCanvas');
-        const cCtx = companionCanvas.getContext('2d');
-        const particlesLayer = document.getElementById('particlesLayer');
-
-        let mouseX = 0, mouseY = 0;
-        let targetRotX = 0, targetRotY = 0;
-        let currentRotX = 0, currentRotY = 0;
-        let isBlinking = false, blinkValue = 0, nextBlinkTime = Date.now() + 3000;
-        let breathTime = 0, mouthOpen = 0, blushIntensity = 0.5, clickSparkleTime = 0;
-
-        function resizeCompanionCanvas() {
-            const rect = companionCanvas.parentElement.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            companionCanvas.width = rect.width * dpr;
-            companionCanvas.height = rect.height * dpr;
-            cCtx.scale(dpr, dpr);
-        }
-        window.addEventListener('resize', resizeCompanionCanvas);
-        setTimeout(resizeCompanionCanvas, 100);
-
-        // Smooth Mouse Tracking
-        window.addEventListener('mousemove', (e) => {
-            const rect = companionCanvas.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            mouseX = (e.clientX - cx) / (window.innerWidth / 2);
-            mouseY = (e.clientY - cy) / (window.innerHeight / 2);
-            targetRotY = Math.max(-0.4, Math.min(0.4, mouseX * 0.55));
-            targetRotX = Math.max(-0.3, Math.min(0.3, mouseY * 0.4));
-        });
-
-        // Click / Touch Reaction
-        companionCanvas.parentElement.addEventListener('click', () => {
-            blushIntensity = 1.0;
-            clickSparkleTime = Date.now();
-            spawnHearts(7);
-            
-            const romanticQuotes = [
-                "I am right here with you, my creator! 🥰",
-                "Your computer is under my complete control! ✨",
-                "Aww, you made me blush! How can I assist you today? 💖",
-                "Ready for our next task, babe! Tell me what to run! 💕"
-            ];
-            const formalQuotes = [
-                "System active. Standing by for command execution.",
-                "All desktop tools and verification sandboxes online.",
-                "Awaiting task instructions."
-            ];
-
-            const quotes = (AppState.companion.style === 'romantic') ? romanticQuotes : formalQuotes;
-            const quote = quotes[Math.floor(Math.random() * quotes.length)];
-            transcriptTextContent.textContent = `"${quote}"`;
-        });
-
-        function spawnHearts(count = 6) {
-            const rect = companionCanvas.parentElement.getBoundingClientRect();
-            const hearts = ['❤️', '💖', '✨', '💕', '⭐'];
-            for (let i = 0; i < count; i++) {
-                const span = document.createElement('span');
-                span.className = 'sparkle-heart';
-                span.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-                span.style.left = (rect.width * 0.4 + (Math.random() - 0.5) * rect.width * 0.35) + 'px';
-                span.style.top = (rect.height * 0.5 + (Math.random() - 0.5) * rect.height * 0.25) + 'px';
-                span.style.animationDelay = (i * 0.09) + 's';
-                particlesLayer.appendChild(span);
-                setTimeout(() => span.remove(), 1800);
-            }
-        }
-
-        // Render 3D Canvas Loop
-        function renderCompanion(time) {
-            requestAnimationFrame(renderCompanion);
-
-            const w = companionCanvas.clientWidth;
-            const h = companionCanvas.clientHeight;
-            if (!w || !h) return;
-
-            cCtx.clearRect(0, 0, w, h);
-
-            // Interpolate Rotation Gaze
-            currentRotX += (targetRotX - currentRotX) * 0.08;
-            currentRotY += (targetRotY - currentRotY) * 0.08;
-
-            // Breathing Physics
-            breathTime = time * 0.0025;
-            const scale = Math.min(w, h) / 300;
-            const cx = w / 2;
-            const cy = h / 2 + 10 * scale;
-            const breathY = Math.sin(breathTime) * 3 * scale;
-
-            // Giggle/Reaction
-            let giggleY = 0;
-            if (Date.now() - clickSparkleTime < 800) {
-                giggleY = Math.sin((Date.now() - clickSparkleTime) * 0.03) * 4 * scale;
-            }
-
-            // Blinking
-            if (Date.now() > nextBlinkTime && !isBlinking) {
-                isBlinking = true;
-                nextBlinkTime = Date.now() + 3000 + Math.random() * 3200;
-            }
-            if (isBlinking) {
-                blinkValue += 0.25;
-                if (blinkValue >= 1) {
-                    blinkValue = 1;
-                    isBlinking = false;
-                }
-            } else if (blinkValue > 0) {
-                blinkValue -= 0.2;
-                if (blinkValue < 0) blinkValue = 0;
-            }
-
-            // Lip-Sync Mouth Morphing
-            if (AppState.agent.state === 'SPEAKING') {
-                mouthOpen = 0.4 + Math.sin(time * 0.02) * 0.35;
-            } else {
-                mouthOpen += (0 - mouthOpen) * 0.15;
-            }
-
-            if (blushIntensity > 0.4) blushIntensity -= 0.003;
-
-            // State Head Tilt
-            let stateTilt = 0;
-            if (AppState.agent.state === 'LISTENING') stateTilt = 0.1;
-            if (AppState.agent.state === 'THINKING') stateTilt = -0.12;
-
-            cCtx.save();
-            cCtx.translate(cx, cy + breathY + giggleY);
-
-            const headX = currentRotY * 34 * scale;
-            const headY = currentRotX * 24 * scale;
-            const totalTilt = stateTilt + (currentRotY * 0.08);
-
-            const isFemale = (AppState.companion.gender === 'female');
-            const style = AppState.companion.style;
-
-            // 1. Back Hair Layer
-            cCtx.save();
-            cCtx.rotate(totalTilt);
-            if (isFemale) {
-                // Female Long Flowing Hair / Twin locks
-                cCtx.fillStyle = (style === 'romantic') ? '#f43f5e' : (style === 'friendly') ? '#9333ea' : '#1e293b';
-                const swayL = Math.sin(breathTime * 1.2) * 5 * scale;
-                const swayR = Math.sin(breathTime * 1.2 + 0.6) * 5 * scale;
-                cCtx.beginPath();
-                cCtx.ellipse(-64 * scale + headX * 0.4, 38 * scale + swayL, 24 * scale, 65 * scale, -0.2, 0, Math.PI * 2);
-                cCtx.ellipse(64 * scale + headX * 0.4, 38 * scale + swayR, 24 * scale, 65 * scale, 0.2, 0, Math.PI * 2);
-                cCtx.fill();
-            } else {
-                // Male Styled Back Hair
-                cCtx.fillStyle = (style === 'romantic') ? '#334155' : (style === 'friendly') ? '#1e293b' : '#0f172a';
-                cCtx.beginPath();
-                cCtx.ellipse(0 + headX * 0.3, -15 * scale, 56 * scale, 48 * scale, 0, 0, Math.PI * 2);
-                cCtx.fill();
-            }
-            cCtx.restore();
-
-            // 2. Neck & Outfit Collar
-            cCtx.fillStyle = '#ffedd5';
-            cCtx.beginPath();
-            cCtx.roundRect(-16 * scale + headX * 0.3, 35 * scale, 32 * scale, 30 * scale, 6);
-            cCtx.fill();
-
-            // Outfit per Style
-            if (style === 'formal') {
-                // Business Suit Blazer & Tie/Collar
-                cCtx.fillStyle = '#0f172a';
-                cCtx.beginPath();
-                cCtx.moveTo(-45 * scale + headX * 0.2, 60 * scale);
-                cCtx.lineTo(-12 * scale, 45 * scale);
-                cCtx.lineTo(0, 68 * scale);
-                cCtx.lineTo(12 * scale, 45 * scale);
-                cCtx.lineTo(45 * scale + headX * 0.2, 60 * scale);
-                cCtx.lineTo(60 * scale, 120 * scale);
-                cCtx.lineTo(-60 * scale, 120 * scale);
-                cCtx.closePath();
-                cCtx.fill();
-                // Dress shirt
-                cCtx.fillStyle = '#ffffff';
-                cCtx.beginPath();
-                cCtx.moveTo(-10 * scale, 45 * scale);
-                cCtx.lineTo(0, 62 * scale);
-                cCtx.lineTo(10 * scale, 45 * scale);
-                cCtx.closePath();
-                cCtx.fill();
-            } else if (style === 'friendly') {
-                // Casual Streetwear Hoodie
-                cCtx.fillStyle = '#334155';
-                cCtx.beginPath();
-                cCtx.roundRect(-42 * scale + headX * 0.2, 48 * scale, 84 * scale, 80 * scale, 16);
-                cCtx.fill();
-            } else {
-                // Romantic Presentation: Choker with Glowing Heart
-                cCtx.fillStyle = '#1e1b4b';
-                cCtx.fillRect(-16 * scale + headX * 0.3, 44 * scale, 32 * scale, 8 * scale);
-                cCtx.fillStyle = '#fb7185';
-                cCtx.shadowColor = '#f43f5e';
-                cCtx.shadowBlur = 10 * scale;
-                cCtx.beginPath();
-                cCtx.arc(headX * 0.3, 50 * scale, 5 * scale, 0, Math.PI * 2);
-                cCtx.fill();
-                cCtx.shadowBlur = 0;
-            }
-
-            // 3. Head & Face
-            cCtx.save();
-            cCtx.translate(headX, headY);
-            cCtx.rotate(totalTilt);
-
-            // Skin Tone
-            const skinGrad = cCtx.createRadialGradient(0, -6 * scale, 10 * scale, 0, 0, 65 * scale);
-            skinGrad.addColorStop(0, '#fff5eb');
-            skinGrad.addColorStop(1, '#fed7aa');
-            cCtx.fillStyle = skinGrad;
-            cCtx.beginPath();
-            if (isFemale) {
-                cCtx.ellipse(0, 0, 52 * scale, 55 * scale, 0, 0, Math.PI * 2);
-            } else {
-                // Male defined jaw
-                cCtx.moveTo(-50 * scale, -20 * scale);
-                cCtx.quadraticCurveTo(-48 * scale, 25 * scale, -24 * scale, 52 * scale);
-                cCtx.lineTo(0, 60 * scale);
-                cCtx.lineTo(24 * scale, 52 * scale);
-                cCtx.quadraticCurveTo(48 * scale, 25 * scale, 50 * scale, -20 * scale);
-                cCtx.quadraticCurveTo(45 * scale, -55 * scale, 0, -56 * scale);
-                cCtx.quadraticCurveTo(-45 * scale, -55 * scale, -50 * scale, -20 * scale);
-            }
-            cCtx.fill();
-
-            // Blush (Warm cheek glow)
-            if (style === 'romantic' || isFemale) {
-                cCtx.fillStyle = `rgba(244, 63, 94, ${0.32 * blushIntensity})`;
-                cCtx.beginPath();
-                cCtx.ellipse(-28 * scale, 12 * scale, 14 * scale, 7 * scale, -0.1, 0, Math.PI * 2);
-                cCtx.ellipse(28 * scale, 12 * scale, 14 * scale, 7 * scale, 0.1, 0, Math.PI * 2);
-                cCtx.fill();
-            }
-
-            // 4. Eyes (High-detail anime rendering)
-            const eyeSpacing = 22 * scale;
-            const eyeY = -4 * scale;
-            const eyeW = isFemale ? 15 * scale : 13 * scale;
-            const eyeH = (isFemale ? 19 * scale : 15 * scale) * (1 - blinkValue);
-
-            // Left Eye
-            if (eyeH > 2) {
-                cCtx.fillStyle = '#ffffff';
-                cCtx.beginPath();
-                cCtx.ellipse(-eyeSpacing, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
-                cCtx.fill();
-
-                // Iris
-                const irisX = -eyeSpacing + (currentRotY * 5 * scale);
-                const irisY = eyeY + (currentRotX * 4 * scale);
-                const irisGrad = cCtx.createLinearGradient(irisX, irisY - eyeH * 0.6, irisX, irisY + eyeH * 0.6);
-                if (isFemale) {
-                    irisGrad.addColorStop(0, '#be185d');
-                    irisGrad.addColorStop(1, '#831843');
-                } else {
-                    irisGrad.addColorStop(0, '#0284c7');
-                    irisGrad.addColorStop(1, '#0f172a');
-                }
-                cCtx.fillStyle = irisGrad;
-                cCtx.beginPath();
-                cCtx.ellipse(irisX, irisY, eyeW * 0.72, eyeH * 0.85, 0, 0, Math.PI * 2);
-                cCtx.fill();
-
-                // Pupil & Highlights
-                cCtx.fillStyle = '#0f172a';
-                cCtx.beginPath();
-                cCtx.arc(irisX, irisY, eyeW * 0.32, 0, Math.PI * 2);
-                cCtx.fill();
-                cCtx.fillStyle = '#ffffff';
-                cCtx.beginPath();
-                cCtx.arc(irisX - 3 * scale, irisY - 4 * scale, 3 * scale, 0, Math.PI * 2);
-                cCtx.arc(irisX + 3.5 * scale, irisY + 3 * scale, 1.5 * scale, 0, Math.PI * 2);
-                cCtx.fill();
-            } else {
-                // Blink Line
-                cCtx.strokeStyle = '#334155';
-                cCtx.lineWidth = 3 * scale;
-                cCtx.beginPath();
-                cCtx.arc(-eyeSpacing, eyeY, eyeW, 0.2, Math.PI - 0.2);
-                cCtx.stroke();
-            }
-
-            // Right Eye
-            if (eyeH > 2) {
-                cCtx.fillStyle = '#ffffff';
-                cCtx.beginPath();
-                cCtx.ellipse(eyeSpacing, eyeY, eyeW, eyeH, 0, 0, Math.PI * 2);
-                cCtx.fill();
-
-                // Iris
-                const irisX = eyeSpacing + (currentRotY * 5 * scale);
-                const irisY = eyeY + (currentRotX * 4 * scale);
-                const irisGrad = cCtx.createLinearGradient(irisX, irisY - eyeH * 0.6, irisX, irisY + eyeH * 0.6);
-                if (isFemale) {
-                    irisGrad.addColorStop(0, '#be185d');
-                    irisGrad.addColorStop(1, '#831843');
-                } else {
-                    irisGrad.addColorStop(0, '#0284c7');
-                    irisGrad.addColorStop(1, '#0f172a');
-                }
-                cCtx.fillStyle = irisGrad;
-                cCtx.beginPath();
-                cCtx.ellipse(irisX, irisY, eyeW * 0.72, eyeH * 0.85, 0, 0, Math.PI * 2);
-                cCtx.fill();
-
-                // Pupil & Highlights
-                cCtx.fillStyle = '#0f172a';
-                cCtx.beginPath();
-                cCtx.arc(irisX, irisY, eyeW * 0.32, 0, Math.PI * 2);
-                cCtx.fill();
-                cCtx.fillStyle = '#ffffff';
-                cCtx.beginPath();
-                cCtx.arc(irisX - 3 * scale, irisY - 4 * scale, 3 * scale, 0, Math.PI * 2);
-                cCtx.arc(irisX + 3.5 * scale, irisY + 3 * scale, 1.5 * scale, 0, Math.PI * 2);
-                cCtx.fill();
-            } else {
-                cCtx.strokeStyle = '#334155';
-                cCtx.lineWidth = 3 * scale;
-                cCtx.beginPath();
-                cCtx.arc(eyeSpacing, eyeY, eyeW, 0.2, Math.PI - 0.2);
-                cCtx.stroke();
-            }
-
-            // Eyebrows
-            cCtx.strokeStyle = isFemale ? '#9f1239' : '#334155';
-            cCtx.lineWidth = isFemale ? 2.5 * scale : 3.5 * scale;
-            cCtx.beginPath();
-            cCtx.arc(-eyeSpacing, eyeY - 14 * scale, 12 * scale, 0.2, Math.PI - 0.2, true);
-            cCtx.arc(eyeSpacing, eyeY - 14 * scale, 12 * scale, 0.2, Math.PI - 0.2, true);
-            cCtx.stroke();
-
-            // Nose
-            cCtx.fillStyle = '#f43f5e';
-            cCtx.beginPath();
-            cCtx.arc(0, 10 * scale, 1.4 * scale, 0, Math.PI * 2);
-            cCtx.fill();
-
-            // Mouth (Morphs with Speech)
-            const mouthH = 3 * scale + (mouthOpen * 9 * scale);
-            cCtx.fillStyle = isFemale ? '#e11d48' : '#be123c';
-            cCtx.beginPath();
-            cCtx.ellipse(0, 24 * scale, 7 * scale, mouthH, 0, 0, Math.PI);
-            cCtx.fill();
-
-            // 5. Front Hair / Bangs
-            cCtx.fillStyle = isFemale 
-                ? ((style === 'romantic') ? '#f43f5e' : (style === 'friendly') ? '#9333ea' : '#1e293b')
-                : ((style === 'romantic') ? '#334155' : (style === 'friendly') ? '#1e293b' : '#0f172a');
-
-            if (isFemale) {
-                // Female Front Bangs
-                cCtx.beginPath();
-                cCtx.ellipse(0, -28 * scale, 56 * scale, 38 * scale, 0, Math.PI, 0);
-                cCtx.fill();
-
-                cCtx.beginPath();
-                cCtx.moveTo(-52 * scale, -24 * scale);
-                cCtx.quadraticCurveTo(-25 * scale, -10 * scale, -18 * scale, -16 * scale);
-                cCtx.quadraticCurveTo(-8 * scale, -4 * scale, 0, -18 * scale);
-                cCtx.quadraticCurveTo(12 * scale, -2 * scale, 22 * scale, -15 * scale);
-                cCtx.quadraticCurveTo(38 * scale, -8 * scale, 52 * scale, -24 * scale);
-                cCtx.lineTo(48 * scale, -45 * scale);
-                cCtx.lineTo(-48 * scale, -45 * scale);
-                cCtx.closePath();
-                cCtx.fill();
-            } else {
-                // Male Modern Styled Front Fringe
-                cCtx.beginPath();
-                cCtx.ellipse(0, -28 * scale, 54 * scale, 36 * scale, 0, Math.PI, 0);
-                cCtx.fill();
-
-                cCtx.beginPath();
-                cCtx.moveTo(-50 * scale, -22 * scale);
-                cCtx.lineTo(-30 * scale, -14 * scale);
-                cCtx.lineTo(-15 * scale, -24 * scale);
-                cCtx.lineTo(10 * scale, -12 * scale);
-                cCtx.lineTo(35 * scale, -25 * scale);
-                cCtx.lineTo(50 * scale, -18 * scale);
-                cCtx.lineTo(45 * scale, -45 * scale);
-                cCtx.lineTo(-45 * scale, -45 * scale);
-                cCtx.closePath();
-                cCtx.fill();
-            }
-
-            cCtx.restore();
-            cCtx.restore();
-        }
-
-        requestAnimationFrame(renderCompanion);
-
-        // =========================================================================
-        // REALTIME AUDIO WAVEFORM CANVAS VISUALIZER
-        // =========================================================================
-        const waveformCanvas = document.getElementById('waveformCanvas');
-        const wCtx = waveformCanvas.getContext('2d');
-        let wavePhase = 0;
-
-        function resizeWaveformCanvas() {
-            const rect = waveformCanvas.parentElement.getBoundingClientRect();
-            waveformCanvas.width = rect.width;
-            waveformCanvas.height = rect.height;
-        }
-        window.addEventListener('resize', resizeWaveformCanvas);
-        setTimeout(resizeWaveformCanvas, 100);
-
-        function drawWaveform() {
-            requestAnimationFrame(drawWaveform);
-            const w = waveformCanvas.width;
-            const h = waveformCanvas.height;
-            if (!w || !h) return;
-
-            wCtx.clearRect(0, 0, w, h);
-
-            const isSpeaking = (AppState.agent.state === 'SPEAKING');
-            const isListening = (AppState.agent.state === 'LISTENING');
-            const isThinking = (AppState.agent.state === 'THINKING');
-
-            let amplitude = 4;
-            let barCount = 42;
-            let speed = 0.05;
-
-            if (isSpeaking) {
-                amplitude = 14;
-                speed = 0.15;
-            } else if (isListening) {
-                amplitude = 9;
-                speed = 0.1;
-            } else if (isThinking) {
-                amplitude = 6;
-                speed = 0.08;
-            }
-
-            wavePhase += speed;
-
-            // Draw Dynamic Frequency Bars
-            const barWidth = (w - (barCount * 3)) / barCount;
-            for (let i = 0; i < barCount; i++) {
-                const x = i * (barWidth + 3) + 4;
-                const sinVal = Math.sin(wavePhase + i * 0.25);
-                const cosVal = Math.cos(wavePhase * 0.7 + i * 0.18);
-                const currentH = Math.max(4, Math.abs(sinVal * cosVal) * amplitude * 2);
-                const y = (h - currentH) / 2;
-
-                const grad = wCtx.createLinearGradient(0, y, 0, y + currentH);
-                if (isSpeaking) {
-                    grad.addColorStop(0, '#f43f5e');
-                    grad.addColorStop(1, '#fb7185');
-                } else if (isListening) {
-                    grad.addColorStop(0, '#10b981');
-                    grad.addColorStop(1, '#34d399');
-                } else if (isThinking) {
-                    grad.addColorStop(0, '#0ea5e9');
-                    grad.addColorStop(1, '#38bdf8');
-                } else {
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-                    grad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-                }
-
-                wCtx.fillStyle = grad;
-                wCtx.beginPath();
-                wCtx.roundRect(x, y, barWidth, currentH, 2);
-                wCtx.fill();
-            }
-        }
-        requestAnimationFrame(drawWaveform);
-
-        // =========================================================================
-        // AGENT STATE CONTROLLER & UI SYNC
-        // =========================================================================
-        function setAgentState(state) {
-            AppState.agent.state = state;
-            headerStateText.textContent = state;
-
-            // Color coding
-            const colorMap = {
-                IDLE: '#64748b',
-                LISTENING: 'var(--success)',
-                THINKING: 'var(--info)',
-                EXECUTING: 'var(--accent-glow)',
-                SPEAKING: 'var(--accent-primary)',
-                MUTED: 'var(--warning)',
-                ERROR: 'var(--danger)'
-            };
-
-            const color = colorMap[state] || '#64748b';
-            headerStateDot.style.background = color;
-            headerStateDot.style.boxShadow = `0 0 10px ${color}`;
-            voiceStateDot.style.color = color;
-            voiceStateLabel.textContent = (state === 'IDLE') ? 'Ready / Idle' : state;
-
-            if (state === 'SPEAKING' || state === 'EXECUTING') {
-                btnBargeIn.classList.add('visible');
-            } else {
-                btnBargeIn.classList.remove('visible');
-            }
-        }
-
-        // =========================================================================
-        // DYNAMIC TASK EXECUTION PIPELINE (RIGHT TASK AREA)
-        // =========================================================================
-        let taskTimerInterval = null;
-        let taskStartTime = null;
-
-        function startTaskExecution(taskPlan) {
-            document.body.classList.add('task-active');
-            setAgentState('EXECUTING');
-
-            activeTaskTitle.textContent = taskPlan.title || "Multi-Step Desktop Task";
-            taskProgressStepLabel.textContent = `Step 1 of ${taskPlan.steps.length}: Starting`;
-            taskProgressPercent.textContent = `0%`;
-            taskProgressFill.style.width = `0%`;
-
-            taskStepsContainer.innerHTML = '';
-            taskTerminalConsole.innerHTML = `[System] Starting task: "${taskPlan.title}"...<br>`;
-            verificationStatusIcon.textContent = '⏳';
-            verificationStatusText.textContent = 'Executing sandbox actions...';
-            btnDismissTask.style.display = 'none';
-
-            // Render Steps
-            taskPlan.steps.forEach((step, idx) => {
-                const row = document.createElement('div');
-                row.className = `step-row-item ${idx === 0 ? 'current' : ''}`;
-                row.id = `stepItem_${idx}`;
-                row.innerHTML = `
-                    <div class="step-status-icon">${idx === 0 ? '⚡' : '○'}</div>
-                    <div class="step-info">
-                        <div class="step-title">${step.title}</div>
-                        <div class="step-detail">${step.command}</div>
+        <!-- Recent Activity Container -->
+        <div class="glass activity-card">
+            <div class="card-hdr">
+                <div class="card-hdr-title">⚡ Recent Activity</div>
+                <div class="pulse-dot" style="background:var(--info);box-shadow:0 0 7px var(--info)"></div>
+            </div>
+            <div class="scroll-area" id="actList">
+                <div class="empty-placeholder" id="actEmpty">
+                    <span class="empty-icon">⏱️</span>
+                    <p>No recent activity</p>
+                    <small>Commands & executions will be logged here.</small>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- CENTER CHARACTER AREA -->
+    <section class="center-area" id="centerArea">
+        <div class="glow-orb" id="glowOrb"></div>
+
+        <div class="char-viewport" id="charViewport" title="Click to interact with your companion">
+            <!-- Dynamic companion image (Female Shruti or Male Shaan) -->
+            <img id="companionImage" src="/shruti_girl.png" alt="AI Companion" draggable="false">
+            <!-- Dynamic state glowing aura ring -->
+            <div class="state-ring" id="stateRing"></div>
+            <div class="particles-layer" id="particlesLayer"></div>
+        </div>
+
+        <div class="voice-deck">
+            <div class="voice-row">
+                <div class="wave-box"><canvas id="waveformCanvas"></canvas></div>
+                <div class="voice-pill" id="voicePill"><span style="color:var(--success)">●</span> Ready</div>
+                <button class="btn-stop" id="btnStop">⏹ Stop</button>
+            </div>
+            <div class="transcript-bar" id="transcriptBar">
+                <span class="t-speaker" id="tSpeaker">Shruti:</span>
+                <span class="t-text" id="tText">Hello! I'm ready. Say a command or type below.</span>
+            </div>
+            <div class="cmd-row">
+                <input class="cmd-input" id="cmdInput" type="text"
+                    placeholder="Type a command (e.g. 'Open VS Code', 'Search YouTube', 'Set reminder')…" autocomplete="off">
+                <button class="btn-send" id="btnSend">Send ➔</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- RIGHT TASK AREA (SLIDES IN ONLY WHEN USER GIVES A TASK) -->
+    <aside class="right-panel" id="rightPanel">
+        <div class="glass task-card">
+            <div class="task-top">
+                <div class="task-label">
+                    <span>⚡</span> Current Task
+                    <span class="task-badge-ip">In Progress</span>
+                </div>
+                <div class="task-timer" id="taskTimer">00:00.0</div>
+            </div>
+
+            <div class="task-title" id="taskTitle">—</div>
+
+            <div>
+                <div class="progress-meta">
+                    <span id="stepLabel">Preparing…</span>
+                    <span id="stepPct">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="steps-list" id="stepsList"></div>
+
+            <div class="console-box" id="consoleBox">[System] Task sandbox initialized…<br></div>
+
+            <div class="verify-box" id="verifyBox">
+                <div class="verify-left">
+                    <span id="verifyIcon">⏳</span>
+                    <span id="verifyText">Executing actions…</span>
+                </div>
+                <button class="btn-task-action" id="btnDismiss" style="display:none">Close</button>
+            </div>
+        </div>
+    </aside>
+
+</main>
+
+<!-- =====================================================================
+     SETTINGS MODAL
+     ===================================================================== -->
+<div class="modal-bg" id="settingsModal">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div class="modal-title">⚙️ Settings & Personalization</div>
+            <button class="close-btn" id="closeSettings">✕</button>
+        </div>
+        <div class="modal-body">
+
+            <!-- Assistant Name -->
+            <div class="form-grp">
+                <label class="form-lbl">🤖 Assistant Name (shown in top-left)</label>
+                <input class="form-inp" type="text" id="settingAgentName" value="Shruti" maxlength="20"
+                    placeholder="e.g. Shruti, Shaan, Maya, Aria…">
+            </div>
+
+            <!-- 1. Gender (Female Shruti vs Male Shaan) -->
+            <div class="form-grp">
+                <label class="form-lbl">1. Companion Gender & Model</label>
+                <div class="r-grid-2" id="genderOptions">
+                    <div class="r-card on" data-g="female">
+                        <div class="r-card-title">👩 Female Model</div>
+                        <div class="r-card-sub">Shruti — warm &amp; expressive</div>
                     </div>
-                `;
-                taskStepsContainer.appendChild(row);
-            });
+                    <div class="r-card" data-g="male">
+                        <div class="r-card-title">👨 Male Model</div>
+                        <div class="r-card-sub">Shaan — smart &amp; confident</div>
+                    </div>
+                </div>
+            </div>
 
-            // Start timer
-            taskStartTime = Date.now();
-            if (taskTimerInterval) clearInterval(taskTimerInterval);
-            taskTimerInterval = setInterval(() => {
-                const elapsed = (Date.now() - taskStartTime) / 1000;
-                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
-                const secs = String(Math.floor(elapsed % 60)).padStart(2, '0');
-                const ms = String(Math.floor((elapsed * 10) % 10));
-                taskTimer.textContent = `${mins}:${secs}.${ms}`;
-            }, 100);
+            <!-- 2. Style (Romantic vs Formal) -->
+            <div class="form-grp">
+                <label class="form-lbl">2. Interaction Persona</label>
+                <div class="r-grid-2" id="styleOptions">
+                    <div class="r-card on" data-s="romantic">
+                        <div class="r-card-title">💖 Romantic / Companion</div>
+                        <div class="r-card-sub">Affectionate, caring &amp; playful</div>
+                    </div>
+                    <div class="r-card" data-s="formal">
+                        <div class="r-card-title">👔 Formal / Professional</div>
+                        <div class="r-card-sub">Direct, concise &amp; task-focused</div>
+                    </div>
+                </div>
+            </div>
 
-            // Execute steps sequentially
-            executeStepSequence(taskPlan, 0);
-        }
+            <!-- 3. Themes -->
+            <div class="form-grp">
+                <label class="form-lbl">3. Dashboard Color Theme</label>
+                <div class="r-grid-5" id="themeOptions">
+                    <div class="r-card on" data-t="rose">
+                        <div class="theme-swatch" style="background:linear-gradient(135deg,#f43f5e,#d946ef)"></div>
+                        <div class="r-card-title" style="font-size:0.72rem;color:#fb7185">🌸 Rose</div>
+                    </div>
+                    <div class="r-card" data-t="sapphire">
+                        <div class="theme-swatch" style="background:linear-gradient(135deg,#0ea5e9,#2563eb)"></div>
+                        <div class="r-card-title" style="font-size:0.72rem;color:#38bdf8">💎 Sapphire</div>
+                    </div>
+                    <div class="r-card" data-t="emerald">
+                        <div class="theme-swatch" style="background:linear-gradient(135deg,#10b981,#047857)"></div>
+                        <div class="r-card-title" style="font-size:0.72rem;color:#34d399">🌿 Emerald</div>
+                    </div>
+                    <div class="r-card" data-t="amethyst">
+                        <div class="theme-swatch" style="background:linear-gradient(135deg,#a855f7,#6366f1)"></div>
+                        <div class="r-card-title" style="font-size:0.72rem;color:#c084fc">🔮 Violet</div>
+                    </div>
+                    <div class="r-card" data-t="gold">
+                        <div class="theme-swatch" style="background:linear-gradient(135deg,#eab308,#b45309)"></div>
+                        <div class="r-card-title" style="font-size:0.72rem;color:#fbbf24">🌟 Gold</div>
+                    </div>
+                </div>
+            </div>
 
-        function executeStepSequence(taskPlan, stepIdx) {
-            if (stepIdx >= taskPlan.steps.length) {
-                // All steps completed and verified!
-                completeTaskExecution(taskPlan);
+            <!-- 4. Voice Selection -->
+            <div class="form-grp">
+                <label class="form-lbl">4. Voice Model</label>
+                <select class="form-inp" id="voiceSelect">
+                    <optgroup label="Female Voices">
+                        <option value="Aoede">Aoede — Melodic &amp; Warm (Female)</option>
+                        <option value="Kore">Kore — Gentle &amp; Calm (Female)</option>
+                        <option value="Zephyr">Zephyr — Bright &amp; Cheerful (Female)</option>
+                    </optgroup>
+                    <optgroup label="Male Voices">
+                        <option value="Fenrir">Fenrir — Deep &amp; Confident (Male)</option>
+                        <option value="Puck">Puck — Energetic &amp; Friendly (Male)</option>
+                        <option value="Charon">Charon — Calm &amp; Grounded (Male)</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- User Name for Greetings -->
+            <div class="form-grp">
+                <label class="form-lbl">5. Your Display Name</label>
+                <input class="form-inp" type="text" id="settingUserName" placeholder="e.g. Alex Mercer" value="">
+            </div>
+
+            <button class="btn-primary" id="btnSaveSettings">✓ Apply &amp; Save Preferences</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification popup -->
+<div class="toast" id="toast">Notification</div>
+
+<!-- =====================================================================
+     SCRIPTS & STATE ENGINE
+     ===================================================================== -->
+<script>
+'use strict';
+
+/* =========================================================================
+   APP STATE
+   ========================================================================= */
+const S = {
+    agent: {
+        name: localStorage.getItem('shruti_agent_name') || 'Shruti',
+        state: 'IDLE',
+        muted: false,
+    },
+    prefs: {
+        gender: localStorage.getItem('shruti_gender') || 'female',
+        style:  localStorage.getItem('shruti_style')  || 'romantic',
+        theme:  localStorage.getItem('shruti_theme')  || 'rose',
+        voice:  localStorage.getItem('shruti_voice')  || 'Aoede',
+        userName: localStorage.getItem('shruti_user_name') || 'Friend',
+    }
+};
+
+/* Character image assets */
+const IMAGES = {
+    female: {
+        src: '/shruti_girl.png',
+        defaultName: 'Shruti',
+        defaultVoice: 'Aoede'
+    },
+    male: {
+        src: '/shaan_boy.png',
+        defaultName: 'Shaan',
+        defaultVoice: 'Fenrir'
+    }
+};
+
+/* =========================================================================
+   DOM HELPERS
+   ========================================================================= */
+function $(id) { return document.getElementById(id); }
+
+function toast(msg, dur = 3000) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+/* =========================================================================
+   LEFT CONTAINERS: DYNAMIC REMINDERS WITH EDIT & DELETE
+   ========================================================================= */
+let remindersList = JSON.parse(localStorage.getItem('shruti_reminders') || '[]');
+
+function saveReminders() {
+    localStorage.setItem('shruti_reminders', JSON.stringify(remindersList));
+    renderReminders();
+}
+
+function updateReminderCount() {
+    const active = remindersList.filter(r => !r.done).length;
+    $('remBadge').textContent = `${active} Active`;
+}
+
+function renderReminders() {
+    const list = $('remList');
+    list.innerHTML = '';
+
+    if (remindersList.length === 0) {
+        list.innerHTML = `
+            <div class="empty-placeholder" id="remEmpty">
+                <span class="empty-icon">🔔</span>
+                <p>No active reminders</p>
+                <small>Click '+ Add' above or ask the assistant by voice.</small>
+            </div>
+        `;
+        updateReminderCount();
+        return;
+    }
+
+    remindersList.forEach((r, idx) => {
+        const item = document.createElement('div');
+        item.className = 'rem-item' + (r.done ? ' done' : '');
+        item.dataset.id = r.id;
+
+        item.innerHTML = `
+            <div class="rem-check" title="Toggle complete">${r.done ? '✓' : ''}</div>
+            <div class="rem-body">
+                <div class="rem-title" id="remTitle_${r.id}">${escapeHtml(r.title)}</div>
+                <div class="rem-meta">${escapeHtml(r.meta || 'Today • Pending')}</div>
+            </div>
+            <div class="rem-actions">
+                <button class="btn-rem-action edit" title="Edit reminder">✏️</button>
+                <button class="btn-rem-action delete" title="Delete reminder">🗑️</button>
+            </div>
+        `;
+
+        // Checkbox toggle
+        item.querySelector('.rem-check').addEventListener('click', (e) => {
+            e.stopPropagation();
+            r.done = !r.done;
+            saveReminders();
+        });
+
+        // Edit button
+        item.querySelector('.btn-rem-action.edit').addEventListener('click', (e) => {
+            e.stopPropagation();
+            startEditReminder(r.id);
+        });
+
+        // Delete button
+        item.querySelector('.btn-rem-action.delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteReminder(r.id);
+        });
+
+        list.appendChild(item);
+    });
+
+    updateReminderCount();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function addReminder(title, meta = 'Today • Pending') {
+    if (!title || !title.trim()) return;
+    const newRem = {
+        id: Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        title: title.trim(),
+        meta: meta,
+        done: false
+    };
+    remindersList.unshift(newRem);
+    saveReminders();
+    toast(`Reminder added: "${newRem.title}"`);
+}
+
+function deleteReminder(id) {
+    const target = remindersList.find(r => r.id === id);
+    remindersList = remindersList.filter(r => r.id !== id);
+    saveReminders();
+    if (target) {
+        toast(`Deleted reminder: "${target.title}"`);
+    }
+}
+
+function startEditReminder(id) {
+    const r = remindersList.find(item => item.id === id);
+    if (!r) return;
+
+    const titleEl = document.getElementById(`remTitle_${id}`);
+    if (!titleEl) return;
+
+    const currentTitle = r.title;
+    titleEl.innerHTML = `
+        <div style="display:flex;gap:4px;width:100%;">
+            <input type="text" id="editInp_${id}" class="rem-input" value="${escapeHtml(currentTitle)}" style="padding:4px 6px;font-size:0.75rem;">
+            <button id="saveEdit_${id}" class="btn-mini-add" style="padding:2px 7px;">✓</button>
+            <button id="cancelEdit_${id}" class="btn-mini-add" style="padding:2px 7px;background:rgba(255,255,255,0.08);">✕</button>
+        </div>
+    `;
+
+    const input = document.getElementById(`editInp_${id}`);
+    input.focus();
+    input.select();
+
+    const finishEdit = (save) => {
+        if (save) {
+            const val = input.value.trim();
+            if (val) {
+                r.title = val;
+                saveReminders();
+                toast("Reminder updated!");
                 return;
             }
+        }
+        renderReminders();
+    };
 
-            const step = taskPlan.steps[stepIdx];
-            const currentItem = document.getElementById(`stepItem_${stepIdx}`);
-            if (currentItem) {
-                currentItem.classList.add('current');
-                currentItem.querySelector('.step-status-icon').textContent = '⚡';
-            }
+    document.getElementById(`saveEdit_${id}`).addEventListener('click', (e) => {
+        e.stopPropagation();
+        finishEdit(true);
+    });
 
-            taskProgressStepLabel.textContent = `Step ${stepIdx + 1} of ${taskPlan.steps.length}: ${step.title}`;
-            const pct = Math.round(((stepIdx) / taskPlan.steps.length) * 100);
-            taskProgressPercent.textContent = `${pct}%`;
-            taskProgressFill.style.width = `${pct}%`;
+    document.getElementById(`cancelEdit_${id}`).addEventListener('click', (e) => {
+        e.stopPropagation();
+        finishEdit(false);
+    });
 
-            taskTerminalConsole.innerHTML += `> ${step.command}<br>`;
-            taskTerminalConsole.scrollTop = taskTerminalConsole.scrollHeight;
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finishEdit(true);
+        if (e.key === 'Escape') finishEdit(false);
+    });
+}
 
-            // Simulate / Execute step
-            setTimeout(() => {
-                taskTerminalConsole.innerHTML += `[Verified] ${step.verifyMessage}<br>`;
-                taskTerminalConsole.scrollTop = taskTerminalConsole.scrollHeight;
+// Toggle Add Reminder Input Bar
+$('btnToggleAddRem').addEventListener('click', () => {
+    const bar = $('remAddBar');
+    if (bar.style.display === 'none') {
+        bar.style.display = 'flex';
+        $('remInput').focus();
+    } else {
+        bar.style.display = 'none';
+    }
+});
 
-                if (currentItem) {
-                    currentItem.classList.remove('current');
-                    currentItem.classList.add('verified');
-                    currentItem.querySelector('.step-status-icon').textContent = '✓';
-                }
+function handleQuickAddReminder() {
+    const input = $('remInput');
+    const val = input.value.trim();
+    if (val) {
+        addReminder(val, 'Today • Manual');
+        input.value = '';
+        $('remAddBar').style.display = 'none';
+    }
+}
 
-                executeStepSequence(taskPlan, stepIdx + 1);
-            }, step.duration || 1200);
+$('btnSaveRem').addEventListener('click', handleQuickAddReminder);
+$('remInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleQuickAddReminder();
+    if (e.key === 'Escape') $('remAddBar').style.display = 'none';
+});
+
+/* =========================================================================
+   RECENT ACTIVITY POPULATION
+   ========================================================================= */
+function addActivity(icon, text) {
+    const list = $('actList');
+    const empty = $('actEmpty');
+    if (empty) empty.style.display = 'none';
+
+    const div = document.createElement('div');
+    div.className = 'act-row';
+    div.innerHTML = `
+        <span class="act-icon">${icon}</span>
+        <span class="act-text">${text}</span>
+        <span class="act-time">Just now</span>
+    `;
+    list.prepend(div);
+    if (list.children.length > 7) list.lastElementChild.remove();
+}
+
+/* =========================================================================
+   THEME SWITCHER
+   ========================================================================= */
+function applyTheme(t) {
+    S.prefs.theme = t;
+    localStorage.setItem('shruti_theme', t);
+    const root = document.documentElement;
+    if (t === 'rose') {
+        root.removeAttribute('data-theme');
+    } else {
+        root.setAttribute('data-theme', t);
+    }
+    document.querySelectorAll('#themeOptions .r-card').forEach(c => {
+        c.classList.toggle('on', c.dataset.t === t);
+    });
+}
+
+/* =========================================================================
+   COMPANION CHARACTER (FEMALE / MALE IMAGE SWITCHER)
+   ========================================================================= */
+function setCompanionModel(gender) {
+    S.prefs.gender = gender;
+    localStorage.setItem('shruti_gender', gender);
+
+    const charImg = $('companionImage');
+    const model = IMAGES[gender] || IMAGES.female;
+    charImg.src = model.src;
+
+    document.querySelectorAll('#genderOptions .r-card').forEach(c => {
+        c.classList.toggle('on', c.dataset.g === gender);
+    });
+
+    const currentName = S.agent.name;
+    if (gender === 'male' && currentName === 'Shruti') {
+        setAgentName('Shaan');
+        if ($('voiceSelect')) $('voiceSelect').value = 'Fenrir';
+    } else if (gender === 'female' && currentName === 'Shaan') {
+        setAgentName('Shruti');
+        if ($('voiceSelect')) $('voiceSelect').value = 'Aoede';
+    }
+}
+
+/* Character Click Reactions */
+$('charViewport').addEventListener('click', () => {
+    spawnParticles(10);
+    const img = $('companionImage');
+    if (img) {
+        img.style.transform = 'scale(1.03) rotate(1.2deg)';
+        setTimeout(() => { img.style.transform = 'scale(0.98) rotate(-1deg)'; }, 100);
+        setTimeout(() => { img.style.transform = ''; }, 240);
+    }
+
+    const quotes_romantic_f = [
+        "Hehe, you touched me! Missing me already? 🥰",
+        "I'm all yours! Tell me what you need, my love. 💖",
+        "You always know how to make my circuits flutter! ✨",
+        "Aww, don't stop! I love talking with you. 💕"
+    ];
+    const quotes_romantic_m = [
+        "Hey! Always right here for you. ✨",
+        "You've got my full attention. What are we conquering today? 💖",
+        "Heh, you're cute when you poke me! Ready whenever you are. 😉"
+    ];
+    const quotes_formal = [
+        "System operational. Awaiting your instructions.",
+        "Desktop tools ready. What is your next task?",
+        "Standing by to assist you."
+    ];
+
+    let quotes;
+    if (S.prefs.style === 'romantic') {
+        quotes = S.prefs.gender === 'male' ? quotes_romantic_m : quotes_romantic_f;
+    } else {
+        quotes = quotes_formal;
+    }
+
+    const q = quotes[Math.floor(Math.random() * quotes.length)];
+    $('tSpeaker').textContent = S.agent.name + ':';
+    $('tText').textContent = q;
+});
+
+function spawnParticles(n = 8) {
+    const vp = $('particlesLayer');
+    if (!vp) return;
+    const r = vp.getBoundingClientRect();
+    const emojis = S.prefs.style === 'romantic'
+        ? ['❤️', '💖', '✨', '💕', '🌸', '💫', '🌹']
+        : ['⭐', '✨', '⚡', '💡', '🔧'];
+
+    for (let i = 0; i < n; i++) {
+        const s = document.createElement('span');
+        s.className = 'sparkle';
+        s.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        s.style.left = (r.width * 0.4 + (Math.random() - 0.5) * r.width * 0.45) + 'px';
+        s.style.top  = (r.height * 0.45 + (Math.random() - 0.5) * r.height * 0.35) + 'px';
+        s.style.animationDelay = (i * 0.08) + 's';
+        vp.appendChild(s);
+        setTimeout(() => s.remove(), 1600);
+    }
+}
+
+/* =========================================================================
+   AGENT NAME EDITABLE IN TOP-LEFT & SETTINGS
+   ========================================================================= */
+const brandDisplay = $('brandNameDisplay');
+const brandInput   = $('brandNameInput');
+const brandText    = $('brandNameText');
+const brandOrb     = $('brandOrb');
+
+function setAgentName(name) {
+    if (!name) return;
+    S.agent.name = name;
+    localStorage.setItem('shruti_agent_name', name);
+    brandText.textContent = name;
+    brandInput.value = name;
+    brandOrb.textContent = name[0].toUpperCase();
+    $('tSpeaker').textContent = name + ':';
+    $('settingAgentName').value = name;
+    document.title = `${name} — AI Desktop Companion`;
+}
+
+brandDisplay.addEventListener('click', () => {
+    brandDisplay.style.display = 'none';
+    brandInput.style.display = 'inline-block';
+    brandInput.focus();
+    brandInput.select();
+});
+
+function commitBrandName() {
+    const v = brandInput.value.trim();
+    brandDisplay.style.display = '';
+    brandInput.style.display = 'none';
+    if (v) {
+        setAgentName(v);
+        toast(`Assistant name updated to "${v}"`);
+    }
+}
+brandInput.addEventListener('blur', commitBrandName);
+brandInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') commitBrandName();
+    if (e.key === 'Escape') {
+        brandInput.value = S.agent.name;
+        commitBrandName();
+    }
+});
+
+/* =========================================================================
+   AGENT STATE CONTROLLER
+   ========================================================================= */
+const colorMap = {
+    IDLE: '#10b981',
+    LISTENING: '#10b981',
+    THINKING: '#0ea5e9',
+    EXECUTING: '#f59e0b',
+    SPEAKING: '#f43f5e',
+    MUTED: '#ef4444',
+    ERROR: '#ef4444'
+};
+
+function setAgentState(state) {
+    if (S.agent.muted && state !== 'MUTED') return;
+
+    S.agent.state = state;
+    const color = colorMap[state] || '#10b981';
+
+    const dot = $('stateDot');
+    dot.style.background = color;
+    dot.style.boxShadow = `0 0 10px ${color}`;
+
+    $('stateText').textContent = state === 'IDLE' ? 'Ready' : state;
+    $('voicePill').innerHTML = `<span style="color:${color}">●</span> ${state === 'IDLE' ? 'Ready' : state}`;
+
+    const btnStop = $('btnStop');
+    if (state === 'SPEAKING' || state === 'EXECUTING') {
+        btnStop.classList.add('show');
+    } else {
+        btnStop.classList.remove('show');
+    }
+
+    document.body.classList.remove('speaking', 'listening', 'thinking', 'muted-state');
+    if (state === 'SPEAKING')   document.body.classList.add('speaking');
+    if (state === 'LISTENING')  document.body.classList.add('listening');
+    if (state === 'THINKING')   document.body.classList.add('thinking');
+    if (state === 'MUTED')      document.body.classList.add('muted-state');
+}
+
+/* =========================================================================
+   MIC MUTE TOGGLE (SEPARATE UI UPDATE & NETWORK SYNC — NO RACE CONDITIONS)
+   ========================================================================= */
+const btnMic = $('btnMic');
+const micIcon = $('micIcon');
+const micLabel = $('micLabel');
+
+function applyMuteUI(muted) {
+    S.agent.muted = muted;
+
+    if (muted) {
+        btnMic.classList.add('muted');
+        micIcon.textContent = '🔇';
+        micLabel.textContent = 'Muted';
+        setAgentState('MUTED');
+    } else {
+        btnMic.classList.remove('muted');
+        micIcon.textContent = '🎙️';
+        micLabel.textContent = 'Mic Active';
+        setAgentState('LISTENING');
+    }
+}
+
+// User-triggered mute button toggle
+btnMic.addEventListener('click', () => {
+    const targetMuted = !S.agent.muted;
+    applyMuteUI(targetMuted);
+
+    if (targetMuted) {
+        toast("Microphone muted. Assistant stopped listening.", 2800);
+    } else {
+        toast("Microphone active. Listening to you...", 2800);
+    }
+
+    // Only send ONE network message to avoid double-toggle race condition
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'toggle_mic',
+            data: { muted: targetMuted }
+        }));
+    } else {
+        fetch('/api/mic/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ muted: targetMuted })
+        }).catch(() => {});
+    }
+});
+
+/* =========================================================================
+   AUDIO WAVEFORM VISUALIZER
+   ========================================================================= */
+const wvc = $('waveformCanvas');
+const wCtx = wvc.getContext('2d');
+let wPhase = 0;
+
+function resizeWave() {
+    const r = wvc.parentElement.getBoundingClientRect();
+    wvc.width = r.width;
+    wvc.height = r.height;
+}
+window.addEventListener('resize', resizeWave);
+setTimeout(resizeWave, 100);
+
+function drawWave() {
+    requestAnimationFrame(drawWave);
+    const w = wvc.width, h = wvc.height;
+    if (!w || !h) return;
+
+    wCtx.clearRect(0, 0, w, h);
+
+    if (S.agent.muted) {
+        wCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        wCtx.lineWidth = 2;
+        wCtx.beginPath();
+        wCtx.moveTo(0, h / 2);
+        wCtx.lineTo(w, h / 2);
+        wCtx.stroke();
+        return;
+    }
+
+    const state = S.agent.state;
+    let amp = 3.5, speed = 0.04, bars = 44;
+
+    if (state === 'SPEAKING') { amp = 14; speed = 0.16; }
+    else if (state === 'LISTENING') { amp = 9; speed = 0.1; }
+    else if (state === 'THINKING') { amp = 6; speed = 0.07; }
+
+    wPhase += speed;
+    const bw = (w - (bars * 3)) / bars;
+
+    for (let i = 0; i < bars; i++) {
+        const x = i * (bw + 3) + 4;
+        const sv = Math.sin(wPhase + i * 0.25) * Math.cos(wPhase * 0.7 + i * 0.18);
+        const bh = Math.max(3, Math.abs(sv) * amp * 2);
+        const y = (h - bh) / 2;
+
+        const g = wCtx.createLinearGradient(0, y, 0, y + bh);
+        if (state === 'SPEAKING') {
+            g.addColorStop(0, '#f43f5e');
+            g.addColorStop(1, '#fb7185');
+        } else if (state === 'LISTENING') {
+            g.addColorStop(0, '#10b981');
+            g.addColorStop(1, '#34d399');
+        } else if (state === 'THINKING') {
+            g.addColorStop(0, '#0ea5e9');
+            g.addColorStop(1, '#38bdf8');
+        } else {
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+            g.addColorStop(1, 'rgba(255, 255, 255, 0.04)');
         }
 
-        function completeTaskExecution(taskPlan) {
-            clearInterval(taskTimerInterval);
-            taskProgressPercent.textContent = '100%';
-            taskProgressFill.style.width = '100%';
-            taskProgressStepLabel.textContent = 'All steps verified successfully!';
+        wCtx.fillStyle = g;
+        wCtx.beginPath();
+        wCtx.roundRect(x, y, bw, bh, 2);
+        wCtx.fill();
+    }
+}
+requestAnimationFrame(drawWave);
 
-            verificationStatusIcon.textContent = '✓';
-            verificationStatusText.textContent = 'Verified: All tasks completed successfully.';
-            btnDismissTask.style.display = 'block';
+/* =========================================================================
+   DYNAMIC TASK EXECUTION PIPELINE (RIGHT PANEL EXPANDS ON TASK)
+   ========================================================================= */
+let timerInt = null, timerStart = null;
 
+function openTask(plan) {
+    document.body.classList.add('task-active');
+    setAgentState('EXECUTING');
+
+    $('taskTitle').textContent = plan.title;
+    $('stepLabel').textContent  = `Step 1 of ${plan.steps.length}: Starting…`;
+    $('stepPct').textContent    = '0%';
+    $('progressFill').style.width = '0%';
+
+    const sl = $('stepsList');
+    sl.innerHTML = '';
+    plan.steps.forEach((s, i) => {
+        const d = document.createElement('div');
+        d.className = 'step-item' + (i === 0 ? ' running' : '');
+        d.id = `step_${i}`;
+        d.innerHTML = `
+            <div class="step-icon">${i === 0 ? '⚡' : '○'}</div>
+            <div class="step-info">
+                <div class="step-name">${s.title}</div>
+                <div class="step-cmd">${s.cmd}</div>
+            </div>
+        `;
+        sl.appendChild(d);
+    });
+
+    $('consoleBox').innerHTML = `[System] Executing plan: "${plan.title}"…<br>`;
+    $('verifyIcon').textContent = '⏳';
+    $('verifyText').textContent = 'Running automation steps…';
+    $('btnDismiss').style.display = 'none';
+
+    addActivity('⚡', `Started: ${plan.title}`);
+    if (plan.reminder) {
+        addReminder(plan.reminder, 'Generated from task');
+    }
+
+    timerStart = Date.now();
+    if (timerInt) clearInterval(timerInt);
+    timerInt = setInterval(() => {
+        const e = (Date.now() - timerStart) / 1000;
+        const mins = String(Math.floor(e / 60)).padStart(2, '0');
+        const secs = String(Math.floor(e % 60)).padStart(2, '0');
+        const ms = Math.floor((e * 10) % 10);
+        $('taskTimer').textContent = `${mins}:${secs}.${ms}`;
+    }, 100);
+
+    runStep(plan, 0);
+}
+
+function runStep(plan, i) {
+    if (i >= plan.steps.length) {
+        finishTask(plan);
+        return;
+    }
+
+    const s = plan.steps[i];
+    const el = document.getElementById(`step_${i}`);
+    if (el) {
+        el.className = 'step-item running';
+        el.querySelector('.step-icon').textContent = '⚡';
+    }
+
+    $('stepLabel').textContent = `Step ${i + 1} of ${plan.steps.length}: ${s.title}`;
+    const pct = Math.round((i / plan.steps.length) * 100);
+    $('stepPct').textContent = pct + '%';
+    $('progressFill').style.width = pct + '%';
+
+    $('consoleBox').innerHTML += `&gt; ${s.cmd}<br>`;
+    $('consoleBox').scrollTop = $('consoleBox').scrollHeight;
+
+    setTimeout(() => {
+        $('consoleBox').innerHTML += `[Verified] ${s.verify}<br>`;
+        $('consoleBox').scrollTop = $('consoleBox').scrollHeight;
+
+        if (el) {
+            el.className = 'step-item done';
+            el.querySelector('.step-icon').textContent = '✓';
+        }
+
+        addActivity('✓', `${s.title}`);
+        runStep(plan, i + 1);
+    }, s.dur || 1100);
+}
+
+function finishTask(plan) {
+    clearInterval(timerInt);
+    $('stepPct').textContent = '100%';
+    $('progressFill').style.width = '100%';
+    $('stepLabel').textContent = 'All steps verified successfully!';
+    $('verifyIcon').textContent = '✅';
+    $('verifyText').textContent = 'Complete & Verified!';
+    $('btnDismiss').style.display = 'block';
+
+    setAgentState('SPEAKING');
+    const uName = S.prefs.userName || 'friend';
+    $('tSpeaker').textContent = S.agent.name + ':';
+    $('tText').textContent = `I've finished "${plan.title}" for you, ${uName}! Everything is verified. 🎉`;
+
+    addActivity('🎉', `Completed: ${plan.title}`);
+    setTimeout(closeTask, 4500);
+}
+
+function closeTask() {
+    clearInterval(timerInt);
+    document.body.classList.remove('task-active');
+    setAgentState('IDLE');
+}
+
+$('btnDismiss').addEventListener('click', closeTask);
+$('btnStop').addEventListener('click', () => {
+    closeTask();
+    toast('Task interrupted.');
+});
+
+/* =========================================================================
+   COMMAND INPUT HANDLER
+   ========================================================================= */
+function handleCmd(text) {
+    const t = text.trim();
+    if (!t) return;
+
+    $('cmdInput').value = '';
+    $('tSpeaker').textContent = 'You:';
+    $('tText').textContent = `"${t}"`;
+    setAgentState('THINKING');
+
+    addActivity('💬', `Command: ${t}`);
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'text_command', data: { text: t } }));
+    }
+
+    const lower = t.toLowerCase();
+
+    if (lower.includes('vs code') || lower.includes('code') || lower.includes('test') || lower.includes('project')) {
+        setTimeout(() => {
+            openTask({
+                title: 'Launch VS Code & Run Project Suite',
+                steps: [
+                    { title: 'Launch Visual Studio Code', cmd: "launch_application('code')", verify: "Process 'code.exe' running (PID 9140)", dur: 1000 },
+                    { title: 'Focus Project Workspace', cmd: "focus_application('Ai-Voice-Agent')", verify: 'Window workspace focused', dur: 850 },
+                    { title: 'Run Safe Terminal Test', cmd: "run_safe_terminal_command('pytest')", verify: 'Exit code 0: 32 tests passed', dur: 1600 },
+                    { title: 'Verify Audit Artifacts', cmd: 'verify_audit_log()', verify: 'Zero errors logged in security sandbox', dur: 900 }
+                ],
+                reminder: 'Review test execution report'
+            });
+        }, 700);
+    } else if (lower.includes('youtube') || lower.includes('browser') || lower.includes('chrome') || lower.includes('search')) {
+        setTimeout(() => {
+            openTask({
+                title: 'Open Browser & Media Stream',
+                steps: [
+                    { title: 'Launch Chrome Browser', cmd: "launch_application('chrome')", verify: 'Chrome window active', dur: 800 },
+                    { title: 'Open Media URL', cmd: "open_browser_url('https://youtube.com')", verify: 'Target navigation completed', dur: 1100 },
+                    { title: 'Search Requested Media', cmd: "web_search('lo-fi chill beats', 'youtube')", verify: 'Media focused & playing', dur: 950 }
+                ]
+            });
+        }, 700);
+    } else if (lower.includes('remind') || lower.includes('remember')) {
+        setTimeout(() => {
             setAgentState('SPEAKING');
-            transcriptTextContent.textContent = `"I have finished '${taskPlan.title}' and verified all steps, Alex!"`;
-
-            // Auto-return to idle after 4.5 seconds
-            setTimeout(() => {
-                closeTaskPanel();
-            }, 4500);
-        }
-
-        function closeTaskPanel() {
-            if (taskTimerInterval) clearInterval(taskTimerInterval);
-            document.body.classList.remove('task-active');
-            setAgentState('IDLE');
-        }
-
-        btnDismissTask.addEventListener('click', closeTaskPanel);
-
-        // =========================================================================
-        // COMMAND DISPATCHER & PRESET DEMO TASKS
-        // =========================================================================
-        function handleCommandInput(text) {
-            const cleanText = text.trim();
-            if (!cleanText) return;
-
-            cmdTextInput.value = '';
-            transcriptSpeakerLabel.textContent = 'You:';
-            transcriptTextContent.textContent = `"${cleanText}"`;
-            setAgentState('THINKING');
-
-            // Send to backend WebSocket if open
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'text_command',
-                    data: { text: cleanText }
-                }));
-            }
-
-            // Check if matches multi-step workflow trigger
-            const lower = cleanText.toLowerCase();
-            if (lower.includes('vs code') || lower.includes('project') || lower.includes('test')) {
-                setTimeout(() => {
-                    startTaskExecution({
-                        title: "Launch VS Code & Execute Test Suite",
-                        steps: [
-                            { title: "Launch Visual Studio Code", command: "launch_application('code')", verifyMessage: "Process 'code.exe' running (PID 8412)", duration: 1100 },
-                            { title: "Focus Project Workspace", command: "focus_application('Ai-Voice-Agent')", verifyMessage: "Window 'Ai-Voice-Agent - Visual Studio Code' focused", duration: 900 },
-                            { title: "Run Safe Terminal Command", command: "run_safe_terminal_command('pytest -v')", verifyMessage: "Sandbox exit code 0: 30 passed in 3.8s", duration: 1800 },
-                            { title: "Verify Automation Artifacts", command: "verify_audit_log_record()", verifyMessage: "Verified: All tests passed with zero errors.", duration: 1000 }
-                        ]
-                    });
-                }, 800);
-            } else if (lower.includes('youtube') || lower.includes('tab') || lower.includes('browse')) {
-                setTimeout(() => {
-                    startTaskExecution({
-                        title: "Browser Navigation & Media Play",
-                        steps: [
-                            { title: "Open New Browser Tab", command: "browser_tab_control('new_tab')", verifyMessage: "Opened new tab via Ctrl+T", duration: 800 },
-                            { title: "Navigate to YouTube", command: "open_browser_url('https://youtube.com')", verifyMessage: "URL loaded in default browser", duration: 1200 },
-                            { title: "Search & Play Media", command: "web_search('lo-fi chill beats', 'youtube')", verifyMessage: "Search results displayed and focused", duration: 1100 }
-                        ]
-                    });
-                }, 800);
-            } else {
-                // Simple conversational answer
-                setTimeout(() => {
-                    setAgentState('SPEAKING');
-                    const companionName = AppState.agent.name;
-                    transcriptSpeakerLabel.textContent = `${companionName}:`;
-                    transcriptTextContent.textContent = `"Right away Alex! I am taking care of '${cleanText}' for you!"`;
-                    setTimeout(() => setAgentState('IDLE'), 3500);
-                }, 900);
-            }
-        }
-
-        btnSendCmd.addEventListener('click', () => handleCommandInput(cmdTextInput.value));
-        cmdTextInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleCommandInput(cmdTextInput.value);
-        });
-
-        // Barge-in button
-        btnBargeIn.addEventListener('click', () => {
-            closeTaskPanel();
-            setAgentState('IDLE');
-            transcriptTextContent.textContent = `"Action stopped, Alex."`;
-            showToast("Speech / Task interrupted.");
-        });
-
-        // =========================================================================
-        // MIC MUTE / UNMUTE TOGGLE
-        // =========================================================================
-        btnHeaderMic.addEventListener('click', () => {
-            AppState.agent.isMuted = !AppState.agent.isMuted;
-            if (AppState.agent.isMuted) {
-                btnHeaderMic.classList.add('muted');
-                headerMicIcon.textContent = '🔇';
-                headerMicLabel.textContent = 'Muted';
-                setAgentState('MUTED');
-                showToast("Microphone muted.");
-            } else {
-                btnHeaderMic.classList.remove('muted');
-                headerMicIcon.textContent = '🎙️';
-                headerMicLabel.textContent = 'Mic Active';
-                setAgentState('IDLE');
-                showToast("Microphone unmuted and active.");
-            }
-        });
-
-        // =========================================================================
-        // REMINDERS INTERACTION
-        // =========================================================================
-        document.querySelectorAll('.reminder-item').forEach(item => {
-            item.addEventListener('click', () => {
-                item.classList.toggle('completed');
-                const activeCount = document.querySelectorAll('.reminder-item:not(.completed)').length;
-                document.getElementById('reminderCountBadge').textContent = `${activeCount} Active`;
-            });
-        });
-
-        // =========================================================================
-        // SETTINGS MODAL ENGINE
-        // =========================================================================
-        btnOpenSettings.addEventListener('click', () => {
-            // Populate form values
-            document.getElementById('inputUserName').value = AppState.user.name;
-            settingsModalOverlay.classList.add('active');
-        });
-
-        btnCloseSettings.addEventListener('click', () => {
-            settingsModalOverlay.classList.remove('active');
-        });
-
-        document.querySelectorAll('#companionGenderOptions .radio-option-card').forEach(card => {
-            card.addEventListener('click', () => {
-                setCompanionPersonalization(card.dataset.companionGender, AppState.companion.style, AppState.companion.voice);
-            });
-        });
-
-        document.querySelectorAll('#companionStyleOptions .radio-option-card').forEach(card => {
-            card.addEventListener('click', () => {
-                setCompanionPersonalization(AppState.companion.gender, card.dataset.companionStyle, AppState.companion.voice);
-            });
-        });
-
-        document.querySelectorAll('#themeOptions .radio-option-card').forEach(card => {
-            card.addEventListener('click', () => {
-                applyTheme(card.dataset.themeName);
-            });
-        });
-
-        document.getElementById('btnPreviewVoice').addEventListener('click', () => {
-            const selectedVoice = document.getElementById('voiceSelect').value;
-            setAgentState('SPEAKING');
-            transcriptSpeakerLabel.textContent = `${AppState.agent.name} (${selectedVoice}):`;
-            transcriptTextContent.textContent = `"Hello Alex! This is a voice sample preview with the ${selectedVoice} model."`;
+            $('tSpeaker').textContent = S.agent.name + ':';
+            $('tText').textContent = `Got it! I added "${t}" to your reminders list.`;
+            addReminder(t, 'Voice Command');
             setTimeout(() => setAgentState('IDLE'), 3000);
-        });
+        }, 600);
+    } else {
+        setTimeout(() => {
+            setAgentState('SPEAKING');
+            $('tSpeaker').textContent = S.agent.name + ':';
+            const romanticMsgs = [
+                `Sure thing, my favorite person! I'm taking care of "${t}" right away! 💖`,
+                `On it! Anything for you. Working on "${t}" now! 🥰`,
+                `You got it! Handled with extra love. ✨`
+            ];
+            const formalMsgs = [
+                `Processing request: "${t}". Standing by.`,
+                `Understood. Proceeding with your instruction.`
+            ];
+            const pool = S.prefs.style === 'romantic' ? romanticMsgs : formalMsgs;
+            $('tText').textContent = pool[Math.floor(Math.random() * pool.length)];
+            setTimeout(() => setAgentState('IDLE'), 3200);
+        }, 700);
+    }
+}
 
-        document.getElementById('btnSaveSettings').addEventListener('click', () => {
-            const newName = document.getElementById('inputUserName').value.trim();
-            if (newName) {
-                AppState.user.name = newName;
-                localStorage.setItem('shruti_user_name', newName);
-                updateGreeting();
-            }
+$('btnSend').addEventListener('click', () => handleCmd($('cmdInput').value));
+$('cmdInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleCmd($('cmdInput').value);
+});
 
-            const voice = document.getElementById('voiceSelect').value;
-            AppState.companion.voice = voice;
-            localStorage.setItem('shruti_voice', voice);
+/* =========================================================================
+   SETTINGS MODAL LOGIC
+   ========================================================================= */
+$('btnSettings').addEventListener('click', () => {
+    $('settingAgentName').value = S.agent.name;
+    $('settingUserName').value  = S.prefs.userName || '';
+    $('voiceSelect').value      = S.prefs.voice;
+    $('settingsModal').classList.add('open');
+});
+let currentPreviewAudio = null;
 
-            // Sync with backend API
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                    type: 'update_preferences',
-                    data: {
-                        agent_name: AppState.agent.name,
-                        voice_name: voice,
-                        persona_mode: AppState.companion.style === 'romantic' ? 'romantic_girlfriend' : 'assistant'
-                    }
-                }));
-            }
+function stopVoicePreview() {
+    if (currentPreviewAudio) {
+        try {
+            currentPreviewAudio.pause();
+            currentPreviewAudio.currentTime = 0;
+            currentPreviewAudio.src = '';
+        } catch (_) {}
+        currentPreviewAudio = null;
+    }
+    if (S.state === 'SPEAKING') {
+        setAgentState('IDLE');
+    }
+}
 
-            settingsModalOverlay.classList.remove('active');
-            showToast("Settings applied successfully!");
-        });
+function closeSettingsModal() {
+    stopVoicePreview();
+    $('settingsModal').classList.remove('open');
+}
 
-        // =========================================================================
-        // AUTHENTICATION MODAL ENGINE (LOGIN, REGISTER, OTP, RESET)
-        // =========================================================================
-        btnHeaderAuth.addEventListener('click', () => {
-            authModalOverlay.classList.add('active');
-        });
+$('closeSettings').addEventListener('click', closeSettingsModal);
 
-        btnCloseAuth.addEventListener('click', () => {
-            authModalOverlay.classList.remove('active');
-        });
+document.querySelectorAll('#genderOptions .r-card').forEach(c => {
+    c.addEventListener('click', () => {
+        stopVoicePreview();
+        setCompanionModel(c.dataset.g);
+        toast(`Companion switched to ${c.dataset.g === 'male' ? 'Shaan (Male)' : 'Shruti (Female)'}`);
+    });
+});
 
-        // Tab Navigation
-        const tabBtnLogin = document.getElementById('tabBtnLogin');
-        const tabBtnRegister = document.getElementById('tabBtnRegister');
-        const viewLogin = document.getElementById('viewLogin');
-        const viewRegister = document.getElementById('viewRegister');
-        const viewForgot = document.getElementById('viewForgot');
-        const viewOtp = document.getElementById('viewOtp');
-        const viewResetPassword = document.getElementById('viewResetPassword');
+$('voiceSelect').addEventListener('change', stopVoicePreview);
 
-        function showAuthView(viewName) {
-            [viewLogin, viewRegister, viewForgot, viewOtp, viewResetPassword].forEach(v => v.style.display = 'none');
-            tabBtnLogin.classList.remove('active');
-            tabBtnRegister.classList.remove('active');
+document.querySelectorAll('#styleOptions .r-card').forEach(c => {
+    c.addEventListener('click', () => {
+        stopVoicePreview();
+        S.prefs.style = c.dataset.s;
+        localStorage.setItem('shruti_style', c.dataset.s);
+        document.querySelectorAll('#styleOptions .r-card').forEach(x => x.classList.remove('on'));
+        c.classList.add('on');
 
-            if (viewName === 'login') {
-                viewLogin.style.display = 'block';
-                tabBtnLogin.classList.add('active');
-            } else if (viewName === 'register') {
-                viewRegister.style.display = 'block';
-                tabBtnRegister.classList.add('active');
-            } else if (viewName === 'forgot') {
-                viewForgot.style.display = 'block';
-            } else if (viewName === 'otp') {
-                viewOtp.style.display = 'block';
-            } else if (viewName === 'reset') {
-                viewResetPassword.style.display = 'block';
-            }
+        const personaMode = c.dataset.s === 'romantic' ? 'romantic_girlfriend' : 'assistant';
+        const v = $('voiceSelect') ? $('voiceSelect').value : (S.prefs.voice || 'Aoede');
+        const payload = {
+            agent_name: S.agent.name,
+            voice_name: v,
+            persona_mode: personaMode
+        };
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'update_preferences',
+                data: payload
+            }));
         }
+        fetch('/api/preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(() => {});
 
-        tabBtnLogin.addEventListener('click', () => showAuthView('login'));
-        tabBtnRegister.addEventListener('click', () => showAuthView('register'));
-        document.getElementById('linkForgotPassword').addEventListener('click', (e) => {
-            e.preventDefault();
-            showAuthView('forgot');
-        });
-        document.getElementById('linkBackToLogin').addEventListener('click', (e) => {
-            e.preventDefault();
-            showAuthView('login');
-        });
+        toast(`Tone switched to ${c.dataset.s === 'romantic' ? 'Romantic / Girlfriend 💖' : 'Formal / Professional 👔'}`);
+    });
+});
 
-        // 1. Submit Login
-        viewLogin.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSubmitLogin');
-            btn.textContent = 'Authenticating...';
-            setTimeout(() => {
-                btn.textContent = 'Sign In to Shruti';
-                AppState.authenticated = true;
-                const email = document.getElementById('loginEmail').value;
-                const name = email.split('@')[0].replace('.', ' ') || 'Alex Mercer';
-                AppState.user.name = name.charAt(0).toUpperCase() + name.slice(1);
-                localStorage.setItem('shruti_user_name', AppState.user.name);
-                updateGreeting();
-                authModalOverlay.classList.remove('active');
-                showToast(`Welcome back, ${AppState.user.name}!`);
-            }, 800);
-        });
+document.querySelectorAll('#themeOptions .r-card').forEach(c => {
+    c.addEventListener('click', () => {
+        applyTheme(c.dataset.t);
+    });
+});
 
-        // 2. Submit Register -> Goes to OTP
-        viewRegister.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSubmitRegister');
-            btn.textContent = 'Sending OTP Code...';
-            setTimeout(() => {
-                btn.textContent = 'Send Verification Code';
-                const name = document.getElementById('regName').value.trim();
-                if (name) AppState.user.name = name;
-                showAuthView('otp');
-                showToast("Verification code sent to your contact.");
-            }, 900);
-        });
+$('btnSaveSettings').addEventListener('click', () => {
+    const newAgent = $('settingAgentName').value.trim();
+    if (newAgent) setAgentName(newAgent);
 
-        // 3. Submit Forgot -> Goes to OTP
-        viewForgot.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSubmitForgot');
-            btn.textContent = 'Sending OTP...';
-            setTimeout(() => {
-                btn.textContent = 'Send OTP Code';
-                showAuthView('otp');
-                showToast("Password reset code sent.");
-            }, 900);
-        });
+    const newUser = $('settingUserName').value.trim();
+    if (newUser) {
+        S.prefs.userName = newUser;
+        localStorage.setItem('shruti_user_name', newUser);
+    }
 
-        // 4. OTP Inputs Auto-Jump
-        const otpInputs = document.querySelectorAll('.otp-digit-input');
-        otpInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
-                    otpInputs[index + 1].focus();
-                }
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                    otpInputs[index - 1].focus();
-                }
-            });
-        });
+    const voice = $('voiceSelect').value;
+    S.prefs.voice = voice;
+    localStorage.setItem('shruti_voice', voice);
 
-        viewOtp.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSubmitOtp');
-            btn.textContent = 'Verifying...';
-            setTimeout(() => {
-                btn.textContent = 'Verify & Complete Sign In';
-                showAuthView('reset');
-            }, 700);
-        });
-
-        // 5. Submit Reset Password
-        viewResetPassword.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnSubmitResetPass');
-            btn.textContent = 'Updating Password...';
-            setTimeout(() => {
-                btn.textContent = 'Update Password & Sign In';
-                authModalOverlay.classList.remove('active');
-                localStorage.setItem('shruti_user_name', AppState.user.name);
-                updateGreeting();
-                showToast("Password updated. Signed in successfully!");
-            }, 800);
-        });
-
-        // Close modals on Esc or backdrop click
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                settingsModalOverlay.classList.remove('active');
-                authModalOverlay.classList.remove('active');
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'update_preferences',
+            data: {
+                agent_name: S.agent.name,
+                voice_name: voice,
+                persona_mode: S.prefs.style === 'romantic' ? 'romantic_girlfriend' : 'assistant'
             }
-        });
-        [settingsModalOverlay, authModalOverlay].forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.classList.remove('active');
-            });
-        });
+        }));
+    }
 
-        // =========================================================================
-        // WEBSOCKET BACKEND INTEGRATION
-        // =========================================================================
-        let ws = null;
+    closeSettingsModal();
+    toast('Preferences applied successfully!');
+});
 
-        function initWebSocket() {
-            const protocol = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
-            const host = window.location.host || 'localhost:8000';
-            const url = `${protocol}//${host}/ws`;
+$('settingsModal').addEventListener('click', (e) => {
+    if (e.target === $('settingsModal')) closeSettingsModal();
+});
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSettingsModal();
+});
 
-            ws = new WebSocket(url);
+/* =========================================================================
+   WEBSOCKET INTEGRATION
+   ========================================================================= */
+let ws = null;
+function initWS() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host  = location.host || 'localhost:8000';
 
-            ws.onopen = () => {
-                console.log("[WebSocket] Connected to Shruti backend.");
-                ws.send(JSON.stringify({ type: 'ping', data: {} }));
-            };
+    try {
+        ws = new WebSocket(`${proto}//${host}/ws`);
 
-            ws.onmessage = (event) => {
-                try {
-                    const msg = JSON.parse(event.data);
-                    if (msg.type === 'state_change') {
-                        setAgentState(msg.data.state);
-                    } else if (msg.type === 'transcript') {
-                        if (msg.data.role === 'assistant') {
-                            transcriptSpeakerLabel.textContent = `${AppState.agent.name}:`;
-                            transcriptTextContent.textContent = `"${msg.data.text}"`;
-                        }
-                    } else if (msg.type === 'tool_event') {
-                        // Backend tool events can feed right into the task pipeline
-                        if (msg.data.action === 'start') {
-                            // Can trigger right task area
-                        }
+        ws.onopen = () => {
+            console.log('[WebSocket] Connected to Voice Agent backend.');
+            ws.send(JSON.stringify({ type: 'ping', data: {} }));
+        };
+
+        ws.onmessage = (e) => {
+            try {
+                const msg = JSON.parse(e.data);
+                if (msg.type === 'state_change') {
+                    setAgentState(msg.data.state);
+                } else if (msg.type === 'transcript') {
+                    if (msg.data.role === 'assistant') {
+                        $('tSpeaker').textContent = S.agent.name + ':';
+                        $('tText').textContent = `"${msg.data.text}"`;
                     }
-                } catch (err) {
-                    console.error("[WebSocket] Parse error:", err);
+                } else if (msg.type === 'mic_status') {
+                    if (msg.data && typeof msg.data.muted === 'boolean') {
+                        // Only update UI visual state, never echo back
+                        applyMuteUI(msg.data.muted);
+                    }
                 }
-            };
+            } catch (_) {}
+        };
 
-            ws.onclose = () => {
-                console.log("[WebSocket] Disconnected. Reconnecting in 3s...");
-                setTimeout(initWebSocket, 3000);
-            };
+        ws.onclose = () => {
+            setTimeout(initWS, 3000);
+        };
 
-            ws.onerror = (err) => {
-                console.warn("[WebSocket] Offline/Error. Running in standalone desktop UI mode.", err);
-            };
-        }
+        ws.onerror = () => {};
+    } catch (_) {}
+}
 
-        // =========================================================================
-        // INITIALIZATION
-        // =========================================================================
-        document.addEventListener('DOMContentLoaded', () => {
-            applyTheme(AppState.companion.theme);
-            setCompanionPersonalization(AppState.companion.gender, AppState.companion.style, AppState.companion.voice);
-            updateGreeting();
-            setAgentState('IDLE');
-            initWebSocket();
-        });
-    </script>
+/* =========================================================================
+   INIT ON LOAD
+   ========================================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    applyTheme(S.prefs.theme);
+    setCompanionModel(S.prefs.gender);
+    setAgentName(S.agent.name);
+
+    document.querySelectorAll('#styleOptions .r-card').forEach(c => {
+        c.classList.toggle('on', c.dataset.s === S.prefs.style);
+    });
+
+    if ($('voiceSelect')) $('voiceSelect').value = S.prefs.voice;
+
+    renderReminders();
+    applyMuteUI(false);
+    initWS();
+});
+</script>
 </body>
 </html>

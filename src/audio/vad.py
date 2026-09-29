@@ -33,6 +33,11 @@ class VoiceActivityDetector:
         
         self.is_speaking = False
         self.silence_frames_count = 0
+
+    def reset(self):
+        """Resets the VAD speaking state and counters."""
+        self.is_speaking = False
+        self.silence_frames_count = 0
         
     def process_chunk(self, audio_bytes: bytes) -> VADEvent:
         """
