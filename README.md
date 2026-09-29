@@ -94,8 +94,9 @@ flowchart TD
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/Ai-Voice-Agent.git
+git clone https://github.com/Purnendudutta/Ai-Voice-Agent.git
 cd Ai-Voice-Agent
+
 
 # Install dependencies
 pip install -r requirements.txt
