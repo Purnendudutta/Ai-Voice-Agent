@@ -74,6 +74,12 @@ class HeadlessPyAutoGUI:
             img.save(imageFilename)
         return img
 
+    def __getattr__(self, name):
+        """Safely intercept any unhandled method or attribute call."""
+        def _dummy(*args, **kwargs):
+            return None
+        return _dummy
+
 
 def setup_gui_compatibility():
     """
@@ -90,7 +96,7 @@ def setup_gui_compatibility():
     try:
         import pyautogui
         return pyautogui
-    except Exception as e:
+    except (Exception, KeyError) as e:
         logger.warning(
             "Display/GUI automation library (pyautogui) could not be initialized (%s). "
             "Activating HeadlessPyAutoGUI fallback for headless cloud environment.",

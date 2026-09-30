@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000 \
     HOST=0.0.0.0
 
-# Install system dependencies (portaudio, build tools, and xvfb for headless display)
+# Install system dependencies (audio, C build tools, and headless utilities)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     portaudio19-dev \
     libasound2-dev \
@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     xvfb \
+    xauth \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -35,5 +36,5 @@ COPY . .
 # Expose port (Render/Railway use $PORT dynamically)
 EXPOSE 8000
 
-# Start SHRUTI AI Web Voice Agent with virtual framebuffer
-CMD ["xvfb-run", "-a", "python", "main.py"]
+# Start SHRUTI AI Web Voice Agent
+CMD ["python", "main.py"]
