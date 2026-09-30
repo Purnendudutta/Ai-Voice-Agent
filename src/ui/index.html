@@ -872,6 +872,418 @@
         .creator-badge:hover .creator-name {
             filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
         }
+
+        /* =====================================================================
+           RESPONSIVE MOBILE ARCHITECTURE & BOTTOM NAVIGATION
+           ===================================================================== */
+        .mobile-bottom-nav {
+            display: none;
+        }
+        .mobile-talk-bar {
+            display: none;
+        }
+        .chat-panel {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                height: 100vh;
+                height: 100dvh;
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+            }
+
+            /* Responsive Header */
+            header {
+                height: 52px;
+                min-height: 52px;
+                padding: 0 12px;
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+            .brand-wrap {
+                gap: 8px;
+            }
+            .brand-orb {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+            #brandNameDisplay {
+                font-size: 1.05rem;
+            }
+            .edit-hint {
+                display: none !important;
+            }
+            .brand-sub {
+                display: none;
+            }
+            .hdr-right {
+                gap: 8px;
+            }
+            .state-badge {
+                padding: 5px 9px;
+                font-size: 0.68rem;
+                max-width: 135px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            #btnMic {
+                padding: 6px 10px;
+                font-size: 0.78rem;
+                min-height: 36px;
+            }
+            #btnMic #micLabel {
+                display: none;
+            }
+            #btnSettings {
+                display: none; /* Moved to bottom navigation bar on mobile */
+            }
+
+            /* Main Container */
+            main {
+                padding: 6px 10px calc(64px + env(safe-area-inset-bottom, 0px));
+                gap: 0;
+                height: calc(100dvh - 52px);
+                flex-direction: column;
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* Mobile Tab View Switching */
+            body:not([data-mobile-tab]) .center-area,
+            body[data-mobile-tab="voice"] .center-area {
+                display: flex !important;
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: var(--radius-md);
+            }
+            body[data-mobile-tab="voice"] .left-panel,
+            body[data-mobile-tab="voice"] .chat-panel,
+            body[data-mobile-tab="voice"] .right-panel {
+                display: none !important;
+            }
+
+            body[data-mobile-tab="chat"] .chat-panel {
+                display: flex !important;
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+            body[data-mobile-tab="chat"] .center-area,
+            body[data-mobile-tab="chat"] .left-panel,
+            body[data-mobile-tab="chat"] .right-panel {
+                display: none !important;
+            }
+
+            body[data-mobile-tab="reminders"] .left-panel {
+                display: flex !important;
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                height: 100% !important;
+                gap: 10px;
+            }
+            body[data-mobile-tab="reminders"] .center-area,
+            body[data-mobile-tab="reminders"] .chat-panel,
+            body[data-mobile-tab="reminders"] .right-panel {
+                display: none !important;
+            }
+
+            /* Voice Screen Character Viewport */
+            .char-viewport {
+                flex: 1;
+                min-height: 180px;
+                padding-bottom: 5px;
+            }
+            #companionImage {
+                max-height: 86%;
+                max-width: 90%;
+            }
+            .state-ring {
+                width: 200px;
+                height: 200px;
+                bottom: 15px;
+            }
+            .glow-orb {
+                width: 220px;
+                height: 220px;
+                top: 20%;
+            }
+
+            /* Voice Screen Deck & Thumb-Friendly Controls */
+            .voice-deck {
+                padding: 10px 12px;
+                gap: 8px;
+                border-radius: var(--radius-md);
+            }
+            .wave-box {
+                height: 48px;
+            }
+            .cmd-row {
+                display: none !important; /* Replaced by bottom talk bar on voice tab */
+            }
+            .mobile-talk-bar {
+                display: flex !important;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+            .mobile-big-talk-btn {
+                flex: 1;
+                height: 52px;
+                min-height: 52px;
+                background: var(--accent-grad);
+                border: none;
+                border-radius: var(--radius-md);
+                color: white;
+                font-size: 0.96rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                box-shadow: 0 4px 20px var(--accent-soft);
+                cursor: pointer;
+                touch-action: manipulation;
+                user-select: none;
+                transition: transform 0.15s, box-shadow 0.25s, background 0.3s;
+            }
+            .mobile-big-talk-btn:active {
+                transform: scale(0.96);
+            }
+            body.listening .mobile-big-talk-btn {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+                animation: talkBtnPulse 1.4s infinite ease-in-out;
+            }
+            body.speaking .mobile-big-talk-btn {
+                background: linear-gradient(135deg, #f43f5e 0%, #d946ef 100%);
+                box-shadow: 0 0 24px rgba(244, 63, 94, 0.5);
+            }
+            @keyframes talkBtnPulse {
+                0%, 100% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.4); }
+                50% { box-shadow: 0 0 32px rgba(16, 185, 129, 0.8); }
+            }
+
+            .mobile-mic-thumb-toggle {
+                width: 52px;
+                height: 52px;
+                min-width: 52px;
+                border-radius: var(--radius-md);
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid var(--panel-border);
+                color: var(--text-1);
+                font-size: 1.3rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                touch-action: manipulation;
+                transition: var(--t);
+            }
+            .mobile-mic-thumb-toggle:active {
+                transform: scale(0.92);
+            }
+            .mobile-mic-thumb-toggle.muted {
+                background: rgba(239, 68, 68, 0.22);
+                border-color: var(--danger);
+                color: #fca5a5;
+            }
+
+            /* Dedicated Mobile Chat Panel */
+            .chat-panel {
+                height: 100%;
+                overflow: hidden;
+            }
+            .chat-card {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 12px 14px;
+                overflow: hidden;
+                height: 100%;
+            }
+            .chat-feed {
+                flex: 1;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding-right: 2px;
+                margin-bottom: 10px;
+            }
+            .chat-bubble {
+                max-width: 86%;
+                padding: 10px 14px;
+                border-radius: var(--radius-md);
+                font-size: 0.88rem;
+                line-height: 1.45;
+                animation: fadeIn 0.25s ease;
+                word-break: break-word;
+            }
+            .chat-bubble.assistant {
+                align-self: flex-start;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: var(--text-1);
+                border-bottom-left-radius: 4px;
+            }
+            .chat-bubble.user {
+                align-self: flex-end;
+                background: var(--accent-grad);
+                color: white;
+                border-bottom-right-radius: 4px;
+                box-shadow: 0 4px 16px var(--accent-soft);
+            }
+            .bubble-sender {
+                font-size: 0.68rem;
+                font-weight: 700;
+                margin-bottom: 3px;
+                opacity: 0.85;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+            .chat-input-bar {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+            .chat-input-bar .cmd-input {
+                font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+                padding: 11px 14px;
+            }
+            .chat-input-bar .btn-send {
+                padding: 11px 18px;
+                min-height: 44px;
+            }
+
+            /* Reminders on Mobile */
+            .reminders-card {
+                flex: 1.2;
+            }
+            .activity-card {
+                flex: 0.8;
+            }
+            .rem-input {
+                font-size: 16px; /* Prevents iOS zoom */
+            }
+            .btn-rem-save {
+                min-height: 44px;
+                padding: 0 16px;
+            }
+            .rem-item {
+                padding: 10px 12px;
+            }
+            .rem-check {
+                width: 24px;
+                height: 24px;
+            }
+            .btn-rem-action {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+            }
+
+            /* Mobile Bottom Navigation Bar */
+            .mobile-bottom-nav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: calc(56px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                background: rgba(6, 9, 18, 0.97);
+                backdrop-filter: blur(28px) saturate(1.5);
+                -webkit-backdrop-filter: blur(28px) saturate(1.5);
+                border-top: 1px solid var(--panel-border);
+                z-index: 85;
+                justify-content: space-around;
+                align-items: center;
+                box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
+            }
+            .mobile-nav-item {
+                flex: 1;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                background: none;
+                border: none;
+                color: var(--text-2);
+                cursor: pointer;
+                user-select: none;
+                touch-action: manipulation;
+                transition: color 0.2s, transform 0.15s;
+                padding: 4px 0;
+                position: relative;
+            }
+            .mobile-nav-item:active {
+                transform: scale(0.92);
+            }
+            .mobile-nav-item .nav-icon {
+                font-size: 1.25rem;
+                line-height: 1;
+                transition: transform 0.2s;
+            }
+            .mobile-nav-item .nav-label {
+                font-size: 0.68rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+            }
+            .mobile-nav-item.active {
+                color: var(--accent-glow);
+            }
+            .mobile-nav-item.active .nav-icon {
+                transform: translateY(-2px);
+                filter: drop-shadow(0 0 8px var(--accent-glow));
+            }
+            .mobile-nav-item.active::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 32px;
+                height: 3px;
+                border-radius: var(--radius-full);
+                background: var(--accent-grad);
+                box-shadow: 0 0 10px var(--accent-glow);
+            }
+
+            /* Settings Modal on Mobile */
+            .modal {
+                width: 96vw;
+                max-height: 90vh;
+                border-radius: var(--radius-md);
+            }
+            .modal-hdr {
+                padding: 14px 16px;
+            }
+            .modal-body {
+                padding: 14px 16px;
+            }
+            .r-grid-5 {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            .form-inp {
+                font-size: 16px; /* Prevent iOS zoom */
+            }
+            .btn-primary {
+                min-height: 48px;
+            }
+
+            /* Hide Creator Badge on Mobile so it doesn't block the nav bar */
+            .creator-badge {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -973,6 +1385,16 @@
                 <div class="voice-pill" id="voicePill"><span style="color:var(--success)">●</span> Ready</div>
                 <button class="btn-stop" id="btnStop">⏹ Stop</button>
             </div>
+            <!-- Mobile Enlarged Thumb-Friendly Talk Bar -->
+            <div class="mobile-talk-bar" id="mobileTalkBar">
+                <button class="mobile-big-talk-btn" id="mobileBigTalkBtn">
+                    <span id="mobileTalkIcon">🎙️</span>
+                    <span id="mobileTalkText">Tap to Talk</span>
+                </button>
+                <button class="mobile-mic-thumb-toggle" id="mobileMicThumbToggle" title="Toggle Microphone">
+                    <span id="mobileMicThumbIcon">🎙️</span>
+                </button>
+            </div>
             <div class="transcript-bar" id="transcriptBar">
                 <span class="t-speaker" id="tSpeaker">Shruti:</span>
                 <span class="t-text" id="tText">Hello! I'm ready. Say a command or type below.</span>
@@ -981,6 +1403,27 @@
                 <input class="cmd-input" id="cmdInput" type="text"
                     placeholder="Type a command (e.g. 'Open VS Code', 'Search YouTube', 'Set reminder')…" autocomplete="off">
                 <button class="btn-send" id="btnSend">Send ➔</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MOBILE DEDICATED CHAT PANEL -->
+    <section class="chat-panel" id="chatPanel">
+        <div class="glass chat-card">
+            <div class="card-hdr">
+                <div class="card-hdr-title">💬 Conversation History</div>
+                <button class="btn-task-action" id="btnClearChat" title="Clear chat history">Clear</button>
+            </div>
+            <div class="chat-feed" id="chatFeed">
+                <div class="chat-bubble assistant">
+                    <div class="bubble-sender">Shruti</div>
+                    <div class="bubble-text">Hello! I'm your AI companion. Tap the microphone in the Voice tab to talk to me, or type your message below.</div>
+                </div>
+            </div>
+            <div class="chat-input-bar">
+                <input class="cmd-input" id="chatInputMobile" type="text"
+                    placeholder="Message Shruti..." autocomplete="off">
+                <button class="btn-send" id="btnSendMobile">Send ➔</button>
             </div>
         </div>
     </section>
@@ -1023,6 +1466,28 @@
     </aside>
 
 </main>
+
+<!-- =====================================================================
+     MOBILE BOTTOM NAVIGATION BAR
+     ===================================================================== -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button class="mobile-nav-item active" data-tab="voice" id="tabVoice">
+        <span class="nav-icon">🎙️</span>
+        <span class="nav-label">Voice</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="chat" id="tabChat">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">Chat</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="reminders" id="tabReminders">
+        <span class="nav-icon">⏰</span>
+        <span class="nav-label">Reminders</span>
+    </button>
+    <button class="mobile-nav-item" data-tab="settings" id="tabSettings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+    </button>
+</nav>
 
 <!-- =====================================================================
      SETTINGS MODAL
@@ -1581,6 +2046,10 @@ function setAgentState(state) {
     if (state === 'LISTENING')  document.body.classList.add('listening');
     if (state === 'THINKING')   document.body.classList.add('thinking');
     if (state === 'MUTED')      document.body.classList.add('muted-state');
+
+    if (typeof updateMobileTalkBtnState === 'function') {
+        updateMobileTalkBtnState(state);
+    }
 }
 
 /* =========================================================================
@@ -1770,15 +2239,22 @@ const micLabel = $('micLabel');
 function applyMuteUI(muted) {
     S.agent.muted = muted;
 
+    const mobThumb = $('mobileMicThumbToggle');
+    const mobIcon = $('mobileMicThumbIcon');
+
     if (muted) {
         btnMic.classList.add('muted');
         micIcon.textContent = '🔇';
         micLabel.textContent = 'Muted';
+        if (mobThumb) mobThumb.classList.add('muted');
+        if (mobIcon) mobIcon.textContent = '🔇';
         setAgentState('MUTED');
     } else {
         btnMic.classList.remove('muted');
         micIcon.textContent = '🎙️';
         micLabel.textContent = 'Mic Active';
+        if (mobThumb) mobThumb.classList.remove('muted');
+        if (mobIcon) mobIcon.textContent = '🎙️';
         setAgentState('LISTENING');
         startBrowserMic();
     }
@@ -2159,8 +2635,11 @@ function handleCmd(text) {
     if (!t) return;
 
     $('cmdInput').value = '';
+    const mobInput = $('chatInputMobile');
+    if (mobInput) mobInput.value = '';
     $('tSpeaker').textContent = 'You:';
     $('tText').textContent = `"${t}"`;
+    addChatMessage('You', t, true);
     setAgentState('THINKING');
 
     addActivity('💬', `Command: ${t}`);
@@ -2199,7 +2678,9 @@ function handleCmd(text) {
         setTimeout(() => {
             setAgentState('SPEAKING');
             $('tSpeaker').textContent = S.agent.name + ':';
-            $('tText').textContent = `Got it! I added "${t}" to your reminders list.`;
+            const remMsg = `Got it! I added "${t}" to your reminders list.`;
+            $('tText').textContent = remMsg;
+            addChatMessage(S.agent.name, remMsg, false);
             addReminder(t, 'Voice Command');
             setTimeout(() => setAgentState('IDLE'), 3000);
         }, 600);
@@ -2217,7 +2698,9 @@ function handleCmd(text) {
                 `Understood. Proceeding with your instruction.`
             ];
             const pool = S.prefs.style === 'romantic' ? romanticMsgs : formalMsgs;
-            $('tText').textContent = pool[Math.floor(Math.random() * pool.length)];
+            const reply = pool[Math.floor(Math.random() * pool.length)];
+            $('tText').textContent = reply;
+            addChatMessage(S.agent.name, reply, false);
             setTimeout(() => setAgentState('IDLE'), 3200);
         }, 700);
     }
@@ -2227,6 +2710,124 @@ $('btnSend').addEventListener('click', () => handleCmd($('cmdInput').value));
 $('cmdInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleCmd($('cmdInput').value);
 });
+
+/* =========================================================================
+   MOBILE BOTTOM NAVIGATION & CHAT FEED ENGINE
+   ========================================================================= */
+let currentMobileTab = 'voice';
+
+function setMobileTab(tab) {
+    if (tab === 'settings') {
+        $('settingAgentName').value = S.agent.name;
+        $('settingUserName').value  = S.prefs.userName || '';
+        $('voiceSelect').value      = S.prefs.voice;
+        $('settingsModal').classList.add('open');
+        return;
+    }
+    currentMobileTab = tab;
+    document.body.setAttribute('data-mobile-tab', tab);
+    document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        setMobileTab(btn.dataset.tab);
+    });
+});
+
+function addChatMessage(sender, text, isUser = false) {
+    const feed = $('chatFeed');
+    if (!feed) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + (isUser ? 'user' : 'assistant');
+    bubble.innerHTML = `
+        <div class="bubble-sender">${escapeHtml(sender)}</div>
+        <div class="bubble-text">${escapeHtml(text)}</div>
+    `;
+    feed.appendChild(bubble);
+    feed.scrollTop = feed.scrollHeight;
+}
+
+const btnClearChat = $('btnClearChat');
+if (btnClearChat) {
+    btnClearChat.addEventListener('click', () => {
+        const feed = $('chatFeed');
+        if (feed) {
+            feed.innerHTML = `
+                <div class="chat-bubble assistant">
+                    <div class="bubble-sender">${escapeHtml(S.agent.name)}</div>
+                    <div class="bubble-text">Chat cleared! How can I help you today?</div>
+                </div>
+            `;
+        }
+    });
+}
+
+const btnSendMobile = $('btnSendMobile');
+const chatInputMobile = $('chatInputMobile');
+if (btnSendMobile && chatInputMobile) {
+    btnSendMobile.addEventListener('click', () => {
+        handleCmd(chatInputMobile.value);
+    });
+    chatInputMobile.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleCmd(chatInputMobile.value);
+    });
+}
+
+/* =========================================================================
+   MOBILE ENLARGED TALK & THUMB MIC CONTROLS
+   ========================================================================= */
+const mobileBigTalkBtn = $('mobileBigTalkBtn');
+const mobileTalkIcon = $('mobileTalkIcon');
+const mobileTalkText = $('mobileTalkText');
+const mobileMicThumbToggle = $('mobileMicThumbToggle');
+const mobileMicThumbIcon = $('mobileMicThumbIcon');
+
+function updateMobileTalkBtnState(state) {
+    if (!mobileBigTalkBtn) return;
+    if (state === 'LISTENING') {
+        if (mobileTalkIcon) mobileTalkIcon.textContent = '🟢';
+        if (mobileTalkText) mobileTalkText.textContent = 'Listening… (Speak now)';
+    } else if (state === 'SPEAKING') {
+        if (mobileTalkIcon) mobileTalkIcon.textContent = '🔊';
+        if (mobileTalkText) mobileTalkText.textContent = `${S.agent.name} Speaking (Tap to stop)`;
+    } else if (state === 'THINKING') {
+        if (mobileTalkIcon) mobileTalkIcon.textContent = '⚡';
+        if (mobileTalkText) mobileTalkText.textContent = 'Thinking…';
+    } else if (state === 'MUTED') {
+        if (mobileTalkIcon) mobileTalkIcon.textContent = '🔇';
+        if (mobileTalkText) mobileTalkText.textContent = 'Muted (Tap to unmute)';
+    } else {
+        if (mobileTalkIcon) mobileTalkIcon.textContent = '🎙️';
+        if (mobileTalkText) mobileTalkText.textContent = 'Tap to Talk';
+    }
+}
+
+if (mobileBigTalkBtn) {
+    mobileBigTalkBtn.addEventListener('click', () => {
+        if (S.agent.state === 'SPEAKING') {
+            stopAllPlayback();
+            triggerManualWake();
+        } else if (S.agent.muted) {
+            applyMuteUI(false);
+            triggerManualWake();
+        } else {
+            triggerManualWake();
+        }
+    });
+}
+
+if (mobileMicThumbToggle) {
+    mobileMicThumbToggle.addEventListener('click', () => {
+        btnMic.click();
+    });
+}
 
 /* =========================================================================
    SETTINGS MODAL LOGIC
@@ -2375,6 +2976,11 @@ function initWS() {
                     if (msg.data.role === 'assistant') {
                         $('tSpeaker').textContent = S.agent.name + ':';
                         $('tText').textContent = `"${msg.data.text}"`;
+                        addChatMessage(S.agent.name, msg.data.text, false);
+                    } else if (msg.data.role === 'user') {
+                        $('tSpeaker').textContent = 'You:';
+                        $('tText').textContent = `"${msg.data.text}"`;
+                        addChatMessage('You', msg.data.text, true);
                     }
                 } else if (msg.type === 'mic_status') {
                     if (msg.data && typeof msg.data.muted === 'boolean') {
@@ -2420,6 +3026,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderReminders();
     applyMuteUI(false);
+    setMobileTab('voice');
     initWS();
 });
 </script>
