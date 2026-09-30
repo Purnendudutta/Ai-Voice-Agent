@@ -1669,24 +1669,6 @@ let wSpeed = 0.025;
 let mouseNormX = -1;
 let mousePower = 0;
 let clickPulse = 0;
-let liveMicAmp = 0;
-let webAudioCtx = null, webAudioAnalyser = null, webAudioData = null;
-
-function initWebAudio() {
-    if (webAudioCtx || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-    try {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            webAudioCtx = new AudioCtx();
-            const src = webAudioCtx.createMediaStreamSource(stream);
-            webAudioAnalyser = webAudioCtx.createAnalyser();
-            webAudioAnalyser.fftSize = 64;
-            webAudioAnalyser.smoothingTimeConstant = 0.75;
-            src.connect(webAudioAnalyser);
-            webAudioData = new Uint8Array(webAudioAnalyser.frequencyBinCount);
-        }).catch(() => {});
-    } catch (_) {}
-}
 
 // Attach hover and click interactivity to the wave box
 const waveBoxEl = wvc ? wvc.parentElement : null;
@@ -1702,7 +1684,6 @@ if (waveBoxEl) {
         mouseNormX = -1;
     });
     waveBoxEl.addEventListener('click', () => {
-        initWebAudio();
         clickPulse = 1.0;
         triggerManualWake();
     });
@@ -1761,32 +1742,23 @@ function drawWave() {
     const midY = h / 2;
     const state = S.agent.state;
 
-    // Sample real microphone audio if available
-    if (webAudioAnalyser && !S.agent.muted) {
-        webAudioAnalyser.getByteFrequencyData(webAudioData);
-        let sum = 0;
-        for (let k = 0; k < 12; k++) sum += webAudioData[k];
-        const micLevel = sum / (12 * 255);
-        liveMicAmp += (micLevel - liveMicAmp) * 0.3;
-    } else {
-        liveMicAmp += (0.0 - liveMicAmp) * 0.1;
-    }
-
     // Dynamic state reactivity
     if (S.agent.muted) {
         wTargetAmp = 0.0;
         wSpeed = 0.005;
     } else if (state === 'SPEAKING') {
-        // Dynamic voice modulation cadence
+        // Dynamic voice modulation cadence (assistant talking)
         const voiceCadence = Math.sin(wPhase * 3.8) * Math.cos(wPhase * 1.9);
-        wTargetAmp = 0.80 + 0.22 * Math.abs(voiceCadence);
+        wTargetAmp = 0.82 + 0.25 * Math.abs(voiceCadence);
         wSpeed = 0.038;
     } else if (state === 'LISTENING') {
-        wTargetAmp = 0.40 + liveMicAmp * 1.5;
-        wSpeed = 0.026 + liveMicAmp * 0.04;
+        // Responsive listening rhythm awaiting/receiving speech
+        const listenCadence = Math.sin(wPhase * 2.8) * Math.cos(wPhase * 1.4);
+        wTargetAmp = 0.65 + 0.22 * Math.abs(listenCadence);
+        wSpeed = 0.030;
     } else if (state === 'THINKING') {
         wTargetAmp = 0.58;
-        wSpeed = 0.028;
+        wSpeed = 0.026;
     } else { // IDLE
         wTargetAmp = 0.36;
         wSpeed = 0.016;
@@ -2287,7 +2259,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReminders();
     applyMuteUI(false);
     initWS();
-    document.body.addEventListener('click', initWebAudio, { once: true });
 });
 </script>
 
