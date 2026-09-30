@@ -165,45 +165,9 @@ async def main() -> None:
 
     permission_manager.on_confirmation_requested = on_confirmation_requested
 
-    # ── Launch Desktop App Window ──
-    async def open_app_window(port: int, delay_sec: float = 1.2) -> None:
-        """Auto-opens the desktop UI in Chrome/Edge app window mode or default browser."""
-        await asyncio.sleep(delay_sec)
-        import shutil
-        import subprocess
-        import webbrowser
-        from pathlib import Path
-
-        url = f"http://localhost:{port}"
-
-        # Try launching Edge or Chrome in standalone app mode (native frameless window)
-        app_candidates = [
-            shutil.which("msedge"),
-            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-            shutil.which("chrome"),
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        ]
-
-        for exe in app_candidates:
-            if exe and Path(exe).exists():
-                try:
-                    subprocess.Popen([exe, f"--app={url}", "--window-size=1260,820"])
-                    logger.info(f"Launched SHRUTI desktop window via {Path(exe).name}")
-                    return
-                except Exception:
-                    pass
-
-        try:
-            webbrowser.open(url)
-        except Exception as err:
-            logger.debug(f"Failed to auto-open browser: {err}")
-
     # ── Launch ──
     logger.info("Starting SHRUTI...")
     print(f"\n  >> Open http://localhost:{settings.web_ui_port} in your browser <<\n")
-    asyncio.create_task(open_app_window(settings.web_ui_port))
 
     try:
         await asyncio.gather(

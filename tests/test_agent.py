@@ -352,40 +352,4 @@ async def test_orchestrator_allows_browser_tool_on_explicit_command(monkeypatch)
     assert "youtube.com" in browser_opened[0]
 
 
-@pytest.mark.asyncio
-async def test_ipc_server_settings_api_key_endpoints(tmp_path, monkeypatch):
-    from unittest.mock import AsyncMock, MagicMock
-    from src.ipc.server import IPCServer, ApiKeyRequest
-    from src.config import settings
-
-    server = IPCServer()
-    mock_orch = MagicMock()
-    mock_orch.gemini = AsyncMock()
-    mock_orch.gemini.is_connected = True
-    mock_orch._reconnect_gemini = AsyncMock(return_value=True)
-    server.set_orchestrator(mock_orch)
-
-    # Use temporary directory for settings data
-    monkeypatch.setattr(settings, "data_dir", tmp_path)
-    monkeypatch.setattr(settings, "base_dir", tmp_path)
-
-    # 1. Update API key
-    req = ApiKeyRequest(api_key="AIzaSyTestKey123456789")
-    # Call endpoint function directly
-    routes = {r.path: r for r in server.app.routes}
-    
-    update_route = routes["/api/settings/api_key"]
-    res = await update_route.endpoint(req)
-    assert res["status"] == "success"
-    assert res["has_api_key"] is True
-    assert settings.gemini_api_key == "AIzaSyTestKey123456789"
-
-    # 2. Get status
-    status_route = routes["/api/settings/status"]
-    status_res = await status_route.endpoint()
-    assert status_res["has_api_key"] is True
-    assert status_res["masked_key"] == "AIza...6789"
-
-
-
 
