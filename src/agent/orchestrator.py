@@ -83,6 +83,26 @@ class AgentOrchestrator:
         self._reconnecting = False
         self._reconnect_lock = asyncio.Lock()
 
+        # Wire local TTS audio streaming to browser WebSocket
+        try:
+            from src.audio.local_tts import local_tts
+            local_tts.set_audio_callback(self._on_local_tts_audio)
+        except Exception as e:
+            logger.debug(f"Could not wire local TTS audio callback: {e}")
+
+    async def _on_local_tts_audio(self, pcm_bytes: bytes, sample_rate: int) -> None:
+        """Stream locally synthesized speech chunks to WebSocket clients and local speaker."""
+        try:
+            self.speaker.play_chunk(pcm_bytes)
+        except Exception:
+            pass
+        import base64
+        b64_audio = base64.b64encode(pcm_bytes).decode("ascii")
+        await self._emit_event("audio_stream", {
+            "pcm_base64": b64_audio,
+            "sample_rate": sample_rate
+        })
+
     # ── State Management ──────────────────────────────────────────────
 
     async def _set_state(self, new_state: AgentState) -> None:
@@ -794,8 +814,8 @@ class AgentOrchestrator:
         asyncio.create_task(self._emit_event("mic_status", {"muted": new_muted}))
         return new_muted
 
-    async def wake_up(self) -> None:
-        """Manually trigger the assistant to start listening immediately."""
+    async def wake_up(self, greet: bool = True) -> None:
+        """Manually trigger the assistant to start listening immediately, optionally providing an immediate vocal greeting."""
         if self.state == AgentState.MUTED:
             self.toggle_mute(False)
         if hasattr(self.microphone, "ensure_started"):
@@ -807,6 +827,44 @@ class AgentOrchestrator:
         await self._set_state(AgentState.LISTENING)
         await self._emit_event("wake_word_detected", {"word": "manual"})
         logger.info("Manual wake-up triggered: agent set to LISTENING.")
+
+        if greet:
+            asyncio.create_task(self._spoken_wake_response())
+
+    async def _spoken_wake_response(self) -> None:
+        """Immediate vocal response when user initiates conversation by tapping talk button."""
+        try:
+            prefs = self.get_preferences()
+            agent_name = prefs.get("agent_name", "Shruti")
+            persona_mode = prefs.get("persona_mode", "romantic_girlfriend")
+            lang = prefs.get("language", "auto")
+
+            if self.gemini.is_connected:
+                prompt = (
+                    f"[The user just tapped the talk button on their mobile device or browser to talk with you. "
+                    f"Greet them warmly in 1 short sweet sentence as {agent_name} and ask how you can help.]"
+                )
+                await self.gemini.send_text(prompt)
+            else:
+                from src.audio.local_tts import local_tts
+                gender = "male" if "shaan" in agent_name.lower() or prefs.get("voice_name") in ["Fenrir", "Charon"] else "female"
+                if persona_mode == "romantic_girlfriend":
+                    if lang == "hindi":
+                        reply = f"Haan meri jaan! Main {agent_name} hoon, sun rahi hoon. Bataiye aaj kya karna hai?"
+                    elif lang == "english":
+                        reply = f"Hey babe! I'm {agent_name}, listening right now. What can I do for you?"
+                    else:
+                        reply = f"Haan meri jaan! Main {agent_name} hoon, sun rahi hoon. Tell me, what would you like to do?"
+                else:
+                    reply = f"Hello, I am {agent_name}. I am listening, how can I help you?"
+
+                self.context.add_message("assistant", reply)
+                await self._emit_event("transcript", {"role": "assistant", "text": reply})
+                await self._set_state(AgentState.SPEAKING)
+                await local_tts.speak(reply, gender=gender)
+                await self._set_state(AgentState.LISTENING)
+        except Exception as e:
+            logger.debug(f"Spoken wake response error: {e}")
 
     async def clear_history(self) -> None:
         """Clear conversation history for privacy."""
@@ -864,10 +922,13 @@ class AgentOrchestrator:
 
     def get_status(self) -> Dict[str, Any]:
         """Return a full status snapshot."""
+        from src.config import settings
+        has_key = bool(settings.gemini_api_key and settings.gemini_api_key != "your_gemini_api_key_here")
         return {
             "state": self.state.name,
             "running": self._running,
             "gemini_connected": self.gemini.is_connected,
+            "has_gemini_api_key": has_key,
             "mic_active": self.microphone.is_active,
             "speaker_playing": self.speaker.is_playing,
             "wake_word_enabled": self.wake_word.enabled,

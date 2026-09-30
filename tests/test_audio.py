@@ -41,3 +41,15 @@ def test_speaker_instantiation():
     assert speaker is not None
     assert speaker.sample_rate == 24000
     assert speaker.is_playing is False
+
+
+def test_local_tts_callback():
+    from src.audio.local_tts import LocalTTS
+    tts = LocalTTS()
+    received_chunks = []
+
+    def mock_cb(chunk: bytes, rate: int):
+        received_chunks.append((chunk, rate))
+
+    tts.set_audio_callback(mock_cb)
+    assert tts.on_audio_data is mock_cb

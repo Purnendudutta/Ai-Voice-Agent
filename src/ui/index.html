@@ -1284,6 +1284,44 @@
                 display: none !important;
             }
         }
+
+        .api-notice-banner {
+            position: relative;
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 7px 16px;
+            background: rgba(245, 158, 11, 0.12);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fde68a;
+            font-size: 0.76rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .api-notice-banner code {
+            background: rgba(0, 0, 0, 0.45);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fbbf24;
+            font-family: monospace;
+            font-size: 0.74rem;
+        }
+        .btn-dismiss-notice {
+            background: none;
+            border: none;
+            color: #fde68a;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            opacity: 0.75;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-dismiss-notice:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -1316,6 +1354,11 @@
         <button class="icon-btn" id="btnSettings">⚙️ Settings</button>
     </div>
 </header>
+
+<div class="api-notice-banner" id="apiNoticeBanner">
+    <span>💡 <strong>Local Neural Voice Active</strong>. For continuous live cloud voice, add <code>GEMINI_API_KEY</code> in Render's Environment settings.</span>
+    <button class="btn-dismiss-notice" id="btnDismissNotice" title="Dismiss notice">✕</button>
+</div>
 
 <!-- =====================================================================
      MAIN LAYOUT
@@ -2074,15 +2117,28 @@ function base64ToUint8(base64) {
     return bytes;
 }
 
-function initPlayContext() {
+function unlockAudioContext() {
     if (!playContext) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         playContext = new AudioCtx({ sampleRate: 24000 });
         nextPlayTime = playContext.currentTime;
     }
     if (playContext.state === 'suspended') {
-        playContext.resume();
+        playContext.resume().then(() => {
+            console.log('[AudioContext] Unlocked & active.');
+        }).catch(err => {
+            console.debug('[AudioContext] Unlock pending gesture:', err);
+        });
     }
+}
+
+// Ensure audio context is unlocked by ANY touch or click interaction on mobile
+['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, unlockAudioContext, { passive: true });
+});
+
+function initPlayContext() {
+    unlockAudioContext();
 }
 
 function stopAllPlayback() {
@@ -2098,21 +2154,27 @@ function stopAllPlayback() {
 
 function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
     try {
-        initPlayContext();
-        const rawBytes = base64ToUint8(pcmBase64);
-        const int16 = new Int16Array(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength / 2);
-        if (int16.length === 0) return;
+        unlockAudioContext();
+        if (!playContext) return;
 
-        const float32 = new Float32Array(int16.length);
+        const rawBytes = base64ToUint8(pcmBase64);
+        let byteLen = rawBytes.byteLength;
+        if (byteLen % 2 !== 0) byteLen -= 1;
+        const numSamples = Math.floor(byteLen / 2);
+        if (numSamples <= 0) return;
+
+        const float32 = new Float32Array(numSamples);
+        const view = new DataView(rawBytes.buffer, rawBytes.byteOffset, byteLen);
         let sum = 0;
-        for (let i = 0; i < int16.length; i++) {
-            const val = int16[i] / 32768.0;
+        for (let i = 0; i < numSamples; i++) {
+            const s = view.getInt16(i * 2, true); // true = little-endian
+            const val = s / 32768.0;
             float32[i] = val;
             sum += val * val;
         }
 
         // Live visualizer reacts dynamically to AI voice output
-        const rms = Math.sqrt(sum / int16.length);
+        const rms = Math.sqrt(sum / numSamples);
         audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
 
         const buffer = playContext.createBuffer(1, float32.length, sampleRate);
@@ -2142,11 +2204,122 @@ function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
     }
 }
 
+function resampleTo16k(inputData, inputSampleRate) {
+    if (!inputSampleRate || inputSampleRate === 16000) return inputData;
+    const ratio = inputSampleRate / 16000;
+    const newLength = Math.round(inputData.length / ratio);
+    const result = new Float32Array(newLength);
+    let offsetResult = 0;
+    let offsetInput = 0;
+    while (offsetResult < result.length) {
+        const nextOffsetInput = Math.round((offsetResult + 1) * ratio);
+        let accum = 0, count = 0;
+        for (let i = offsetInput; i < nextOffsetInput && i < inputData.length; i++) {
+            accum += inputData[i];
+            count++;
+        }
+        result[offsetResult] = count > 0 ? accum / count : inputData[offsetInput];
+        offsetResult++;
+        offsetInput = nextOffsetInput;
+    }
+    return result;
+}
+
+// ── On-device Web Speech Recognition (for mobile accuracy & offline fallback) ──
+let speechRec = null;
+let isRecActive = false;
+
+function initSpeechRecognition() {
+    const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechClass) return;
+
+    try {
+        speechRec = new SpeechClass();
+        speechRec.continuous = true;
+        speechRec.interimResults = true;
+        speechRec.lang = S.prefs.language === 'hindi' ? 'hi-IN' : (S.prefs.language === 'english' ? 'en-US' : 'hi-IN');
+
+        speechRec.onstart = () => {
+            isRecActive = true;
+            console.log("[SpeechRecognition] On-device voice recognition started.");
+        };
+
+        speechRec.onresult = (evt) => {
+            let interim = '';
+            let final = '';
+
+            for (let i = evt.resultIndex; i < evt.results.length; i++) {
+                if (evt.results[i].isFinal) {
+                    final += evt.results[i][0].transcript;
+                } else {
+                    interim += evt.results[i][0].transcript;
+                }
+            }
+
+            if (interim) {
+                $('tSpeaker').textContent = 'You:';
+                $('tText').textContent = `"${interim}..."`;
+            }
+
+            if (final && final.trim()) {
+                const text = final.trim();
+                $('tSpeaker').textContent = 'You:';
+                $('tText').textContent = `"${text}"`;
+                addChatMessage('You', text, true);
+                setAgentState('THINKING');
+
+                // If Gemini Live is in degraded mode (no API key configured on Render), route voice text to server
+                if (!S.geminiConnected) {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'text_command', data: { text: text } }));
+                    } else {
+                        fetch('/api/command', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ command: text })
+                        }).catch(() => {});
+                    }
+                }
+            }
+        };
+
+        speechRec.onerror = (e) => {
+            if (e.error !== 'no-speech') {
+                console.debug("[SpeechRecognition] Status:", e.error);
+            }
+        };
+
+        speechRec.onend = () => {
+            isRecActive = false;
+            if (S.agent.state === 'LISTENING' && !S.agent.muted) {
+                try { speechRec.start(); } catch (_) {}
+            }
+        };
+    } catch (e) {
+        console.debug("[SpeechRecognition] Not available:", e);
+    }
+}
+
+function startSpeechRecognition() {
+    if (!speechRec) initSpeechRecognition();
+    if (speechRec && !isRecActive && !S.agent.muted) {
+        try { speechRec.start(); } catch (_) {}
+    }
+}
+
 async function startBrowserMic() {
-    initPlayContext();
-    if (isBrowserMicActive && micStream) return;
+    unlockAudioContext();
+    if (isBrowserMicActive && micStream) {
+        startSpeechRecognition();
+        return;
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.warn("getUserMedia not supported in this browser.");
+        console.warn("getUserMedia not supported in this browser context.");
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            toast("⚠️ Microphone access requires HTTPS on mobile devices.", 4500);
+        } else {
+            toast("⚠️ Microphone is not supported by this browser.", 4000);
+        }
         return;
     }
     try {
@@ -2162,7 +2335,11 @@ async function startBrowserMic() {
         micStream = stream;
 
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        micContext = new AudioCtx({ sampleRate: 16000 });
+        try {
+            micContext = new AudioCtx({ sampleRate: 16000 });
+        } catch (_) {
+            micContext = new AudioCtx();
+        }
         if (micContext.state === 'suspended') {
             await micContext.resume();
         }
@@ -2184,10 +2361,13 @@ async function startBrowserMic() {
                 audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
             }
 
+            // Downsample accurately to 16000 Hz if hardware uses 44.1kHz or 48kHz
+            const samples16k = resampleTo16k(inputData, micContext.sampleRate || 16000);
+
             // Convert to 16-bit PCM little-endian
-            const pcm16 = new Int16Array(inputData.length);
-            for (let i = 0; i < inputData.length; i++) {
-                const s = Math.max(-1, Math.min(1, inputData[i]));
+            const pcm16 = new Int16Array(samples16k.length);
+            for (let i = 0; i < samples16k.length; i++) {
+                const s = Math.max(-1, Math.min(1, samples16k[i]));
                 pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
             }
 
@@ -2201,12 +2381,20 @@ async function startBrowserMic() {
         micProcessor.connect(micContext.destination);
         isBrowserMicActive = true;
         console.log("In-browser microphone capture active (16kHz PCM streaming).");
+
+        startSpeechRecognition();
     } catch (err) {
         console.warn("Microphone access error:", err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            toast("⚠️ Microphone permission denied. Please allow microphone in browser settings to speak.", 5000);
+        } else {
+            toast(`⚠️ Microphone error: ${err.message || 'Cannot access mic'}`, 4000);
+        }
     }
 }
 
 function triggerManualWake() {
+    unlockAudioContext();
     if (S.agent.muted) {
         applyMuteUI(false);
     }
@@ -2633,6 +2821,7 @@ $('btnStop').addEventListener('click', () => {
 function handleCmd(text) {
     const t = text.trim();
     if (!t) return;
+    unlockAudioContext();
 
     $('cmdInput').value = '';
     const mobInput = $('chatInputMobile');
@@ -2646,63 +2835,16 @@ function handleCmd(text) {
 
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'text_command', data: { text: t } }));
-    }
-
-    const lower = t.toLowerCase();
-
-    if (lower.includes('vs code') || lower.includes('code') || lower.includes('test') || lower.includes('project')) {
-        setTimeout(() => {
-            openTask({
-                title: 'Launch VS Code & Run Project Suite',
-                steps: [
-                    { title: 'Launch Visual Studio Code', cmd: "launch_application('code')", verify: "Process 'code.exe' running (PID 9140)", dur: 1000 },
-                    { title: 'Focus Project Workspace', cmd: "focus_application('Ai-Voice-Agent')", verify: 'Window workspace focused', dur: 850 },
-                    { title: 'Run Safe Terminal Test', cmd: "run_safe_terminal_command('pytest')", verify: 'Exit code 0: 32 tests passed', dur: 1600 },
-                    { title: 'Verify Audit Artifacts', cmd: 'verify_audit_log()', verify: 'Zero errors logged in security sandbox', dur: 900 }
-                ],
-                reminder: 'Review test execution report'
-            });
-        }, 700);
-    } else if (lower.includes('youtube') || lower.includes('browser') || lower.includes('chrome') || lower.includes('search')) {
-        setTimeout(() => {
-            openTask({
-                title: 'Open Browser & Media Stream',
-                steps: [
-                    { title: 'Launch Chrome Browser', cmd: "launch_application('chrome')", verify: 'Chrome window active', dur: 800 },
-                    { title: 'Open Media URL', cmd: "open_browser_url('https://youtube.com')", verify: 'Target navigation completed', dur: 1100 },
-                    { title: 'Search Requested Media', cmd: "web_search('lo-fi chill beats', 'youtube')", verify: 'Media focused & playing', dur: 950 }
-                ]
-            });
-        }, 700);
-    } else if (lower.includes('remind') || lower.includes('remember')) {
-        setTimeout(() => {
-            setAgentState('SPEAKING');
-            $('tSpeaker').textContent = S.agent.name + ':';
-            const remMsg = `Got it! I added "${t}" to your reminders list.`;
-            $('tText').textContent = remMsg;
-            addChatMessage(S.agent.name, remMsg, false);
-            addReminder(t, 'Voice Command');
-            setTimeout(() => setAgentState('IDLE'), 3000);
-        }, 600);
     } else {
-        setTimeout(() => {
-            setAgentState('SPEAKING');
-            $('tSpeaker').textContent = S.agent.name + ':';
-            const romanticMsgs = [
-                `Sure thing, my favorite person! I'm taking care of "${t}" right away! 💖`,
-                `On it! Anything for you. Working on "${t}" now! 🥰`,
-                `You got it! Handled with extra love. ✨`
-            ];
-            const formalMsgs = [
-                `Processing request: "${t}". Standing by.`,
-                `Understood. Proceeding with your instruction.`
-            ];
-            const pool = S.prefs.style === 'romantic' ? romanticMsgs : formalMsgs;
-            const reply = pool[Math.floor(Math.random() * pool.length)];
-            $('tText').textContent = reply;
-            addChatMessage(S.agent.name, reply, false);
-            setTimeout(() => setAgentState('IDLE'), 3200);
-        }, 700);
+        fetch('/api/command', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: t })
+        }).catch(err => {
+            console.warn("Failed to send command:", err);
+            toast("⚠️ Connection error. Retrying...", 3000);
+            setAgentState('IDLE');
+        });
     }
 }
 
@@ -2966,6 +3108,12 @@ function initWS() {
                 const msg = JSON.parse(e.data);
                 if (msg.type === 'state_change') {
                     setAgentState(msg.data.state);
+                } else if (msg.type === 'system_status') {
+                    if (msg.data) {
+                        S.geminiConnected = !!msg.data.gemini_connected;
+                        S.hasApiKey = !!msg.data.has_gemini_api_key;
+                        updateApiKeyNotice();
+                    }
                 } else if (msg.type === 'audio_stream') {
                     if (msg.data && msg.data.pcm_base64) {
                         playRemotePcmChunk(msg.data.pcm_base64, msg.data.sample_rate || 24000);
@@ -2996,7 +3144,12 @@ function initWS() {
                             dot.style.boxShadow = '0 0 10px #f59e0b';
                         }
                     } else if (msg.data && msg.data.status === 'connected') {
+                        S.geminiConnected = true;
                         setAgentState(S.agent.state || 'IDLE');
+                        updateApiKeyNotice();
+                    } else if (msg.data && msg.data.status === 'degraded_mode') {
+                        S.geminiConnected = false;
+                        updateApiKeyNotice();
                     }
                 }
             } catch (_) {}
@@ -3008,6 +3161,24 @@ function initWS() {
 
         ws.onerror = () => {};
     } catch (_) {}
+}
+
+function updateApiKeyNotice() {
+    const banner = $('apiNoticeBanner');
+    if (!banner) return;
+    if (S.hasApiKey === false) {
+        banner.style.display = 'flex';
+    } else {
+        banner.style.display = 'none';
+    }
+}
+
+const btnDismissNotice = $('btnDismissNotice');
+if (btnDismissNotice) {
+    btnDismissNotice.addEventListener('click', () => {
+        const banner = $('apiNoticeBanner');
+        if (banner) banner.style.display = 'none';
+    });
 }
 
 /* =========================================================================

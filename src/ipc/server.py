@@ -125,7 +125,7 @@ class IPCServer:
         async def manual_wake():
             if not self.orchestrator:
                 raise HTTPException(status_code=503, detail="Orchestrator not ready")
-            await self.orchestrator.wake_up()
+            await self.orchestrator.wake_up(greet=True)
             return {"status": "listening"}
 
         # ── WebSocket endpoint ──
@@ -299,7 +299,7 @@ class IPCServer:
                 await websocket.send_json({"type": "mic_status", "data": {"muted": is_muted}})
 
             elif msg_type == "wake" and self.orchestrator:
-                await self.orchestrator.wake_up()
+                await self.orchestrator.wake_up(greet=True)
 
             elif msg_type == "browser_audio" and self.orchestrator:
                 # Decodes base64 16kHz PCM audio chunk from browser mic
