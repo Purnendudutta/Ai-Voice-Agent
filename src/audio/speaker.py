@@ -80,10 +80,9 @@ class SpeakerOutput:
             )
             self._stream.start()
             self._is_playing = True
-            logger.info(f"Started speaker output (sr={self.sample_rate}, channels={self.channels})")
         except Exception as e:
-            logger.error(f"Failed to start speaker: {e}")
-            raise
+            logger.warning(f"Physical speaker not available ({e}). In-browser audio streaming active.")
+            self._is_playing = False
 
     def stop(self):
         """Stops the audio output stream."""

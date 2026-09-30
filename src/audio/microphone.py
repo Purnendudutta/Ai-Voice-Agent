@@ -88,10 +88,9 @@ class MicrophoneStream:
             )
             self._stream.start()
             self._is_active = True
-            logger.info(f"Started microphone capture (sr={self.sample_rate}, channels={self.channels})")
         except Exception as e:
-            logger.error(f"Failed to start microphone: {e}")
-            raise
+            logger.warning(f"Physical microphone not available ({e}). In-browser audio streaming active.")
+            self._is_active = False
 
     def stop(self):
         """Stops capturing audio."""

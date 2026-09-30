@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: shruti-voice-agent
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AGENT_NAME
+        value: Shruti
+      - key: PERSONA_MODE
+        value: romantic_girlfriend
+      - key: LANGUAGE_PREFERENCE
+        value: auto
+      - key: VOICE_NAME
+        value: Aoede

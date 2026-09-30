@@ -1583,10 +1583,165 @@ function setAgentState(state) {
     if (state === 'MUTED')      document.body.classList.add('muted-state');
 }
 
+/* =========================================================================
+   IN-BROWSER AUDIO ENGINE (MIC IN & SPEAKER OUT STREAMING FOR EVERYONE)
+   ========================================================================= */
+let micContext = null;
+let micStream = null;
+let micProcessor = null;
+let isBrowserMicActive = false;
+
+let playContext = null;
+let nextPlayTime = 0;
+let activeAudioSources = [];
+
+function base64ToUint8(base64) {
+    const binary = window.atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function initPlayContext() {
+    if (!playContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        playContext = new AudioCtx({ sampleRate: 24000 });
+        nextPlayTime = playContext.currentTime;
+    }
+    if (playContext.state === 'suspended') {
+        playContext.resume();
+    }
+}
+
+function stopAllPlayback() {
+    for (let i = 0; i < activeAudioSources.length; i++) {
+        try { activeAudioSources[i].stop(); } catch (_) {}
+    }
+    activeAudioSources = [];
+    if (playContext) {
+        nextPlayTime = playContext.currentTime;
+    }
+    audioPower = 0.05;
+}
+
+function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
+    try {
+        initPlayContext();
+        const rawBytes = base64ToUint8(pcmBase64);
+        const int16 = new Int16Array(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength / 2);
+        if (int16.length === 0) return;
+
+        const float32 = new Float32Array(int16.length);
+        let sum = 0;
+        for (let i = 0; i < int16.length; i++) {
+            const val = int16[i] / 32768.0;
+            float32[i] = val;
+            sum += val * val;
+        }
+
+        // Live visualizer reacts dynamically to AI voice output
+        const rms = Math.sqrt(sum / int16.length);
+        audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
+
+        const buffer = playContext.createBuffer(1, float32.length, sampleRate);
+        buffer.getChannelData(0).set(float32);
+
+        const source = playContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(playContext.destination);
+
+        const now = playContext.currentTime;
+        if (nextPlayTime < now) {
+            nextPlayTime = now + 0.015;
+        }
+        source.start(nextPlayTime);
+        nextPlayTime += buffer.duration;
+
+        activeAudioSources.push(source);
+        source.onended = () => {
+            const idx = activeAudioSources.indexOf(source);
+            if (idx > -1) activeAudioSources.splice(idx, 1);
+            if (activeAudioSources.length === 0 && S.agent.state === 'SPEAKING') {
+                audioPower = 0.05;
+            }
+        };
+    } catch (err) {
+        console.debug("Audio play error:", err);
+    }
+}
+
+async function startBrowserMic() {
+    initPlayContext();
+    if (isBrowserMicActive && micStream) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn("getUserMedia not supported in this browser.");
+        return;
+    }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                channelCount: 1,
+                sampleRate: 16000,
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+        micStream = stream;
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        micContext = new AudioCtx({ sampleRate: 16000 });
+        if (micContext.state === 'suspended') {
+            await micContext.resume();
+        }
+
+        const source = micContext.createMediaStreamSource(stream);
+        micProcessor = micContext.createScriptProcessor(2048, 1, 1);
+
+        micProcessor.onaudioprocess = (e) => {
+            if (S.agent.muted) return;
+            const inputData = e.inputBuffer.getChannelData(0);
+
+            // Compute volume for visualizer
+            let sum = 0;
+            for (let i = 0; i < inputData.length; i++) {
+                sum += inputData[i] * inputData[i];
+            }
+            const rms = Math.sqrt(sum / inputData.length);
+            if (rms > 0.01) {
+                audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
+            }
+
+            // Convert to 16-bit PCM little-endian
+            const pcm16 = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+                const s = Math.max(-1, Math.min(1, inputData[i]));
+                pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+
+            // Stream directly over WebSocket to voice agent
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(pcm16.buffer);
+            }
+        };
+
+        source.connect(micProcessor);
+        micProcessor.connect(micContext.destination);
+        isBrowserMicActive = true;
+        console.log("In-browser microphone capture active (16kHz PCM streaming).");
+    } catch (err) {
+        console.warn("Microphone access error:", err);
+    }
+}
+
 function triggerManualWake() {
     if (S.agent.muted) {
         applyMuteUI(false);
     }
+    startBrowserMic();
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'wake', data: {} }));
     } else {
@@ -1625,6 +1780,7 @@ function applyMuteUI(muted) {
         micIcon.textContent = '🎙️';
         micLabel.textContent = 'Mic Active';
         setAgentState('LISTENING');
+        startBrowserMic();
     }
 }
 
@@ -2209,6 +2365,12 @@ function initWS() {
                 const msg = JSON.parse(e.data);
                 if (msg.type === 'state_change') {
                     setAgentState(msg.data.state);
+                } else if (msg.type === 'audio_stream') {
+                    if (msg.data && msg.data.pcm_base64) {
+                        playRemotePcmChunk(msg.data.pcm_base64, msg.data.sample_rate || 24000);
+                    }
+                } else if (msg.type === 'interrupted') {
+                    stopAllPlayback();
                 } else if (msg.type === 'transcript') {
                     if (msg.data.role === 'assistant') {
                         $('tSpeaker').textContent = S.agent.name + ':';

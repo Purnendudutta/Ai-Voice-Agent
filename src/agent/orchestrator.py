@@ -344,11 +344,17 @@ class AgentOrchestrator:
                     if not self._running:
                         break
 
-                    # ── Audio data → speaker ──
+                    # ── Audio data → speaker and browser WebSocket ──
                     if response.audio_data:
                         if self.state != AgentState.SPEAKING:
                             await self._set_state(AgentState.SPEAKING)
                         self.speaker.play_chunk(response.audio_data)
+                        import base64
+                        b64_audio = base64.b64encode(response.audio_data).decode("ascii")
+                        await self._emit_event("audio_stream", {
+                            "pcm_base64": b64_audio,
+                            "sample_rate": 24000
+                        })
 
                     # ── Input transcript (what user said) ──
                     if response.input_transcript:

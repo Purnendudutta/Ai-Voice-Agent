@@ -5,8 +5,12 @@ Window Management Tools
 import asyncio
 from typing import Dict, Any, Tuple
 from pydantic import BaseModel, Field
-import win32gui
-import win32con
+try:
+    import win32gui
+    import win32con
+except ImportError:
+    win32gui = None
+    win32con = None
 
 from src.tools.base import BaseTool
 from src.security.permissions import RiskLevel

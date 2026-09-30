@@ -8,14 +8,24 @@ import asyncio
 import time
 import json
 import logging
-import winreg
 import shutil
 from typing import Dict, Any, Tuple, Optional, List
 from pydantic import BaseModel, Field
 import psutil
-import win32gui
-import win32process
-import win32con
+
+try:
+    import winreg
+except ImportError:
+    winreg = None
+
+try:
+    import win32gui
+    import win32process
+    import win32con
+except ImportError:
+    win32gui = None
+    win32process = None
+    win32con = None
 
 from src.tools.base import BaseTool, RetryPolicy
 from src.security.permissions import RiskLevel

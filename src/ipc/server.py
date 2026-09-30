@@ -11,6 +11,8 @@ Provides:
 import asyncio
 import json
 import logging
+import os
+import base64
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -147,8 +149,18 @@ class IPCServer:
 
             try:
                 while True:
-                    data = await websocket.receive_text()
-                    await self._handle_ws_message(websocket, data)
+                    ws_msg = await websocket.receive()
+                    if ws_msg.get("type") == "websocket.disconnect":
+                        break
+
+                    # 1. Direct binary audio frames from in-browser microphone
+                    if "bytes" in ws_msg and ws_msg["bytes"]:
+                        if self.orchestrator and hasattr(self.orchestrator, "microphone"):
+                            self.orchestrator.microphone.queue.put_nowait(ws_msg["bytes"])
+
+                    # 2. Text / JSON messages
+                    elif "text" in ws_msg and ws_msg["text"]:
+                        await self._handle_ws_message(websocket, ws_msg["text"])
             except WebSocketDisconnect:
                 self._remove_connection(websocket)
             except Exception as e:
@@ -289,6 +301,16 @@ class IPCServer:
             elif msg_type == "wake" and self.orchestrator:
                 await self.orchestrator.wake_up()
 
+            elif msg_type == "browser_audio" and self.orchestrator:
+                # Decodes base64 16kHz PCM audio chunk from browser mic
+                b64_pcm = data.get("pcm_base64")
+                if b64_pcm:
+                    try:
+                        raw_bytes = base64.b64decode(b64_pcm)
+                        self.orchestrator.microphone.queue.put_nowait(raw_bytes)
+                    except Exception as err:
+                        logger.debug(f"Error handling browser audio: {err}")
+
             elif msg_type == "ping":
                 await websocket.send_json({"type": "pong", "data": {}})
 
@@ -302,10 +324,12 @@ class IPCServer:
 
     async def start_async(self) -> None:
         """Run the FastAPI server asynchronously (non-blocking)."""
+        port = int(os.environ.get("PORT", settings.web_ui_port))
+        host = os.environ.get("HOST", "0.0.0.0")
         config = uvicorn.Config(
             self.app,
-            host="127.0.0.1",
-            port=settings.web_ui_port,
+            host=host,
+            port=port,
             log_level="warning",
         )
         self._server = uvicorn.Server(config)
