@@ -1,6 +1,6 @@
-# Nova AI - Production-Grade Voice Desktop Agent
+# SHRUTI - Production-Grade Voice Desktop Agent
 
-Nova AI is an intelligent, interruptible, observable desktop agent built for Windows. It acts as an autonomous pairing agent, capable of understanding voice and text, breaking complex requests into multi-step workflows, executing desktop automation actions across applications, verifying that those actions succeeded, and speaking the responses in real time.
+SHRUTI is an intelligent, interruptible, observable desktop agent built for Windows. It acts as an autonomous pairing agent, capable of understanding voice and text, breaking complex requests into multi-step workflows, executing desktop automation actions across applications, verifying that those actions succeeded, and speaking the responses in real time.
 
 ```
 Microphone → Wake Word / VAD → Gemini Live WebSocket → Agent Orchestrator → Tool Registry → Desktop Automation → Verification Engine → Speaker Output
@@ -15,7 +15,7 @@ Microphone → Wake Word / VAD → Gemini Live WebSocket → Agent Orchestrator 
 - **Low-Latency Streaming**: Raw PCM 16kHz 16-bit mono input (`audio/pcm;rate=16000`) and 24kHz audio playback.
 - **Voice Activity Detection (VAD)**: Real-time RMS energy analysis with silence detection and turn completion.
 - **Barge-In / Interruption**: When you speak while the agent is speaking, playback buffer clears in under 10ms and the agent switches immediately to `LISTENING`.
-- **Local Degraded Mode**: When offline or if no API key is configured, Nova AI automatically runs an offline task planner with local text-to-speech (`pyttsx3`) via Windows SAPI5.
+- **Local Degraded Mode**: When offline or if no API key is configured, SHRUTI automatically runs an offline task planner with local text-to-speech (`pyttsx3`) via Windows SAPI5.
 
 ### 2. Desktop Automation & Action Verification
 - **Application Control**: Open, close, focus, and query running processes and GUI windows.
@@ -113,7 +113,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_LIVE_MODEL=gemini-3.1-flash-live-preview
 VOICE_NAME=Puck
 ```
-*(Note: If you do not have an API key, Nova AI will start in Local Degraded Mode with offline command planning and local speech synthesis.)*
+*(Note: If you do not have an API key, SHRUTI will start in Local Degraded Mode with offline command planning and local speech synthesis.)*
 
 ### 4. Running the Assistant
 ```bash
@@ -128,7 +128,7 @@ http://localhost:8000
 
 ## Tool Catalog
 
-Nova AI comes with 25 built-in tools across 9 categories:
+SHRUTI comes with 25 built-in tools across 9 categories:
 
 | Tool Name | Category | Risk Level | Description |
 | :--- | :--- | :--- | :--- |

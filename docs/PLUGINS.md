@@ -1,12 +1,12 @@
-# Nova AI - Plugin & Extensibility Guide
+# SHRUTI - Plugin & Extensibility Guide
 
-Nova AI is designed with an extensible plugin architecture. New capabilities can be added without modifying the core agent, orchestrator, or communication layer.
+SHRUTI is designed with an extensible plugin architecture. New capabilities can be added without modifying the core agent, orchestrator, or communication layer.
 
 ---
 
 ## 1. Anatomy of a Tool
 
-Every tool in Nova AI extends `BaseTool` from `src.tools.base`:
+Every tool in SHRUTI extends `BaseTool` from `src.tools.base`:
 
 ```python
 from pydantic import BaseModel, Field

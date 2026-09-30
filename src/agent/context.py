@@ -136,7 +136,7 @@ class ContextManager:
 
     def set_agent_name(self, name: str) -> None:
         """Update and persist the agent name."""
-        clean_name = name.strip() or "Nova"
+        clean_name = name.strip() or "Shruti"
         self.user_preferences["agent_name"] = clean_name
         self.save_preferences()
         logger.info(f"Agent name updated to: {clean_name}")

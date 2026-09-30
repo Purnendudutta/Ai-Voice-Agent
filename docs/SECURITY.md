@@ -1,6 +1,6 @@
-# Nova AI - Security & Permission Architecture
+# SHRUTI - Security & Permission Architecture
 
-Security and safety are core design pillars of Nova AI. Unlike ordinary voice chatbots, Nova AI operates directly on the user's desktop with access to processes, files, windows, and system controls. Consequently, Nova AI enforces strict multi-layered defense-in-depth principles.
+Security and safety are core design pillars of SHRUTI. Unlike ordinary voice chatbots, SHRUTI operates directly on the user's desktop with access to processes, files, windows, and system controls. Consequently, SHRUTI enforces strict multi-layered defense-in-depth principles.
 
 ---
 
@@ -49,7 +49,7 @@ stateDiagram-v2
 
 ## 3. Sandboxed Terminal Execution
 
-Nova AI strictly prohibits the LLM from executing arbitrary or unsanitized shell commands:
+SHRUTI strictly prohibits the LLM from executing arbitrary or unsanitized shell commands:
 - **Command Prefix Whitelist**: Only approved developer utilities (`git`, `npm`, `node`, `python`, `pytest`, `docker`, `pip`, etc.) are permitted.
 - **Destructive Command Blacklist**: Destructive patterns (`format`, `diskpart`, `bcdedit`, `reg delete`, `rmdir /s /q c:\`, `del /s /q c:\`) are blocked at the sandbox boundary before execution.
 - **Path Traversal Protection**: All file and directory arguments are resolved and validated. System root directories (`C:\Windows`, `C:\Windows\System32`, `C:\Recovery`) cannot be targeted.

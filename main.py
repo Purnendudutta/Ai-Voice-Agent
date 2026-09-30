@@ -1,5 +1,5 @@
 """
-Nova AI - Intelligent Voice Desktop Agent
+SHRUTI - Intelligent Voice Desktop Agent
 ==========================================
 Main entry point that wires all subsystems together and launches the assistant.
 
@@ -35,7 +35,7 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 logging.getLogger("google").setLevel(logging.WARNING)
 
-logger = logging.getLogger("nova.main")
+logger = logging.getLogger("shruti.main")
 
 
 def print_banner() -> None:
@@ -45,14 +45,14 @@ def print_banner() -> None:
 
     banner = r"""
     +--------------------------------------------------+
-    |     _   _  _____  _   _  ___       ___  _____    |
-    |    | \ | ||  _  || | | |/ _ \     / _ \|_   _|   |
-    |    |  \| || | | || | | / /_\ \   / /_\ \ | |     |
-    |    | . ` || | | || | | |  _  |   |  _  | | |     |
-    |    | |\  |\ \_/ /\ \_/ / | | |   | | | |_| |_    |
-    |    \_| \_/ \___/  \___/\_| |_/   \_| |_/\___/    |
+    |   _____  _   _ ______  _   _  _____  _____       |
+    |  /  ___|| | | || ___ \| | | ||_   _||_   _|      |
+    |  \ `--. | |_| || |_/ /| | | |  | |    | |        |
+    |   `--. \|  _  ||    / | | | |  | |    | |        |
+    |  /\__/ /| | | || |\ \ | |_| |  | |   _| |_       |
+    |  \____/ \_| |_/\_| \_| \___/   \_/   \___/       |
     |                                                  |
-    |       Intelligent Voice Desktop Agent v1.0       |
+    |      SHRUTI AI - Intelligent Voice Assistant     |
     +--------------------------------------------------+
     """
     print(banner)
@@ -96,7 +96,7 @@ async def main() -> None:
     if not has_api_key:
         logger.warning(
             "GEMINI_API_KEY is not configured.\n"
-            "  -> Nova AI is starting in LOCAL DEGRADED MODE (Offline Task Execution & Local TTS).\n"
+            "  -> SHRUTI is starting in LOCAL DEGRADED MODE (Offline Task Execution & Local TTS).\n"
             "  -> Set GEMINI_API_KEY in .env to activate live cloud streaming at any time."
         )
     else:
@@ -166,7 +166,7 @@ async def main() -> None:
     permission_manager.on_confirmation_requested = on_confirmation_requested
 
     # ── Launch ──
-    logger.info("Starting Nova AI...")
+    logger.info("Starting SHRUTI...")
     print(f"\n  >> Open http://localhost:{settings.web_ui_port} in your browser <<\n")
 
     try:
@@ -179,11 +179,11 @@ async def main() -> None:
     except Exception as e:
         logger.error(f"Error in main loop: {e}", exc_info=True)
     finally:
-        logger.info("Shutting down Nova AI...")
+        logger.info("Shutting down SHRUTI...")
         await orchestrator.stop()
         await ipc_server.stop()
         context_manager.save_preferences()
-        logger.info("Nova AI stopped cleanly.")
+        logger.info("SHRUTI stopped cleanly.")
 
 
 if __name__ == "__main__":

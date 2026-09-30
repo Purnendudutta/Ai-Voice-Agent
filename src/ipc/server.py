@@ -59,7 +59,7 @@ class IPCServer:
     """
 
     def __init__(self):
-        self.app = FastAPI(title="Nova AI IPC Server", docs_url=None, redoc_url=None)
+        self.app = FastAPI(title="SHRUTI IPC Server", docs_url=None, redoc_url=None)
         self.orchestrator: Any = None
         self.active_connections: List[WebSocket] = []
         self._server: Optional[uvicorn.Server] = None
@@ -92,7 +92,7 @@ class IPCServer:
             index_file = UI_DIR / "index.html"
             if index_file.exists():
                 return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
-            return HTMLResponse(content="<h1>Nova AI</h1><p>UI not found.</p>")
+            return HTMLResponse(content="<h1>SHRUTI</h1><p>UI not found.</p>")
 
         # ── Serve UI static assets (png, jpg, svg, etc.) ──
         @self.app.get("/{filename}.png")

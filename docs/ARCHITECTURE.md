@@ -1,6 +1,6 @@
-# Nova AI - Intelligent Voice Desktop Agent: Architecture
+# SHRUTI - Intelligent Voice Desktop Agent: Architecture
 
-Nova AI is a production-grade, interruptible, observable desktop agent powered by the **Gemini Live WebSocket API** (`gemini-3.1-flash-live-preview`), bidirectional raw PCM audio streaming, an extensible typed Tool Registry, secure local IPC, and an action verification engine.
+SHRUTI is a production-grade, interruptible, observable desktop agent powered by the **Gemini Live WebSocket API** (`gemini-3.1-flash-live-preview`), bidirectional raw PCM audio streaming, an extensible typed Tool Registry, secure local IPC, and an action verification engine.
 
 ---
 
@@ -47,7 +47,7 @@ flowchart TD
 ### 2.1 Audio Pipeline & Low Latency
 - **Input**: `MicrophoneStream` continuously buffers 16kHz, 16-bit, little-endian mono PCM audio (`audio/pcm;rate=16000`).
 - **VAD**: `VoiceActivityDetector` measures RMS energy against an adaptive noise threshold, detecting `SPEECH_START`, `SPEECH_CONTINUE`, `SPEECH_END`, and `SILENCE`.
-- **Wake Word**: `WakeWordDetector` listens for target activation phrases ("Jarvis", "Gemini", "Computer", "Nova") and switches the state from `IDLE` to `LISTENING`.
+- **Wake Word**: `WakeWordDetector` listens for target activation phrases ("Jarvis", "Gemini", "Computer", "Shruti") and switches the state from `IDLE` to `LISTENING`.
 - **Output**: `SpeakerOutput` plays 24kHz raw PCM audio streamed directly from Gemini Live.
 - **Barge-In / Interruption**: When user speech is detected while the agent is speaking or Gemini emits `server_content.interrupted`, the speaker buffer is cleared instantly (<10ms latency) and the state transitions back to `LISTENING`.
 
