@@ -212,3 +212,144 @@ async def test_orchestrator_mute_and_unmute():
     assert orch.state == AgentState.LISTENING
 
 
+@pytest.mark.asyncio
+async def test_orchestrator_speech_in_idle_wakes_agent():
+    import asyncio
+    from unittest.mock import AsyncMock, MagicMock
+    from src.audio.vad import VADEvent
+    from src.gemini.live_client import GeminiLiveClient
+    from src.agent.orchestrator import AgentOrchestrator, AgentState
+
+    mock_mic = MagicMock()
+    mock_mic.is_muted = False
+    mock_mic.queue = asyncio.Queue()
+    mock_speaker = MagicMock()
+    mock_vad = MagicMock()
+    # Simulate VAD returning SPEECH_START on incoming audio
+    mock_vad.process_chunk.return_value = VADEvent.SPEECH_START
+
+    mock_wake = MagicMock()
+    mock_wake.enabled = True
+    # openWakeWord returns None (user said "hello", not "jarvis")
+    mock_wake.process_chunk.return_value = None
+
+    mock_gemini = AsyncMock(spec=GeminiLiveClient)
+    mock_gemini.is_connected = True
+
+    ctx = ContextManager()
+    orch = AgentOrchestrator(
+        microphone=mock_mic,
+        speaker=mock_speaker,
+        vad=mock_vad,
+        wake_word=mock_wake,
+        gemini=mock_gemini,
+        context=ctx
+    )
+    orch.state = AgentState.IDLE
+    orch._running = True
+
+    # Put a mock audio chunk into the microphone queue
+    dummy_chunk = b"\x00\x00" * 512
+    await mock_mic.queue.put(dummy_chunk)
+
+    # Run capture loop for one cycle
+    capture_task = asyncio.create_task(orch._audio_capture_loop())
+    await asyncio.sleep(0.05)
+    orch._running = False
+    capture_task.cancel()
+    try:
+        await capture_task
+    except asyncio.CancelledError:
+        pass
+
+    # Verified: Orchestrator switched to LISTENING and forwarded audio chunk to Gemini
+    assert orch.state == AgentState.LISTENING
+    assert mock_gemini.send_audio.called
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_suppresses_browser_tabs_on_questions(monkeypatch):
+    from unittest.mock import AsyncMock, MagicMock
+    from src.gemini.live_client import GeminiLiveClient
+    from src.agent.orchestrator import AgentOrchestrator
+
+    mock_mic = MagicMock()
+    mock_speaker = MagicMock()
+    mock_vad = MagicMock()
+    mock_wake = MagicMock()
+    mock_gemini = AsyncMock(spec=GeminiLiveClient)
+
+    # Track if webbrowser.open was called
+    browser_opened = []
+    monkeypatch.setattr("webbrowser.open", lambda url: browser_opened.append(url))
+
+    ctx = ContextManager()
+    # User asked a simple factual question
+    ctx.add_message("user", "what is the capital of France?")
+
+    orch = AgentOrchestrator(
+        microphone=mock_mic,
+        speaker=mock_speaker,
+        vad=mock_vad,
+        wake_word=mock_wake,
+        gemini=mock_gemini,
+        context=ctx
+    )
+
+    # Gemini attempts to call web_search
+    await orch._handle_tool_call(
+        name="web_search",
+        args={"query": "capital of France"},
+        call_id="call-test-123"
+    )
+
+    # Verified: NO browser opened!
+    assert len(browser_opened) == 0
+
+    # Verified: Tool response sent to Gemini instructing direct spoken answer
+    assert mock_gemini.send_tool_response.called
+    call_args = mock_gemini.send_tool_response.call_args[0][0]
+    assert len(call_args) == 1
+    assert "Do not open a browser tab" in str(call_args[0].response)
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_allows_browser_tool_on_explicit_command(monkeypatch):
+    from unittest.mock import AsyncMock, MagicMock
+    from src.gemini.live_client import GeminiLiveClient
+    from src.agent.orchestrator import AgentOrchestrator
+
+    mock_mic = MagicMock()
+    mock_speaker = MagicMock()
+    mock_vad = MagicMock()
+    mock_wake = MagicMock()
+    mock_gemini = AsyncMock(spec=GeminiLiveClient)
+
+    browser_opened = []
+    monkeypatch.setattr("webbrowser.open", lambda url: browser_opened.append(url))
+
+    ctx = ContextManager()
+    # User explicitly commanded to open a website
+    ctx.add_message("user", "open youtube.com")
+
+    orch = AgentOrchestrator(
+        microphone=mock_mic,
+        speaker=mock_speaker,
+        vad=mock_vad,
+        wake_word=mock_wake,
+        gemini=mock_gemini,
+        context=ctx
+    )
+
+    await orch._handle_tool_call(
+        name="open_browser_url",
+        args={"url": "https://youtube.com"},
+        call_id="call-test-456"
+    )
+
+    # Verified: Browser was opened as explicitly commanded
+    assert len(browser_opened) == 1
+    assert "youtube.com" in browser_opened[0]
+
+
+

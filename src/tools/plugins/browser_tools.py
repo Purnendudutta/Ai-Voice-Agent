@@ -21,9 +21,9 @@ class OpenUrlInput(BaseModel):
 class OpenUrlTool(BaseTool):
     name = "open_browser_url"
     description = (
-        "Opens a web URL in the user's default web browser. ONLY call this when the user explicitly "
-        "instructs to open a website, link, or web page (e.g. 'open youtube.com', 'go to reddit'). "
-        "Do NOT call for general questions, small queries, facts, or definitions."
+        "STRICT: Opens a web URL in the user's browser. ONLY call when user explicitly says "
+        "'open website', 'open url', or gives an explicit URL/link to open. "
+        "FORBIDDEN: Never call this to answer questions, queries, or look up information."
     )
     risk_level = RiskLevel.LOW_RISK
     parameters_schema = OpenUrlInput
@@ -47,9 +47,9 @@ class WebSearchInput(BaseModel):
 class WebSearchTool(BaseTool):
     name = "web_search"
     description = (
-        "Opens a new browser tab to conduct a web or YouTube search. ONLY call this when the user explicitly "
-        "requests to search the web or open browser results (e.g. 'search on google', 'google karo', 'open youtube and search'). "
-        "For small queries, facts, definitions, or questions, answer directly with speech instead of opening browser tabs."
+        "STRICT: Opens a new browser tab with Google or YouTube search. ONLY call when the user explicitly "
+        "commands 'search on google', 'google karo', 'open youtube and search'. "
+        "FORBIDDEN: Never call this for questions, facts, definitions, or queries. Always answer questions verbally without opening browser tabs."
     )
     risk_level = RiskLevel.LOW_RISK
     parameters_schema = WebSearchInput

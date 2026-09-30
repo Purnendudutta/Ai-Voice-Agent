@@ -255,20 +255,34 @@ class AgentOrchestrator:
                 if self.state == AgentState.MUTED or self.microphone.is_muted:
                     continue
 
-                # ── IDLE state: listen for wake word ──
+                # ── IDLE state: listen for wake word or greeting speech ("Say hello or tap to talk") ──
                 if self.state == AgentState.IDLE:
+                    wake_detected = False
                     if self.wake_word.enabled:
                         wake_result = self.wake_word.process_chunk(chunk)
                         if wake_result:
                             logger.info(f"Wake word detected: {wake_result}")
+                            wake_detected = True
+                            self._speech_active = True
+                            self._last_speech_time = asyncio.get_running_loop().time()
                             await self._set_state(AgentState.LISTENING)
                             await self._emit_event("wake_word_detected", {"word": wake_result})
-                    else:
-                        # No wake word engine → use VAD to start listening on speech
+
+                    # If neural wake model didn't trigger, evaluate VAD speech detection
+                    if not wake_detected:
                         vad_event = self.vad.process_chunk(chunk)
                         if vad_event == VADEvent.SPEECH_START:
+                            logger.info("Speech detected in IDLE standby (Say hello or tap to talk) -> Switching to LISTENING.")
+                            self._speech_active = True
+                            self._last_speech_time = asyncio.get_running_loop().time()
                             await self._set_state(AgentState.LISTENING)
                             await self._emit_event("speech_detected", {})
+                            # Forward this first audio chunk immediately to Gemini so the greeting is received
+                            if self.gemini.is_connected:
+                                try:
+                                    await self.gemini.send_audio(chunk)
+                                except Exception as e:
+                                    logger.debug(f"Failed to forward initial speech chunk: {e}")
 
                 # ── LISTENING state: stream audio to Gemini ──
                 if self.state in (AgentState.LISTENING, AgentState.SPEAKING) and not self._tool_active:
@@ -455,12 +469,99 @@ class AgentOrchestrator:
 
     # ── Tool Call Handler ─────────────────────────────────────────────
 
+    def _is_explicit_browser_command(self, tool_name: str, args: Dict[str, Any]) -> bool:
+        """
+        Determines whether the user explicitly commanded to open a browser tab/page.
+        For informational questions or simple queries, returns False to prevent unwanted browser tabs.
+        """
+        import re
+
+        # Look for user's latest query in context conversation history
+        latest_user_text = ""
+        for msg in reversed(self.context.conversation_history):
+            if msg.get("role") == "user":
+                latest_user_text = msg.get("content", "").strip().lower()
+                break
+
+        if not latest_user_text:
+            return False
+
+        # If it's explicitly an informational question asking for definitions, explanations, or trivia,
+        # never open a browser tab unless there's an explicit search/open command.
+        question_patterns = [
+            r"^(what|who|why|where|when|which|how|tell me|explain|can you explain|define|calculate|kya|kaun|kaise|kyun)\b",
+            r"\b(what is|who is|how does|why is|explain to me|tell me about|kya hai|kaun hai)\b"
+        ]
+        is_question = any(re.search(pat, latest_user_text) for pat in question_patterns)
+
+        # Imperative open/launch verbs
+        open_verb_pattern = r"\b(open|launch|visit|kholo|khol|kholna|chalao|dikhao)\b"
+        has_open_verb = bool(re.search(open_verb_pattern, latest_user_text))
+
+        # Explicit search commands (e.g. "search on google", "google karo", "search in youtube")
+        search_command_pattern = (
+            r"\b(search\s+(on|in|with)?\s*(google|youtube|bing|web)|"
+            r"(google|youtube)\s+search|"
+            r"(google|search)\s+karo|"
+            r"look\s+up\s+on\s+google|"
+            r"(par|pe)\s+search)\b"
+        )
+        has_search_command = bool(re.search(search_command_pattern, latest_user_text))
+
+        # Explicit URL / domain
+        domain_pattern = r"(https?:\/\/|www\.|\.com\b|\.org\b|\.net\b|\.io\b|\.edu\b|\.gov\b|\.ai\b|\.in\b)"
+        has_domain = bool(re.search(domain_pattern, latest_user_text))
+
+        # 1. If user explicitly issued an explicit search command
+        if has_search_command:
+            return True
+
+        # 2. If user provided a domain/URL and used an open/visit verb
+        if has_domain and (has_open_verb or "go to" in latest_user_text or "visit" in latest_user_text):
+            return True
+
+        # 3. If user said an open verb with browser/page target (e.g. "open youtube", "open tab", "youtube kholo")
+        if has_open_verb and any(term in latest_user_text for term in ["tab", "browser", "chrome", "edge", "youtube", "google", "website", "page", "link"]):
+            return True
+
+        # If it's a question or general query, never open browser
+        if is_question:
+            return False
+
+        return False
+
     async def _handle_tool_call(self, name: str, args: Dict[str, Any], call_id: str) -> None:
         """Execute tool → verify → send response back to Gemini."""
         await self._emit_event("tool_started", {"name": name, "args": args})
         logger.info(f"Executing tool: {name} with args: {args}")
 
         try:
+            # ── Guard: Filter unwanted browser tabs for simple questions & small queries ──
+            is_browser_tool = name in ("web_search", "open_browser_url") or (
+                name == "launch_application" and args.get("app_name", "").lower() in ["chrome", "browser", "google chrome", "edge", "firefox"]
+            )
+            if is_browser_tool and not self._is_explicit_browser_command(name, args):
+                logger.info(f"Suppressed browser tool '{name}' for non-browser query: {args}")
+                response_data = {
+                    "result": "Do not open a browser tab or window for informational queries or simple questions. Please answer the user's question directly with speech right now using your own knowledge.",
+                    "verification": "Suppressed browser tab opening; answering conversationally via speech."
+                }
+                function_response = types.FunctionResponse(
+                    name=name,
+                    id=call_id,
+                    response=response_data
+                )
+                await self.gemini.send_tool_response([function_response])
+                await self._emit_event("tool_completed", {
+                    "name": name,
+                    "success": True,
+                    "verification": "Suppressed browser tab opening; answering conversationally via speech.",
+                    "execution_time_ms": 1,
+                    "data": "Answer directly via speech without opening browser tab.",
+                    "error": None,
+                })
+                return
+
             # Execute through the full pipeline (permission, validation, retry, verification, audit)
             result = await tool_registry.execute_tool(name, args)
 
@@ -693,6 +794,10 @@ class AgentOrchestrator:
             self.toggle_mute(False)
         if hasattr(self.microphone, "ensure_started"):
             self.microphone.ensure_started()
+        self._speech_active = False
+        self._last_speech_time = asyncio.get_running_loop().time()
+        if hasattr(self.vad, "reset"):
+            self.vad.reset()
         await self._set_state(AgentState.LISTENING)
         await self._emit_event("wake_word_detected", {"word": "manual"})
         logger.info("Manual wake-up triggered: agent set to LISTENING.")
