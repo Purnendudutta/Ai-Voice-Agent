@@ -1964,6 +1964,8 @@ $('charViewport').addEventListener('click', () => {
     const q = quotes[Math.floor(Math.random() * quotes.length)];
     $('tSpeaker').textContent = S.agent.name + ':';
     $('tText').textContent = q;
+    unlockAudioContext();
+    speakBrowserSpeech(q);
 });
 
 function spawnParticles(n = 8) {
@@ -2120,7 +2122,13 @@ function base64ToUint8(base64) {
 function unlockAudioContext() {
     if (!playContext) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        playContext = new AudioCtx({ sampleRate: 24000 });
+        try {
+            // Native hardware rate without forced sampleRate argument - avoids NotSupportedError on iOS Safari
+            playContext = new AudioCtx();
+        } catch (e) {
+            console.warn('[AudioContext] Could not initialize:', e);
+            return;
+        }
         nextPlayTime = playContext.currentTime;
     }
     if (playContext.state === 'suspended') {
@@ -2130,6 +2138,14 @@ function unlockAudioContext() {
             console.debug('[AudioContext] Unlock pending gesture:', err);
         });
     }
+    // WebKit/iOS unlock trick: play a 1-sample silent buffer synchronously inside user gesture
+    try {
+        const silentBuf = playContext.createBuffer(1, 1, 22050);
+        const srcNode = playContext.createBufferSource();
+        srcNode.buffer = silentBuf;
+        srcNode.connect(playContext.destination);
+        srcNode.start(0);
+    } catch (_) {}
 }
 
 // Ensure audio context is unlocked by ANY touch or click interaction on mobile
@@ -2141,7 +2157,106 @@ function initPlayContext() {
     unlockAudioContext();
 }
 
+let activeAudioElement = null;
+let audioPlayedThisTurn = false;
+let speechFallbackTimer = null;
+
+function notifyAudioStarted() {
+    audioPlayedThisTurn = true;
+    if (speechFallbackTimer) {
+        clearTimeout(speechFallbackTimer);
+        speechFallbackTimer = null;
+    }
+}
+
+function speakBrowserSpeech(text) {
+    if (!('speechSynthesis' in window)) return;
+    try {
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/[*_#`~[\]]/g, '').trim();
+        if (!cleanText) return;
+        const utter = new SpeechSynthesisUtterance(cleanText);
+        utter.lang = S.prefs.language === 'hindi' ? 'hi-IN' : (S.prefs.language === 'english' ? 'en-US' : 'hi-IN');
+        utter.rate = 1.0;
+        utter.pitch = S.prefs.gender === 'male' ? 0.95 : 1.15;
+        utter.onstart = () => {
+            setAgentState('SPEAKING');
+            audioPower = 0.75;
+        };
+        utter.onend = () => {
+            audioPower = 0.05;
+            setAgentState('LISTENING');
+        };
+        window.speechSynthesis.speak(utter);
+    } catch (e) {
+        console.debug("Browser speech synthesis error:", e);
+    }
+}
+
+function scheduleSpeechFallback(text) {
+    if (speechFallbackTimer) clearTimeout(speechFallbackTimer);
+    audioPlayedThisTurn = false;
+    speechFallbackTimer = setTimeout(() => {
+        if (!audioPlayedThisTurn && !activeAudioElement && activeAudioSources.length === 0) {
+            console.log("[Audio Fallback] Server audio stream not detected, speaking via device SpeechSynthesis.");
+            speakBrowserSpeech(text);
+        }
+    }, 1100);
+}
+
+function playAudioClip(b64Data, mimeType = 'audio/mpeg') {
+    try {
+        notifyAudioStarted();
+        stopAllPlayback();
+        const audio = new Audio();
+        audio.src = `data:${mimeType};base64,${b64Data}`;
+        audio.preload = 'auto';
+        activeAudioElement = audio;
+
+        audio.onplay = () => {
+            notifyAudioStarted();
+            setAgentState('SPEAKING');
+            audioPower = 0.85;
+        };
+        audio.ontimeupdate = () => {
+            audioPower = 0.55 + 0.35 * Math.abs(Math.sin(Date.now() * 0.008));
+        };
+        audio.onended = () => {
+            activeAudioElement = null;
+            audioPower = 0.05;
+            setAgentState('LISTENING');
+        };
+        audio.onerror = (e) => {
+            console.debug("Audio clip playback error:", e);
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                console.warn("Audio element play error:", err);
+            });
+        }
+    } catch (err) {
+        console.warn("playAudioClip error:", err);
+    }
+}
+
 function stopAllPlayback() {
+    if (speechFallbackTimer) {
+        clearTimeout(speechFallbackTimer);
+        speechFallbackTimer = null;
+    }
+    if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+    }
+    if (activeAudioElement) {
+        try {
+            activeAudioElement.pause();
+            activeAudioElement.currentTime = 0;
+            activeAudioElement.src = '';
+        } catch (_) {}
+        activeAudioElement = null;
+    }
     for (let i = 0; i < activeAudioSources.length; i++) {
         try { activeAudioSources[i].stop(); } catch (_) {}
     }
@@ -2154,6 +2269,10 @@ function stopAllPlayback() {
 
 function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
     try {
+        // If an HTML5 audio clip is already playing, skip duplicate PCM chunks
+        if (activeAudioElement) return;
+
+        notifyAudioStarted();
         unlockAudioContext();
         if (!playContext) return;
 
@@ -2177,6 +2296,7 @@ function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
         const rms = Math.sqrt(sum / numSamples);
         audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
 
+        // playContext.createBuffer automatically resamples to the hardware rate
         const buffer = playContext.createBuffer(1, float32.length, sampleRate);
         buffer.getChannelData(0).set(float32);
 
@@ -2185,7 +2305,7 @@ function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
         source.connect(playContext.destination);
 
         const now = playContext.currentTime;
-        if (nextPlayTime < now) {
+        if (nextPlayTime < now || nextPlayTime > now + 0.5) {
             nextPlayTime = now + 0.015;
         }
         source.start(nextPlayTime);
@@ -2195,7 +2315,7 @@ function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
         source.onended = () => {
             const idx = activeAudioSources.indexOf(source);
             if (idx > -1) activeAudioSources.splice(idx, 1);
-            if (activeAudioSources.length === 0 && S.agent.state === 'SPEAKING') {
+            if (activeAudioSources.length === 0 && S.agent.state === 'SPEAKING' && !activeAudioElement) {
                 audioPower = 0.05;
             }
         };
@@ -2268,17 +2388,15 @@ function initSpeechRecognition() {
                 addChatMessage('You', text, true);
                 setAgentState('THINKING');
 
-                // If Gemini Live is in degraded mode (no API key configured on Render), route voice text to server
-                if (!S.geminiConnected) {
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({ type: 'text_command', data: { text: text } }));
-                    } else {
-                        fetch('/api/command', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ command: text })
-                        }).catch(() => {});
-                    }
+                // Route voice text command to server (works in both Live API and local degraded mode)
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'text_command', data: { text: text } }));
+                } else {
+                    fetch('/api/command', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ command: text })
+                    }).catch(() => {});
                 }
             }
         };
@@ -3118,6 +3236,10 @@ function initWS() {
                     if (msg.data && msg.data.pcm_base64) {
                         playRemotePcmChunk(msg.data.pcm_base64, msg.data.sample_rate || 24000);
                     }
+                } else if (msg.type === 'audio_clip') {
+                    if (msg.data && msg.data.base64) {
+                        playAudioClip(msg.data.base64, msg.data.mime_type || 'audio/mpeg');
+                    }
                 } else if (msg.type === 'interrupted') {
                     stopAllPlayback();
                 } else if (msg.type === 'transcript') {
@@ -3125,6 +3247,7 @@ function initWS() {
                         $('tSpeaker').textContent = S.agent.name + ':';
                         $('tText').textContent = `"${msg.data.text}"`;
                         addChatMessage(S.agent.name, msg.data.text, false);
+                        scheduleSpeechFallback(msg.data.text);
                     } else if (msg.data.role === 'user') {
                         $('tSpeaker').textContent = 'You:';
                         $('tText').textContent = `"${msg.data.text}"`;

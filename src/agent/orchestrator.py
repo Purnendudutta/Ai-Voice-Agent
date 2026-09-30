@@ -87,6 +87,7 @@ class AgentOrchestrator:
         try:
             from src.audio.local_tts import local_tts
             local_tts.set_audio_callback(self._on_local_tts_audio)
+            local_tts.set_audio_clip_callback(self._on_local_tts_clip)
         except Exception as e:
             logger.debug(f"Could not wire local TTS audio callback: {e}")
 
@@ -101,6 +102,13 @@ class AgentOrchestrator:
         await self._emit_event("audio_stream", {
             "pcm_base64": b64_audio,
             "sample_rate": sample_rate
+        })
+
+    async def _on_local_tts_clip(self, b64_audio: str, mime_type: str) -> None:
+        """Stream locally synthesized speech clip to WebSocket clients for HTML5 playback."""
+        await self._emit_event("audio_clip", {
+            "base64": b64_audio,
+            "mime_type": mime_type
         })
 
     # ── State Management ──────────────────────────────────────────────
@@ -360,6 +368,7 @@ class AgentOrchestrator:
                         await asyncio.sleep(0.5)
                     continue
 
+                turn_pcm_chunks = []
                 async for response in self.gemini.receive_responses():
                     if not self._running:
                         break
@@ -369,6 +378,7 @@ class AgentOrchestrator:
                         if self.state != AgentState.SPEAKING:
                             await self._set_state(AgentState.SPEAKING)
                         self.speaker.play_chunk(response.audio_data)
+                        turn_pcm_chunks.append(response.audio_data)
                         import base64
                         b64_audio = base64.b64encode(response.audio_data).decode("ascii")
                         await self._emit_event("audio_stream", {
@@ -396,6 +406,7 @@ class AgentOrchestrator:
                     if response.interrupted:
                         logger.info("Barge-in: user interrupted assistant speech.")
                         self.speaker.clear_queue()
+                        turn_pcm_chunks.clear()
                         await self._set_state(AgentState.LISTENING)
                         await self._emit_event("interrupted", {})
 
@@ -409,8 +420,27 @@ class AgentOrchestrator:
                             call_id=response.tool_call_id or response.tool_call.name,
                         )
 
-                    # ── After audio finishes, go back to LISTENING ──
+                    # ── After audio finishes, emit turn audio_clip and return to LISTENING ──
                     if not response.audio_data and not response.tool_call:
+                        if turn_pcm_chunks:
+                            try:
+                                import io, wave, base64
+                                full_pcm = b"".join(turn_pcm_chunks)
+                                turn_pcm_chunks.clear()
+                                buf = io.BytesIO()
+                                with wave.open(buf, "wb") as wf:
+                                    wf.setnchannels(1)
+                                    wf.setsampwidth(2)
+                                    wf.setframerate(24000)
+                                    wf.writeframes(full_pcm)
+                                wav_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+                                await self._emit_event("audio_clip", {
+                                    "base64": wav_b64,
+                                    "mime_type": "audio/wav"
+                                })
+                            except Exception as wav_err:
+                                logger.debug(f"Failed to generate turn WAV clip: {wav_err}")
+
                         if self.state == AgentState.SPEAKING and not self.speaker.is_playing:
                             if self._continuous_conversation:
                                 await self._set_state(AgentState.LISTENING)
@@ -839,30 +869,23 @@ class AgentOrchestrator:
             persona_mode = prefs.get("persona_mode", "romantic_girlfriend")
             lang = prefs.get("language", "auto")
 
-            if self.gemini.is_connected:
-                prompt = (
-                    f"[The user just tapped the talk button on their mobile device or browser to talk with you. "
-                    f"Greet them warmly in 1 short sweet sentence as {agent_name} and ask how you can help.]"
-                )
-                await self.gemini.send_text(prompt)
-            else:
-                from src.audio.local_tts import local_tts
-                gender = "male" if "shaan" in agent_name.lower() or prefs.get("voice_name") in ["Fenrir", "Charon"] else "female"
-                if persona_mode == "romantic_girlfriend":
-                    if lang == "hindi":
-                        reply = f"Haan meri jaan! Main {agent_name} hoon, sun rahi hoon. Bataiye aaj kya karna hai?"
-                    elif lang == "english":
-                        reply = f"Hey babe! I'm {agent_name}, listening right now. What can I do for you?"
-                    else:
-                        reply = f"Haan meri jaan! Main {agent_name} hoon, sun rahi hoon. Tell me, what would you like to do?"
+            from src.audio.local_tts import local_tts
+            gender = "male" if "shaan" in agent_name.lower() or prefs.get("voice_name") in ["Fenrir", "Charon"] else "female"
+            if persona_mode == "romantic_girlfriend":
+                if lang == "hindi":
+                    reply = f"Haan meri jaan! Main {agent_name} hoon, sun rahi hoon. Bataiye aaj kya karna hai?"
+                elif lang == "english":
+                    reply = f"Hey babe! I'm {agent_name}, listening right now. What can I do for you?"
                 else:
-                    reply = f"Hello, I am {agent_name}. I am listening, how can I help you?"
+                    reply = f"Haan meri jaan! Main {agent_name} hoon, sun rahi hoon. Tell me, what would you like to do?"
+            else:
+                reply = f"Hello, I am {agent_name}. I am listening, how can I help you?"
 
-                self.context.add_message("assistant", reply)
-                await self._emit_event("transcript", {"role": "assistant", "text": reply})
-                await self._set_state(AgentState.SPEAKING)
-                await local_tts.speak(reply, gender=gender)
-                await self._set_state(AgentState.LISTENING)
+            self.context.add_message("assistant", reply)
+            await self._emit_event("transcript", {"role": "assistant", "text": reply})
+            await self._set_state(AgentState.SPEAKING)
+            await local_tts.speak(reply, gender=gender)
+            await self._set_state(AgentState.LISTENING)
         except Exception as e:
             logger.debug(f"Spoken wake response error: {e}")
 

@@ -22,10 +22,15 @@ class LocalTTS:
         self.volume = volume
         self._lock = threading.Lock()
         self.on_audio_data: Optional[Callable[[bytes, int], Any]] = None
+        self.on_audio_clip: Optional[Callable[[str, str], Any]] = None
 
     def set_audio_callback(self, cb: Callable[[bytes, int], Any]) -> None:
         """Register an async or sync callback to receive raw PCM chunks (bytes, sample_rate)."""
         self.on_audio_data = cb
+
+    def set_audio_clip_callback(self, cb: Callable[[str, str], Any]) -> None:
+        """Register a callback to receive the entire synthesized audio clip (base64_data, mime_type)."""
+        self.on_audio_clip = cb
 
     async def speak(self, text: str, gender: str = "female") -> None:
         """Speaks the text string using Neural Edge TTS or SAPI fallback."""
@@ -54,6 +59,20 @@ class LocalTTS:
 
             try:
                 await communicate.save(tmp_path)
+
+                # Send complete MP3 audio clip to web clients for bulletproof HTML5 audio playback
+                if self.on_audio_clip:
+                    try:
+                        with open(tmp_path, "rb") as f_mp3:
+                            mp3_bytes = f_mp3.read()
+                        import base64
+                        b64_mp3 = base64.b64encode(mp3_bytes).decode("ascii")
+                        clip_res = self.on_audio_clip(b64_mp3, "audio/mpeg")
+                        if asyncio.iscoroutine(clip_res):
+                            await clip_res
+                    except Exception as clip_err:
+                        logger.debug(f"Audio clip dispatch error: {clip_err}")
+
                 decoded = miniaudio.decode_file(tmp_path)
                 samples = np.frombuffer(decoded.samples, dtype=np.int16)
                 if decoded.nchannels > 1:
