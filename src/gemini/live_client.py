@@ -174,6 +174,13 @@ class GeminiLiveClient:
         retries = 0
         while retries <= self.max_retries:
             try:
+                key = self.api_key or settings.gemini_api_key
+                if not key or key == "your_gemini_api_key_here":
+                    raise RuntimeError("GEMINI_API_KEY is not set or valid.")
+                # Re-instantiate client if needed or on retries to ensure clean TCP/SSL sockets
+                if not self.client or retries > 0:
+                    self.client = genai.Client(api_key=key)
+
                 tools = []
                 declarations = tool_registry.get_gemini_declarations()
                 if declarations:
@@ -184,6 +191,13 @@ class GeminiLiveClient:
                             ]
                         )
                     ]
+
+                # Only include session_resumption if a valid handle is available
+                session_resumption = (
+                    types.SessionResumptionConfig(handle=self.session_handle)
+                    if self.session_handle
+                    else None
+                )
 
                 config = types.LiveConnectConfig(
                     response_modalities=[types.Modality.AUDIO],
@@ -200,7 +214,7 @@ class GeminiLiveClient:
                         )
                     ),
                     tools=tools,
-                    session_resumption=types.SessionResumptionConfig(handle=self.session_handle),
+                    session_resumption=session_resumption,
                     context_window_compression=types.ContextWindowCompressionConfig(
                         sliding_window=types.SlidingWindow()
                     )
@@ -218,6 +232,15 @@ class GeminiLiveClient:
                 return
             except Exception as e:
                 self.connection_error = e
+                # Clean up failed context manager if created
+                if self._session_cm:
+                    try:
+                        await self._session_cm.__aexit__(None, None, None)
+                    except Exception:
+                        pass
+                    self._session_cm = None
+                self.session = None
+
                 # If we tried resuming with a handle and failed, drop the handle to start fresh
                 if self.session_handle:
                     logger.warning(
@@ -225,11 +248,17 @@ class GeminiLiveClient:
                         "Dropping handle to start fresh."
                     )
                     self.session_handle = None
-                logger.error(f"Failed to connect to Gemini Live API: {e} (attempt {retries + 1})")
+
                 retries += 1
                 if retries <= self.max_retries:
-                    await asyncio.sleep(min(2 ** retries, 5))
+                    delay = min(2 ** retries, 5)
+                    logger.warning(
+                        f"Connection attempt {retries}/{self.max_retries + 1} to Gemini Live API failed ({e}). "
+                        f"Retrying in {delay}s with clean session..."
+                    )
+                    await asyncio.sleep(delay)
                 else:
+                    logger.error(f"Failed to connect to Gemini Live API after {self.max_retries + 1} attempts: {e}")
                     raise
 
     async def disconnect(self) -> None:
@@ -256,10 +285,12 @@ class GeminiLiveClient:
         except Exception as e:
             self.is_connected = False
             self.connection_error = e
+            self.session_handle = None
             err_str = str(e)
             if "1011" in err_str:
-                self.session_handle = None
                 logger.debug(f"Audio send interrupted by server reset (1011): {e}")
+            elif "1006" in err_str:
+                logger.debug(f"Audio send interrupted by abnormal closure (1006): {e}")
             raise
 
     async def send_text(self, text: str) -> None:
@@ -333,18 +364,21 @@ class GeminiLiveClient:
         except Exception as e:
             self.is_connected = False
             self.connection_error = e
+            self.session_handle = None
             err_str = str(e)
             if "1000" in err_str:
                 logger.info("Gemini Live session closed normally (code 1000).")
                 return
             elif "1011" in err_str:
-                self.session_handle = None
                 logger.warning(
                     f"Gemini Live session reset by Google server (1011 Internal Error). "
                     "Clearing session handle for clean reconnection: " + str(e)
                 )
             elif "1006" in err_str:
-                logger.warning(f"Gemini Live session connection closed abnormally (code 1006): {e}")
+                logger.warning(
+                    f"Gemini Live session connection closed abnormally (code 1006). "
+                    "Clearing session handle for clean reconnection: " + str(e)
+                )
             else:
                 logger.error(f"Error receiving from Gemini Live API: {e}")
             raise

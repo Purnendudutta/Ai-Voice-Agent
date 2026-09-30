@@ -422,12 +422,13 @@ class AgentOrchestrator:
                 if not self._running:
                     break
                 try:
+                    should_resume = (attempt == 1)
                     await self.gemini.connect(
                         agent_name=prefs["agent_name"],
                         language=prefs["language"],
                         voice_name=prefs["voice_name"],
                         persona_mode=prefs.get("persona_mode"),
-                        resume_session=True
+                        resume_session=should_resume
                     )
                     logger.info(f"Successfully reconnected to Gemini Live API on attempt {attempt}.")
                     self.microphone.clear_queue()  # Flush backlog audio chunks buffered during downtime

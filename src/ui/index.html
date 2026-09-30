@@ -2247,6 +2247,17 @@ function initWS() {
                         // Only update UI visual state, never echo back
                         applyMuteUI(msg.data.muted);
                     }
+                } else if (msg.type === 'connection_status') {
+                    if (msg.data && msg.data.status === 'reconnecting') {
+                        $('stateText').textContent = 'Reconnecting to AI...';
+                        const dot = $('stateDot');
+                        if (dot) {
+                            dot.style.background = '#f59e0b';
+                            dot.style.boxShadow = '0 0 10px #f59e0b';
+                        }
+                    } else if (msg.data && msg.data.status === 'connected') {
+                        setAgentState(S.agent.state || 'IDLE');
+                    }
                 }
             } catch (_) {}
         };

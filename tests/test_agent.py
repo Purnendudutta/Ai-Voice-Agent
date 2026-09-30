@@ -104,6 +104,34 @@ async def test_live_client_handles_1011_internal_error():
 
 
 @pytest.mark.asyncio
+async def test_live_client_handles_1006_abnormal_closure():
+    from unittest.mock import AsyncMock
+    from src.gemini.live_client import GeminiLiveClient
+
+    client = GeminiLiveClient()
+    client.is_connected = True
+    client.session_handle = "stale-handle-99999"
+
+    mock_session = AsyncMock()
+
+    async def mock_receive_fail_1006():
+        if False:
+            yield None
+        raise Exception("1006 None. Abnormal closure.")
+
+    mock_session.receive = mock_receive_fail_1006
+    client.session = mock_session
+
+    with pytest.raises(Exception, match="1006"):
+        async for _ in client.receive_responses():
+            pass
+
+    assert client.is_connected is False
+    assert client.session_handle is None
+    assert "1006" in str(client.connection_error)
+
+
+@pytest.mark.asyncio
 async def test_orchestrator_auto_reconnect_success():
     from unittest.mock import AsyncMock, MagicMock
     from src.gemini.live_client import GeminiLiveClient
