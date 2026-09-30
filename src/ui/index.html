@@ -823,9 +823,9 @@
     </div>
 
     <div class="hdr-right">
-        <div class="state-badge">
+        <div class="state-badge" id="stateBadge" style="cursor:pointer;" title="Click to start listening">
             <div class="pulse-dot" id="stateDot"></div>
-            <span id="stateText">Ready</span>
+            <span id="stateText">Standby</span>
         </div>
         <button class="icon-btn" id="btnMic">
             <span id="micIcon">🎙️</span>
@@ -1466,6 +1466,26 @@ const colorMap = {
     ERROR: '#ef4444'
 };
 
+const labelMap = {
+    IDLE: 'Standby (Say "Jarvis" or tap to talk)',
+    LISTENING: 'Listening (Speak now...)',
+    THINKING: 'Thinking...',
+    EXECUTING: 'Executing task...',
+    SPEAKING: 'Speaking...',
+    MUTED: 'Microphone Muted',
+    ERROR: 'Error'
+};
+
+const pillMap = {
+    IDLE: 'Standby',
+    LISTENING: 'Listening',
+    THINKING: 'Thinking',
+    EXECUTING: 'Executing',
+    SPEAKING: 'Speaking',
+    MUTED: 'Muted',
+    ERROR: 'Error'
+};
+
 function setAgentState(state) {
     if (S.agent.muted && state !== 'MUTED') return;
 
@@ -1476,8 +1496,8 @@ function setAgentState(state) {
     dot.style.background = color;
     dot.style.boxShadow = `0 0 10px ${color}`;
 
-    $('stateText').textContent = state === 'IDLE' ? 'Ready' : state;
-    $('voicePill').innerHTML = `<span style="color:${color}">●</span> ${state === 'IDLE' ? 'Ready' : state}`;
+    $('stateText').textContent = labelMap[state] || state;
+    $('voicePill').innerHTML = `<span style="color:${color}">●</span> ${pillMap[state] || state}`;
 
     const btnStop = $('btnStop');
     if (state === 'SPEAKING' || state === 'EXECUTING') {
@@ -1491,6 +1511,28 @@ function setAgentState(state) {
     if (state === 'LISTENING')  document.body.classList.add('listening');
     if (state === 'THINKING')   document.body.classList.add('thinking');
     if (state === 'MUTED')      document.body.classList.add('muted-state');
+}
+
+function triggerManualWake() {
+    if (S.agent.muted) {
+        applyMuteUI(false);
+    }
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'wake', data: {} }));
+    } else {
+        fetch('/api/wake', { method: 'POST' }).catch(() => {});
+    }
+    setAgentState('LISTENING');
+    toast("Listening to your microphone... Speak now!", 2500);
+}
+
+const stateBadge = $('stateBadge');
+if (stateBadge) stateBadge.addEventListener('click', triggerManualWake);
+const voicePill = $('voicePill');
+if (voicePill) {
+    voicePill.style.cursor = 'pointer';
+    voicePill.title = 'Click to speak';
+    voicePill.addEventListener('click', triggerManualWake);
 }
 
 /* =========================================================================

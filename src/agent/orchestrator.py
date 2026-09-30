@@ -76,6 +76,8 @@ class AgentOrchestrator:
         self._continuous_conversation = True
         self._speech_active = False
         self._tool_active = False
+        self._last_speech_time: float = 0.0
+        self._silence_timeout_seconds: float = 8.0
 
         # Reconnection coordination
         self._reconnecting = False
@@ -89,6 +91,11 @@ class AgentOrchestrator:
             old = self.state
             self.state = new_state
             logger.info(f"State: {old.name} → {new_state.name}")
+            if new_state == AgentState.LISTENING:
+                try:
+                    self._last_speech_time = asyncio.get_running_loop().time()
+                except RuntimeError:
+                    self._last_speech_time = 0.0
             await self._emit_event("state_change", {
                 "state": new_state.name,
                 "previous": old.name
@@ -265,6 +272,14 @@ class AgentOrchestrator:
 
                 # ── LISTENING state: stream audio to Gemini ──
                 if self.state in (AgentState.LISTENING, AgentState.SPEAKING) and not self._tool_active:
+                    # Silence inactivity check: if user does not speak for 8 seconds, return to IDLE standby
+                    if self.state == AgentState.LISTENING and not self._speech_active:
+                        now = asyncio.get_running_loop().time()
+                        if self._last_speech_time > 0 and (now - self._last_speech_time) >= self._silence_timeout_seconds:
+                            logger.info(f"Silence timeout ({self._silence_timeout_seconds}s) reached. Switching to IDLE standby.")
+                            await self._set_state(AgentState.IDLE)
+                            continue
+
                     if self.gemini.is_connected:
                         try:
                             await self.gemini.send_audio(chunk)
@@ -281,8 +296,16 @@ class AgentOrchestrator:
                     vad_event = self.vad.process_chunk(chunk)
                     if vad_event == VADEvent.SPEECH_START:
                         self._speech_active = True
+                        self._last_speech_time = asyncio.get_running_loop().time()
+                    elif vad_event == VADEvent.SPEECH_CONTINUE:
+                        if self._speech_active:
+                            self._last_speech_time = asyncio.get_running_loop().time()
                     elif vad_event == VADEvent.SPEECH_END:
                         self._speech_active = False
+                        self._last_speech_time = asyncio.get_running_loop().time()
+                        # Signal Gemini that the audio input turn is complete so it responds immediately
+                        if self.gemini.is_connected and hasattr(self.gemini, "send_audio_stream_end"):
+                            asyncio.create_task(self.gemini.send_audio_stream_end())
 
             except asyncio.CancelledError:
                 raise
@@ -663,6 +686,15 @@ class AgentOrchestrator:
         asyncio.create_task(self._emit_event("mic_status", {"muted": new_muted}))
         return new_muted
 
+    async def wake_up(self) -> None:
+        """Manually trigger the assistant to start listening immediately."""
+        if self.state == AgentState.MUTED:
+            self.toggle_mute(False)
+        if hasattr(self.microphone, "ensure_started"):
+            self.microphone.ensure_started()
+        await self._set_state(AgentState.LISTENING)
+        await self._emit_event("wake_word_detected", {"word": "manual"})
+        logger.info("Manual wake-up triggered: agent set to LISTENING.")
 
     async def clear_history(self) -> None:
         """Clear conversation history for privacy."""

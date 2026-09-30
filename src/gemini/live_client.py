@@ -273,6 +273,16 @@ class GeminiLiveClient:
             self.connection_error = e
             raise
 
+    async def send_audio_stream_end(self) -> None:
+        """Signal to Gemini that the current audio turn / speech has ended."""
+        if not self.is_connected or not self.session:
+            return
+        try:
+            await self.session.send_realtime_input(audio_stream_end=True)
+            logger.debug("Sent audio_stream_end to Gemini Live.")
+        except Exception as e:
+            logger.debug(f"Error sending audio_stream_end: {e}")
+
     async def receive_responses(self) -> AsyncGenerator[GeminiResponse, None]:
         """Receive and parse responses from the Gemini Live session."""
         if not self.is_connected or not self.session:

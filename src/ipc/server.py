@@ -118,6 +118,14 @@ class IPCServer:
             is_muted = self.orchestrator.toggle_mute(muted)
             return {"muted": is_muted}
 
+        # ── REST: Manual Wake-Up ──
+        @self.app.post("/api/wake")
+        async def manual_wake():
+            if not self.orchestrator:
+                raise HTTPException(status_code=503, detail="Orchestrator not ready")
+            await self.orchestrator.wake_up()
+            return {"status": "listening"}
+
         # ── WebSocket endpoint ──
         @self.app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None)):
@@ -277,6 +285,9 @@ class IPCServer:
                 muted = data.get("muted")
                 is_muted = self.orchestrator.toggle_mute(muted)
                 await websocket.send_json({"type": "mic_status", "data": {"muted": is_muted}})
+
+            elif msg_type == "wake" and self.orchestrator:
+                await self.orchestrator.wake_up()
 
             elif msg_type == "ping":
                 await websocket.send_json({"type": "pong", "data": {}})
