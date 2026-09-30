@@ -52,6 +52,10 @@ class MicToggleRequest(BaseModel):
     muted: Optional[bool] = None
 
 
+class ApiKeyRequest(BaseModel):
+    api_key: str
+
+
 class IPCServer:
     """
     FastAPI-based IPC server providing real-time WebSocket communication
@@ -221,6 +225,44 @@ class IPCServer:
                 persona_mode=req.persona_mode
             )
             return {"status": "updated", "preferences": updated}
+
+        # ── REST: Settings & API Key Status ──
+        @self.app.get("/api/settings/status")
+        async def get_settings_status():
+            from src.config import settings
+            key = settings.gemini_api_key or ""
+            has_key = bool(key and key != "your_gemini_api_key_here")
+            masked = f"{key[:4]}...{key[-4:]}" if len(key) > 8 else ("****" if key else "")
+            connected = bool(self.orchestrator and getattr(self.orchestrator.gemini, "is_connected", False))
+            return {
+                "has_api_key": has_key,
+                "masked_key": masked,
+                "agent_name": settings.agent_name,
+                "voice_name": settings.voice_name,
+                "language": settings.language_preference,
+                "model": settings.gemini_live_model,
+                "connected": connected
+            }
+
+        # ── REST: Update Gemini API Key ──
+        @self.app.post("/api/settings/api_key")
+        async def update_api_key(req: ApiKeyRequest):
+            from src.config import save_api_key, settings
+            key = req.api_key.strip()
+            if not key:
+                raise HTTPException(status_code=400, detail="API Key cannot be empty.")
+            
+            save_api_key(key)
+            
+            if self.orchestrator and hasattr(self.orchestrator, "gemini"):
+                self.orchestrator.gemini.api_key = key
+                asyncio.create_task(self.orchestrator._reconnect_gemini())
+
+            return {
+                "status": "success",
+                "message": "API key saved successfully! Connecting to Gemini...",
+                "has_api_key": True
+            }
 
         # ── REST: Generate auth token (for WebSocket auth) ──
         @self.app.get("/api/token")

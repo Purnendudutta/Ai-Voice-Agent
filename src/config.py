@@ -88,5 +88,50 @@ class Settings(BaseSettings):
         ]
     )
 
+    def model_post_init(self, __context):
+        """Loads API key from fallback file if not provided in environment."""
+        if not self.gemini_api_key or self.gemini_api_key == "your_gemini_api_key_here":
+            key_file = self.data_dir / "api_key.txt"
+            if key_file.exists():
+                try:
+                    loaded = key_file.read_text(encoding="utf-8").strip()
+                    if loaded and loaded != "your_gemini_api_key_here":
+                        self.gemini_api_key = loaded
+                except Exception:
+                    pass
+
 
 settings = Settings()
+
+
+def save_api_key(new_key: str) -> None:
+    """Persists the Gemini API key in settings, data/api_key.txt, and .env."""
+    key = new_key.strip()
+    settings.gemini_api_key = key
+    os.environ["GEMINI_API_KEY"] = key
+
+    # Save to data_dir/api_key.txt
+    try:
+        key_file = settings.data_dir / "api_key.txt"
+        key_file.write_text(key, encoding="utf-8")
+    except Exception:
+        pass
+
+    # Save to .env
+    try:
+        env_file = settings.base_dir / ".env"
+        lines = []
+        found = False
+        if env_file.exists():
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                if line.strip().startswith("GEMINI_API_KEY="):
+                    lines.append(f"GEMINI_API_KEY={key}")
+                    found = True
+                else:
+                    lines.append(line)
+        if not found:
+            lines.append(f"GEMINI_API_KEY={key}")
+        env_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except Exception:
+        pass
+
