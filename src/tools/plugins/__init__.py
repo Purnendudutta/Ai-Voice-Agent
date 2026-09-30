@@ -2,6 +2,7 @@
 Plugin Auto-Registration & Discovery
 """
 
+import src.tools.gui_compat  # Safe headless display initialization
 from src.tools.registry import tool_registry
 
 # Import all built-in plugins

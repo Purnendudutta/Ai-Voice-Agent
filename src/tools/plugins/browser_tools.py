@@ -8,6 +8,7 @@ import webbrowser
 import urllib.parse
 from typing import Dict, Any, Tuple, Literal
 from pydantic import BaseModel, Field
+import src.tools.gui_compat  # Safe headless display initialization
 import pyautogui
 
 from src.tools.base import BaseTool

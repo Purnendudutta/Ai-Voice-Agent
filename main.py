@@ -37,6 +37,8 @@ logging.getLogger("google").setLevel(logging.WARNING)
 
 logger = logging.getLogger("shruti.main")
 
+import src.tools.gui_compat  # Safe headless display and GUI initialization
+
 
 def print_banner() -> None:
     """Print the startup banner with system information."""

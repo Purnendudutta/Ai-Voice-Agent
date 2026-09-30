@@ -5,6 +5,7 @@ Keyboard & Mouse Automation Tools
 import asyncio
 from typing import Dict, Any, Tuple, List, Optional
 from pydantic import BaseModel, Field
+import src.tools.gui_compat  # Safe headless display initialization
 import pyautogui
 
 from src.tools.base import BaseTool
