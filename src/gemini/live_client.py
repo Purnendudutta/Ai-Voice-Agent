@@ -143,7 +143,7 @@ class GeminiLiveClient:
         resume_session: bool = True
     ) -> None:
         """Establish a live session with the Gemini API with retry logic and session resumption."""
-        if self.is_connected:
+        if self._session_cm is not None or self.session is not None or self.is_connected:
             await self.disconnect()
 
         if not resume_session:
@@ -234,15 +234,16 @@ class GeminiLiveClient:
 
     async def disconnect(self) -> None:
         """Cleanly close the connection."""
-        if self._session_cm:
-            try:
+        try:
+            if self._session_cm:
                 await self._session_cm.__aexit__(None, None, None)
-            except Exception as e:
-                logger.debug(f"Error disconnecting from Gemini Live API: {e}")
-        self.session = None
-        self._session_cm = None
-        self.is_connected = False
-        logger.info("Disconnected from Gemini Live API")
+        except Exception as e:
+            logger.debug(f"Error disconnecting from Gemini Live API: {e}")
+        finally:
+            self.session = None
+            self._session_cm = None
+            self.is_connected = False
+            logger.info("Disconnected from Gemini Live API")
 
     async def send_audio(self, chunk: bytes) -> None:
         """Send audio data to the Gemini Live session."""
@@ -255,6 +256,10 @@ class GeminiLiveClient:
         except Exception as e:
             self.is_connected = False
             self.connection_error = e
+            err_str = str(e)
+            if "1011" in err_str:
+                self.session_handle = None
+                logger.debug(f"Audio send interrupted by server reset (1011): {e}")
             raise
 
     async def send_text(self, text: str) -> None:
@@ -323,7 +328,11 @@ class GeminiLiveClient:
                 logger.info("Gemini Live session closed normally (code 1000).")
                 return
             elif "1011" in err_str:
-                logger.warning(f"Gemini Live session connection reset by server (1011 Internal Error): {e}")
+                self.session_handle = None
+                logger.warning(
+                    f"Gemini Live session reset by Google server (1011 Internal Error). "
+                    "Clearing session handle for clean reconnection: " + str(e)
+                )
             elif "1006" in err_str:
                 logger.warning(f"Gemini Live session connection closed abnormally (code 1006): {e}")
             else:

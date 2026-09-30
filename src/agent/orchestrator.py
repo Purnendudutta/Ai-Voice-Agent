@@ -269,8 +269,12 @@ class AgentOrchestrator:
                         try:
                             await self.gemini.send_audio(chunk)
                         except Exception as e:
-                            logger.warning(f"Failed to send audio to Gemini: {e}")
                             self.gemini.is_connected = False
+                            err_str = str(e)
+                            if "1011" in err_str:
+                                logger.info("Gemini Live connection reset by server (1011). Triggering auto-reconnect...")
+                            else:
+                                logger.warning(f"Failed to send audio to Gemini: {e}")
                             asyncio.create_task(self._reconnect_gemini())
 
                     # Track VAD for continuous conversation management
@@ -353,8 +357,12 @@ class AgentOrchestrator:
             except asyncio.CancelledError:
                 raise
             except Exception as e:
-                logger.warning(f"Gemini Live stream interrupted: {e}")
                 self.gemini.is_connected = False
+                err_str = str(e)
+                if "1011" in err_str:
+                    logger.info("Gemini Live stream reset by server (1011). Reconnecting automatically...")
+                else:
+                    logger.warning(f"Gemini Live stream interrupted: {e}")
                 if self.state in (AgentState.SPEAKING, AgentState.THINKING, AgentState.EXECUTING):
                     await self._set_state(AgentState.IDLE)
                 if self._running:
@@ -399,6 +407,7 @@ class AgentOrchestrator:
                         resume_session=True
                     )
                     logger.info(f"Successfully reconnected to Gemini Live API on attempt {attempt}.")
+                    self.microphone.clear_queue()  # Flush backlog audio chunks buffered during downtime
                     await self._emit_event("connection_status", {"status": "connected"})
                     if self.state == AgentState.ERROR:
                         await self._set_state(AgentState.IDLE)

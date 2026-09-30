@@ -82,6 +82,7 @@ async def test_live_client_handles_1011_internal_error():
 
     client = GeminiLiveClient()
     client.is_connected = True
+    client.session_handle = "old-handle-12345"
 
     mock_session = AsyncMock()
 
@@ -98,6 +99,7 @@ async def test_live_client_handles_1011_internal_error():
             pass
 
     assert client.is_connected is False
+    assert client.session_handle is None
     assert "1011" in str(client.connection_error)
 
 
