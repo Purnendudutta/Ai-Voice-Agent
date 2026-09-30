@@ -549,28 +549,32 @@
             justify-content: space-between; gap: 10px;
         }
         .wave-box {
-            flex: 1; height: 54px;
-            background: radial-gradient(ellipse at center, rgba(6, 16, 38, 0.90) 0%, rgba(2, 5, 16, 0.98) 100%);
-            border: 1px solid rgba(0, 240, 255, 0.22);
+            flex: 1; height: 58px;
+            background: #020514;
+            border: 1px solid rgba(0, 240, 255, 0.25);
             border-radius: var(--radius-md);
             overflow: hidden; position: relative;
             display: flex; align-items: center;
-            box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 240, 255, 0.08);
+            box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.85), 0 0 16px rgba(0, 240, 255, 0.08);
             transition: border-color 0.3s, box-shadow 0.3s;
+            cursor: pointer;
         }
         body.speaking .wave-box {
-            border-color: rgba(244, 63, 94, 0.42);
-            box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75), 0 0 20px rgba(244, 63, 94, 0.22);
+            border-color: rgba(244, 63, 94, 0.55);
+            box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.85), 0 0 22px rgba(244, 63, 94, 0.28);
         }
         body.listening .wave-box {
-            border-color: rgba(0, 240, 255, 0.52);
-            box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75), 0 0 22px rgba(0, 240, 255, 0.25);
+            border-color: rgba(0, 240, 255, 0.6);
+            box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.85), 0 0 24px rgba(0, 240, 255, 0.3);
         }
         body.thinking .wave-box {
-            border-color: rgba(14, 165, 233, 0.45);
-            box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75), 0 0 20px rgba(14, 165, 233, 0.2);
+            border-color: rgba(14, 165, 233, 0.5);
+            box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.85), 0 0 20px rgba(14, 165, 233, 0.22);
         }
-        #waveformCanvas { width: 100%; height: 100%; display: block; }
+        #waveformCanvas {
+            width: 100%; height: 100%; display: block;
+            filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.25));
+        }
         .voice-pill {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 5px 12px; border-radius: var(--radius-full);
@@ -813,45 +817,50 @@
             border-radius: var(--radius-full);
             padding: 9px 22px; font-size: 0.84rem; font-weight: 600;
             color: white; opacity: 0; transition: var(--t); z-index: 200;
-        /* Creator Attribution Badge (Bottom Corner) */
+        }
+
+        /* Creator Attribution Link Badge (Bottom Right Corner) */
         .creator-badge {
             position: fixed;
             bottom: 12px;
             right: 18px;
-            z-index: 50;
+            z-index: 100;
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            padding: 5px 14px;
+            padding: 6px 14px;
             border-radius: var(--radius-full);
-            background: rgba(6, 10, 24, 0.85);
-            border: 1px solid rgba(0, 240, 255, 0.22);
+            background: rgba(6, 10, 24, 0.88);
+            border: 1px solid rgba(0, 240, 255, 0.28);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 15px rgba(0, 240, 255, 0.12);
-            font-size: 0.74rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 14px rgba(0, 240, 255, 0.12);
+            font-size: 0.73rem;
             font-weight: 500;
-            letter-spacing: 0.03em;
-            color: rgba(226, 232, 240, 0.85);
-            user-select: none;
+            letter-spacing: 0.02em;
+            color: rgba(226, 232, 240, 0.88);
+            text-decoration: none;
+            cursor: pointer;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        body.task-active .creator-badge {
+            right: 442px;
+        }
         .creator-badge:hover {
-            background: rgba(8, 14, 32, 0.95);
-            border-color: rgba(0, 240, 255, 0.55);
-            box-shadow: 0 6px 26px rgba(0, 0, 0, 0.6), 0 0 22px rgba(0, 240, 255, 0.28);
+            background: rgba(10, 18, 40, 0.96);
+            border-color: rgba(0, 240, 255, 0.75);
+            box-shadow: 0 6px 26px rgba(0, 0, 0, 0.65), 0 0 22px rgba(0, 240, 255, 0.35);
             transform: translateY(-2px);
             color: #ffffff;
         }
-        .creator-spark {
+        .creator-gh-icon {
             color: #00f0ff;
-            font-size: 0.85rem;
-            display: inline-block;
-            animation: creatorSpark 2.8s infinite ease-in-out;
+            flex-shrink: 0;
+            transition: transform 0.25s ease, color 0.25s ease;
         }
-        @keyframes creatorSpark {
-            0%, 100% { opacity: 0.6; transform: scale(0.9) rotate(0deg); }
-            50% { opacity: 1; transform: scale(1.3) rotate(45deg); text-shadow: 0 0 10px #00f0ff; }
+        .creator-badge:hover .creator-gh-icon {
+            transform: scale(1.18) rotate(6deg);
+            color: #38bdf8;
         }
         .creator-name {
             font-weight: 700;
@@ -859,6 +868,9 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 0.02em;
+        }
+        .creator-badge:hover .creator-name {
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
         }
     </style>
 </head>
@@ -1643,15 +1655,58 @@ btnMic.addEventListener('click', () => {
 });
 
 /* =========================================================================
-   AUDIO WAVEFORM VISUALIZER (PARAMETRIC MULTI-STRAND LUMINOUS HARMONIC WAVE)
-   Inspired by generative neon ribbon acoustics (multi-frequency wave packets)
+   AUDIO WAVEFORM VISUALIZER (PERFORMANCE-OPTIMIZED 3D NEON RIBBON HARMONIC WAVE)
+   Directly matching generative wireframe acoustics & vector ribbon aesthetics
    ========================================================================= */
 const wvc = $('waveformCanvas');
 const wCtx = wvc.getContext('2d');
 let wPhase = 0;
-let wDispAmp = 0.35;
-let wTargetAmp = 0.35;
-let wSpeed = 0.02;
+let wDispAmp = 0.45;
+let wTargetAmp = 0.45;
+let wSpeed = 0.025;
+
+// Interactive dynamics
+let mouseNormX = -1;
+let mousePower = 0;
+let clickPulse = 0;
+let liveMicAmp = 0;
+let webAudioCtx = null, webAudioAnalyser = null, webAudioData = null;
+
+function initWebAudio() {
+    if (webAudioCtx || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    try {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            webAudioCtx = new AudioCtx();
+            const src = webAudioCtx.createMediaStreamSource(stream);
+            webAudioAnalyser = webAudioCtx.createAnalyser();
+            webAudioAnalyser.fftSize = 64;
+            webAudioAnalyser.smoothingTimeConstant = 0.75;
+            src.connect(webAudioAnalyser);
+            webAudioData = new Uint8Array(webAudioAnalyser.frequencyBinCount);
+        }).catch(() => {});
+    } catch (_) {}
+}
+
+// Attach hover and click interactivity to the wave box
+const waveBoxEl = wvc ? wvc.parentElement : null;
+if (waveBoxEl) {
+    waveBoxEl.style.cursor = 'pointer';
+    waveBoxEl.title = 'Click to speak / interact';
+    waveBoxEl.addEventListener('mousemove', (e) => {
+        const r = waveBoxEl.getBoundingClientRect();
+        mouseNormX = (e.clientX - r.left) / r.width;
+        mousePower = Math.min(1.0, mousePower + 0.2);
+    });
+    waveBoxEl.addEventListener('mouseleave', () => {
+        mouseNormX = -1;
+    });
+    waveBoxEl.addEventListener('click', () => {
+        initWebAudio();
+        clickPulse = 1.0;
+        triggerManualWake();
+    });
+}
 
 function resizeWave() {
     if (!wvc || !wvc.parentElement) return;
@@ -1665,67 +1720,33 @@ function resizeWave() {
 window.addEventListener('resize', resizeWave);
 setTimeout(resizeWave, 100);
 
-const STRANDS = 26;
+// Pre-computed strand colors directly matching the reference image:
+// From baseline crimson/gold up through emerald, turquoise, electric cyan, and royal blue
+const STRAND_COLORS = [
+    'rgba(244, 63, 94, 0.88)',   // 0: Crimson-rose (near baseline)
+    'rgba(249, 115, 22, 0.90)',  // 1: Fiery red-orange
+    'rgba(245, 158, 11, 0.90)',  // 2: Warm orange
+    'rgba(234, 179, 8, 0.92)',   // 3: Golden amber
+    'rgba(250, 204, 21, 0.92)',  // 4: Bright gold
+    'rgba(253, 224, 71, 0.94)',  // 5: Luminous yellow
+    'rgba(163, 230, 53, 0.90)',  // 6: Lime
+    'rgba(34, 197, 94, 0.90)',   // 7: Spring green
+    'rgba(16, 185, 129, 0.92)',  // 8: Emerald green
+    'rgba(20, 184, 166, 0.92)',  // 9: Aqua marine
+    'rgba(6, 182, 212, 0.94)',   // 10: Turquoise
+    'rgba(0, 240, 255, 0.95)',   // 11: Electric neon cyan
+    'rgba(14, 165, 233, 0.95)',  // 12: Sky cyan
+    'rgba(2, 132, 199, 0.95)',   // 13: Ocean cyan
+    'rgba(37, 99, 235, 0.92)',   // 14: Royal blue
+    'rgba(59, 130, 246, 0.90)',  // 15: Bright sapphire
+    'rgba(79, 70, 229, 0.88)',   // 16: Indigo
+    'rgba(99, 102, 241, 0.85)'   // 17: Deep violet-blue (outermost crest)
+];
+const NUM_STRANDS = STRAND_COLORS.length;
 
-function getWaveStrandColor(distNorm, state, alpha) {
-    const d = Math.min(Math.max(distNorm, 0.0), 1.0);
-    let r, g, b;
-
-    if (state === 'MUTED') {
-        return `rgba(239, 68, 68, ${alpha * 0.4})`;
-    }
-
-    if (state === 'SPEAKING') {
-        // High peaks: electric cyan / blue; Mid: emerald green; Core: warm gold / fiery orange / red
-        if (d < 0.16) {
-            const s = d / 0.16;
-            r = Math.round(245 + s * 10);
-            g = Math.round(45 + s * 115);
-            b = 30;
-        } else if (d < 0.35) {
-            const s = (d - 0.16) / 0.19;
-            r = Math.round(255 - s * 16);
-            g = Math.round(160 + s * 45);
-            b = Math.round(30 + s * 18);
-        } else if (d < 0.58) {
-            const s = (d - 0.35) / 0.23;
-            r = Math.round(239 * (1 - s) + 16 * s);
-            g = Math.round(205 * (1 - s) + 210 * s);
-            b = Math.round(48 * (1 - s) + 140 * s);
-        } else if (d < 0.82) {
-            const s = (d - 0.58) / 0.24;
-            r = Math.round(16 * (1 - s) + 0 * s);
-            g = Math.round(210 * (1 - s) + 235 * s);
-            b = Math.round(140 * (1 - s) + 255 * s);
-        } else {
-            const s = (d - 0.82) / 0.18;
-            r = Math.round(0 * (1 - s) + 30 * s);
-            g = Math.round(235 * (1 - s) + 110 * s);
-            b = Math.round(255 * (1 - s) + 245 * s);
-        }
-    } else if (state === 'THINKING') {
-        // Shimmering sapphire and violet
-        if (d < 0.35) {
-            r = 168; g = 85; b = 247;
-        } else if (d < 0.70) {
-            r = 14; g = 165; b = 233;
-        } else {
-            r = 59; g = 130; b = 246;
-        }
-    } else {
-        // LISTENING / IDLE: Electric cyan, emerald green, and golden baseline
-        if (d < 0.18) {
-            r = 251; g = 191; b = 36;
-        } else if (d < 0.42) {
-            r = 16; g = 185; b = 129;
-        } else if (d < 0.75) {
-            r = 6; g = 182; b = 212;
-        } else {
-            r = 14; g = 165; b = 233;
-        }
-    }
-
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+function smoothstep(e0, e1, x) {
+    const t = Math.max(0.0, Math.min(1.0, (x - e0) / (e1 - e0)));
+    return t * t * (3.0 - 2.0 * t);
 }
 
 function drawWave() {
@@ -1740,103 +1761,144 @@ function drawWave() {
     const midY = h / 2;
     const state = S.agent.state;
 
-    // Adjust dynamics based on assistant state
+    // Sample real microphone audio if available
+    if (webAudioAnalyser && !S.agent.muted) {
+        webAudioAnalyser.getByteFrequencyData(webAudioData);
+        let sum = 0;
+        for (let k = 0; k < 12; k++) sum += webAudioData[k];
+        const micLevel = sum / (12 * 255);
+        liveMicAmp += (micLevel - liveMicAmp) * 0.3;
+    } else {
+        liveMicAmp += (0.0 - liveMicAmp) * 0.1;
+    }
+
+    // Dynamic state reactivity
     if (S.agent.muted) {
         wTargetAmp = 0.0;
         wSpeed = 0.005;
     } else if (state === 'SPEAKING') {
-        wTargetAmp = 1.0;
-        wSpeed = 0.032;
+        // Dynamic voice modulation cadence
+        const voiceCadence = Math.sin(wPhase * 3.8) * Math.cos(wPhase * 1.9);
+        wTargetAmp = 0.80 + 0.22 * Math.abs(voiceCadence);
+        wSpeed = 0.038;
     } else if (state === 'LISTENING') {
-        wTargetAmp = 0.78;
-        wSpeed = 0.026;
+        wTargetAmp = 0.40 + liveMicAmp * 1.5;
+        wSpeed = 0.026 + liveMicAmp * 0.04;
     } else if (state === 'THINKING') {
-        wTargetAmp = 0.55;
-        wSpeed = 0.018;
+        wTargetAmp = 0.58;
+        wSpeed = 0.028;
     } else { // IDLE
-        wTargetAmp = 0.32;
-        wSpeed = 0.014;
+        wTargetAmp = 0.36;
+        wSpeed = 0.016;
     }
 
-    // Smooth exponential approach for amplitude
-    wDispAmp += (wTargetAmp - wDispAmp) * 0.08;
+    // Smooth response approach
+    wDispAmp += (wTargetAmp - wDispAmp) * 0.12;
     wPhase += wSpeed;
+    if (clickPulse > 0.01) clickPulse *= 0.92;
+    if (mouseNormX < 0 && mousePower > 0.01) mousePower *= 0.88;
 
-    // 1. Draw glowing baseline
+    // 1. Draw central horizontal glowing baseline (straight line matching reference)
     const baseGrad = wCtx.createLinearGradient(0, 0, w, 0);
     if (S.agent.muted) {
-        baseGrad.addColorStop(0, 'rgba(239, 68, 68, 0.1)');
-        baseGrad.addColorStop(0.5, 'rgba(239, 68, 68, 0.6)');
-        baseGrad.addColorStop(1, 'rgba(239, 68, 68, 0.1)');
+        baseGrad.addColorStop(0.0, 'rgba(239, 68, 68, 0.1)');
+        baseGrad.addColorStop(0.5, 'rgba(239, 68, 68, 0.8)');
+        baseGrad.addColorStop(1.0, 'rgba(239, 68, 68, 0.1)');
     } else {
-        baseGrad.addColorStop(0, 'rgba(0, 240, 255, 0.15)');
-        baseGrad.addColorStop(0.28, 'rgba(0, 240, 255, 0.55)');
-        baseGrad.addColorStop(0.38, 'rgba(251, 191, 36, 0.85)');
-        baseGrad.addColorStop(0.58, 'rgba(249, 115, 22, 0.8)');
-        baseGrad.addColorStop(0.72, 'rgba(0, 240, 255, 0.55)');
-        baseGrad.addColorStop(1, 'rgba(0, 240, 255, 0.15)');
+        baseGrad.addColorStop(0.00, 'rgba(0, 240, 255, 0.12)');
+        baseGrad.addColorStop(0.18, 'rgba(0, 240, 255, 0.55)');
+        baseGrad.addColorStop(0.32, 'rgba(16, 185, 129, 0.85)');
+        baseGrad.addColorStop(0.42, 'rgba(250, 204, 21, 0.95)');
+        baseGrad.addColorStop(0.50, 'rgba(249, 115, 22, 0.95)');
+        baseGrad.addColorStop(0.58, 'rgba(250, 204, 21, 0.95)');
+        baseGrad.addColorStop(0.68, 'rgba(6, 182, 212, 0.85)');
+        baseGrad.addColorStop(0.82, 'rgba(0, 240, 255, 0.55)');
+        baseGrad.addColorStop(1.00, 'rgba(0, 240, 255, 0.12)');
     }
 
-    wCtx.save();
     wCtx.beginPath();
     wCtx.moveTo(0, midY);
     wCtx.lineTo(w, midY);
     wCtx.strokeStyle = baseGrad;
-    wCtx.lineWidth = 1.6;
-    wCtx.shadowColor = S.agent.muted ? 'rgba(239, 68, 68, 0.5)' : 'rgba(0, 240, 255, 0.6)';
-    wCtx.shadowBlur = 6;
+    wCtx.lineWidth = 1.4;
     wCtx.stroke();
-    wCtx.restore();
 
     if (S.agent.muted) return;
 
-    // 2. Draw multi-strand ribbon waves
+    // 2. Draw 3D wireframe ribbon strands
     wCtx.save();
     wCtx.globalCompositeOperation = 'screen';
 
-    const maxHalf = (h * 0.44) * wDispAmp;
-    const step = Math.max(2, Math.floor(w / 160));
+    // Maximum vertical travel (scaled to fit wave box perfectly without clipping)
+    const maxHalf = (h * 0.44) * (wDispAmp + clickPulse * 0.45);
+    const step = 4; // High-precision smooth curves with negligible CPU cost
 
-    for (let i = 0; i < STRANDS; i++) {
-        const t = i / (STRANDS - 1);
-        const ampFactor = 0.16 + 0.84 * (i / STRANDS);
-        const strandPhase = wPhase + i * 0.082;
+    // Gaussian wave packet centers matching reference image:
+    // Left valley at 0.24, tall crest at 0.39, deep trough at 0.55, secondary crest at 0.70
+    const c0 = 0.24, s0 = 0.060;
+    const c1 = 0.39, s1 = 0.052;
+    const c2 = 0.55, s2 = 0.062;
+    const c3 = 0.70, s3 = 0.070;
 
-        const points = [];
+    for (let i = 0; i < NUM_STRANDS; i++) {
+        const v = i / (NUM_STRANDS - 1);
+        const vFactor = 0.08 + 0.92 * Math.pow(v, 1.1);
+        const strandSpatialShift = (v - 0.5) * 0.026;
+        const strandPhaseOffset = v * 0.45;
+
+        wCtx.beginPath();
+        let first = true;
+
         for (let x = 0; x <= w; x += step) {
             const u = x / w;
+            const lf = smoothstep(0.08, 0.18, u);
+            const rf = 1.0 - smoothstep(0.78, 0.88, u);
+            const win = lf * rf;
 
-            // Gaussian wave packets matching the reference image:
-            const g1 = Math.exp(-Math.pow((u - 0.38) / 0.082, 2)); // Tall crest
-            const g2 = Math.exp(-Math.pow((u - 0.58) / 0.095, 2)); // Deep trough
-            const g3 = Math.exp(-Math.pow((u - 0.71) / 0.075, 2)); // Soft secondary crest
-            const g0 = Math.exp(-Math.pow((u - 0.26) / 0.06, 2));  // Pre-dip
+            let y = midY;
+            if (win > 0.001) {
+                const uShifted = u + strandSpatialShift;
 
-            const osc1 = Math.sin(u * 21.0 - strandPhase);
-            const osc2 = Math.cos(u * 17.5 - strandPhase * 0.9);
+                const p0 = -0.36 * Math.exp(-Math.pow((uShifted - c0) / s0, 2));
+                const p1 =  1.08 * Math.exp(-Math.pow((uShifted - c1) / s1, 2));
+                const p2 = -0.88 * Math.exp(-Math.pow((uShifted - c2) / s2, 2));
+                const p3 =  0.50 * Math.exp(-Math.pow((uShifted - c3) / s3, 2));
+                const rawPacket = p0 + p1 + p2 + p3;
 
-            const disp = (g1 * 1.65 * osc1 - g2 * 1.45 * osc2 + g3 * 0.75 * osc1 - g0 * 0.40 * osc2);
-            const windowEnv = Math.pow(Math.sin(Math.min(Math.max(u * Math.PI, 0), Math.PI)), 2.2);
+                // Flowing acoustic ripple
+                const ripple = Math.cos(u * 14.0 - wPhase + strandPhaseOffset) * 0.10 * v;
 
-            const yDisp = disp * ampFactor * windowEnv * maxHalf;
-            const y = midY - yDisp;
-            const dist = Math.abs(yDisp) / Math.max(1, maxHalf);
-            points.push({ x, y, dist });
+                let yDisp = (rawPacket * vFactor + ripple * rawPacket) * win * maxHalf;
+
+                // Mouse hover tactile wave deflection
+                if (mousePower > 0.01 && mouseNormX >= 0) {
+                    const mDist = Math.abs(u - mouseNormX);
+                    if (mDist < 0.16) {
+                        const mImpulse = Math.cos(mDist * Math.PI / 0.16) * 0.28 * mousePower * (v - 0.5);
+                        yDisp += mImpulse * maxHalf;
+                    }
+                }
+
+                // Click shockwave expansion
+                if (clickPulse > 0.01) {
+                    const pulseDist = Math.abs(u - 0.5);
+                    yDisp *= (1.0 + clickPulse * 0.5 * Math.sin(pulseDist * 16.0 - wPhase * 2.0));
+                }
+
+                y = midY - yDisp;
+            }
+
+            if (first) {
+                wCtx.moveTo(x, y);
+                first = false;
+            } else {
+                wCtx.lineTo(x, y);
+            }
         }
 
-        // Render continuous segments with height-dependent neon glow
-        for (let k = 0; k < points.length - 1; k++) {
-            const p1 = points[k];
-            const p2 = points[k + 1];
-            wCtx.beginPath();
-            wCtx.moveTo(p1.x, p1.y);
-            wCtx.lineTo(p2.x, p2.y);
-            wCtx.strokeStyle = getWaveStrandColor(p1.dist, state, 0.78);
-            wCtx.lineWidth = 1.35;
-            wCtx.shadowColor = wCtx.strokeStyle;
-            wCtx.shadowBlur = 5;
-            wCtx.stroke();
-        }
+        wCtx.strokeStyle = STRAND_COLORS[i];
+        wCtx.lineWidth = 1.15;
+        wCtx.stroke();
     }
 
     wCtx.restore();
@@ -2214,13 +2276,17 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReminders();
     applyMuteUI(false);
     initWS();
+    document.body.addEventListener('click', initWebAudio, { once: true });
 });
 </script>
 
-<!-- BOTTOM CORNER ATTRIBUTION -->
-<div class="creator-badge" id="creatorBadge" title="AI Voice Desktop Agent">
-    <span class="creator-spark">✦</span> Created by <span class="creator-name">Purnendu Dutta</span>
-</div>
+<!-- BOTTOM RIGHT CORNER ATTRIBUTION WITH GITHUB HYPERLINK -->
+<a href="https://github.com/Purnendudutta" target="_blank" rel="noopener noreferrer" class="creator-badge" id="creatorBadge" title="Created by Purnendu Dutta (Open GitHub Profile)">
+    <svg class="creator-gh-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+    <span>Created by <span class="creator-name">Purnendu Dutta</span></span>
+</a>
 
 </body>
 </html>
