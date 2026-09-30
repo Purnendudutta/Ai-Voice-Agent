@@ -20,7 +20,11 @@ class OpenUrlInput(BaseModel):
 
 class OpenUrlTool(BaseTool):
     name = "open_browser_url"
-    description = "Opens a web URL in the user's default web browser."
+    description = (
+        "Opens a web URL in the user's default web browser. ONLY call this when the user explicitly "
+        "instructs to open a website, link, or web page (e.g. 'open youtube.com', 'go to reddit'). "
+        "Do NOT call for general questions, small queries, facts, or definitions."
+    )
     risk_level = RiskLevel.LOW_RISK
     parameters_schema = OpenUrlInput
 
@@ -42,7 +46,11 @@ class WebSearchInput(BaseModel):
 
 class WebSearchTool(BaseTool):
     name = "web_search"
-    description = "Conducts a web or YouTube search query in the browser."
+    description = (
+        "Opens a new browser tab to conduct a web or YouTube search. ONLY call this when the user explicitly "
+        "requests to search the web or open browser results (e.g. 'search on google', 'google karo', 'open youtube and search'). "
+        "For small queries, facts, definitions, or questions, answer directly with speech instead of opening browser tabs."
+    )
     risk_level = RiskLevel.LOW_RISK
     parameters_schema = WebSearchInput
 

@@ -165,6 +165,10 @@ class LocalPlanner:
         search_match = re.match(r"(?:search|google|look up)\s+(?:for\s+)?(.+)", lower)
         if search_match:
             query = search_match.group(1).strip()
+            # If it's a small query or informational question, answer directly without opening a browser tab
+            question_prefixes = ["what is", "who is", "why is", "why does", "how to", "how do", "meaning of", "define", "tell me", "kya hai", "kaun hai", "batao"]
+            if any(query.startswith(qp) for qp in question_prefixes) and not any(k in lower for k in ["in browser", "on google", "google par", "browser me"]):
+                return None
             return PlannedStep(description=f"Search Google for '{query}'", tool_name="web_search", arguments={"query": query, "engine": "google"})
 
         # 9. Browser Tab Controls (English & Hindi)
