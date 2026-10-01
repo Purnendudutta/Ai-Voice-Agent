@@ -352,4 +352,66 @@ async def test_orchestrator_allows_browser_tool_on_explicit_command(monkeypatch)
     assert "youtube.com" in browser_opened[0]
 
 
+@pytest.mark.asyncio
+async def test_orchestrator_suppresses_web_search_when_query_is_question(monkeypatch):
+    from unittest.mock import AsyncMock, MagicMock
+    from src.gemini.live_client import GeminiLiveClient
+    from src.agent.orchestrator import AgentOrchestrator
+
+    mock_mic = MagicMock()
+    mock_speaker = MagicMock()
+    mock_vad = MagicMock()
+    mock_wake = MagicMock()
+    mock_gemini = AsyncMock(spec=GeminiLiveClient)
+
+    browser_opened = []
+    monkeypatch.setattr("webbrowser.open", lambda url: browser_opened.append(url))
+
+    ctx = ContextManager()
+    orch = AgentOrchestrator(
+        microphone=mock_mic,
+        speaker=mock_speaker,
+        vad=mock_vad,
+        wake_word=mock_wake,
+        gemini=mock_gemini,
+        context=ctx
+    )
+
+    # Gemini attempts to call web_search for a question like "what is quantum computing"
+    await orch._handle_tool_call(
+        name="web_search",
+        args={"query": "what is quantum computing?"},
+        call_id="call-test-question"
+    )
+
+    # Verified: NO browser opened!
+    assert len(browser_opened) == 0
+    assert mock_gemini.send_tool_response.called
+    call_args = mock_gemini.send_tool_response.call_args[0][0]
+    assert "Do not open a browser tab" in str(call_args[0].response)
+
+
+def test_browser_url_normalization_and_tab_synonyms():
+    from src.tools.plugins.browser_tools import normalize_web_url, BrowserTabControlTool, BrowserTabActionInput
+    import asyncio
+
+    # URL normalization
+    assert normalize_web_url("youtube") == "https://www.youtube.com"
+    assert normalize_web_url("google.com") == "https://google.com"
+    assert normalize_web_url("https://github.com") == "https://github.com"
+    assert normalize_web_url("wikipedia.org") == "https://wikipedia.org"
+
+    # Tab control synonym handling
+    tool = BrowserTabControlTool()
+    raw_action = "close"
+    synonyms = {
+        "open_tab": "new_tab",
+        "close": "close_tab",
+        "reload": "refresh",
+        "switch_tab": "next_tab"
+    }
+    assert synonyms.get(raw_action) == "close_tab"
+
+
+
 

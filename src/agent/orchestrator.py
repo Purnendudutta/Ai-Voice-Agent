@@ -368,9 +368,6 @@ class AgentOrchestrator:
                     elif vad_event == VADEvent.SPEECH_END:
                         self._speech_active = False
                         self._last_speech_time = asyncio.get_running_loop().time()
-                        # Signal Gemini that the audio input turn is complete so it responds immediately
-                        if self.gemini.is_connected and hasattr(self.gemini, "send_audio_stream_end"):
-                            asyncio.create_task(self.gemini.send_audio_stream_end())
 
             except asyncio.CancelledError:
                 raise
@@ -533,64 +530,84 @@ class AgentOrchestrator:
 
     def _is_explicit_browser_command(self, tool_name: str, args: Dict[str, Any]) -> bool:
         """
-        Determines whether the user explicitly commanded to open a browser tab/page.
-        For informational questions or simple queries, returns False to prevent unwanted browser tabs.
+        Determines whether a browser tool call is valid or should be suppressed in favor of a spoken answer.
+        Rules:
+        - Informational questions (e.g. "what is...", "who is...", "explain...", "capital of France")
+          MUST be answered with voice without opening any browser tab.
+        - Explicit user requests to open websites, browser tabs, or search Google/YouTube
+          (e.g. "open youtube", "search on google", "kholo", specific URLs) MUST be executed.
         """
         import re
 
-        # Look for user's latest query in context conversation history
+        # 1. Look for user's latest query in context conversation history
         latest_user_text = ""
         for msg in reversed(self.context.conversation_history):
             if msg.get("role") == "user":
                 latest_user_text = msg.get("content", "").strip().lower()
                 break
 
-        if not latest_user_text:
-            return False
-
-        # If it's explicitly an informational question asking for definitions, explanations, or trivia,
-        # never open a browser tab unless there's an explicit search/open command.
+        # Check question patterns in user text
         question_patterns = [
             r"^(what|who|why|where|when|which|how|tell me|explain|can you explain|define|calculate|kya|kaun|kaise|kyun)\b",
             r"\b(what is|who is|how does|why is|explain to me|tell me about|kya hai|kaun hai)\b"
         ]
-        is_question = any(re.search(pat, latest_user_text) for pat in question_patterns)
+        user_asked_question = bool(
+            latest_user_text and any(re.search(pat, latest_user_text) for pat in question_patterns)
+        )
 
-        # Imperative open/launch verbs
-        open_verb_pattern = r"\b(open|launch|visit|kholo|khol|kholna|chalao|dikhao)\b"
-        has_open_verb = bool(re.search(open_verb_pattern, latest_user_text))
-
-        # Explicit search commands (e.g. "search on google", "google karo", "search in youtube")
+        # Check explicit search command in user text (e.g. "search on google", "google karo")
         search_command_pattern = (
             r"\b(search\s+(on|in|with)?\s*(google|youtube|bing|web)|"
             r"(google|youtube)\s+search|"
             r"(google|search)\s+karo|"
             r"look\s+up\s+on\s+google|"
-            r"(par|pe)\s+search)\b"
+            r"(par|pe)\s+search|"
+            r"search\s+for\b)"
         )
-        has_search_command = bool(re.search(search_command_pattern, latest_user_text))
+        user_commanded_search = bool(latest_user_text and re.search(search_command_pattern, latest_user_text))
 
-        # Explicit URL / domain
-        domain_pattern = r"(https?:\/\/|www\.|\.com\b|\.org\b|\.net\b|\.io\b|\.edu\b|\.gov\b|\.ai\b|\.in\b)"
-        has_domain = bool(re.search(domain_pattern, latest_user_text))
+        # Check explicit open / launch command in user text
+        open_verb_pattern = r"\b(open|launch|visit|kholo|khol|kholna|chalao|dikhao|go to)\b"
+        user_commanded_open = bool(latest_user_text and re.search(open_verb_pattern, latest_user_text))
 
-        # 1. If user explicitly issued an explicit search command
-        if has_search_command:
+        # 2. Inspect by tool
+        if tool_name == "web_search":
+            query = str(args.get("query", "")).strip().lower()
+            query_is_question = bool(
+                any(re.search(pat, query) for pat in question_patterns) or query.endswith("?")
+            )
+
+            # If user explicitly commanded a search -> ALLOW
+            if user_commanded_search:
+                return True
+
+            # If user asked a question or query itself is a question -> SUPPRESS (answer verbally)
+            if user_asked_question or query_is_question:
+                return False
+
+            # If user asked to open and mentions search/google/youtube -> ALLOW
+            if user_commanded_open and any(w in latest_user_text for w in ["search", "google", "youtube"]):
+                return True
+
+            # For general informational queries without an explicit search command -> SUPPRESS (answer verbally)
+            if latest_user_text and not user_commanded_search:
+                return False
+
             return True
 
-        # 2. If user provided a domain/URL and used an open/visit verb
-        if has_domain and (has_open_verb or "go to" in latest_user_text or "visit" in latest_user_text):
+        if tool_name == "open_browser_url":
+            # If user text was an informational question and did NOT contain an open command -> SUPPRESS
+            if user_asked_question and not user_commanded_open:
+                return False
+            # Otherwise, legitimate URL open request -> ALLOW
             return True
 
-        # 3. If user said an open verb with browser/page target (e.g. "open youtube", "open tab", "youtube kholo")
-        if has_open_verb and any(term in latest_user_text for term in ["tab", "browser", "chrome", "edge", "youtube", "google", "website", "page", "link"]):
+        if tool_name == "launch_application":
+            if user_asked_question and not user_commanded_open:
+                return False
             return True
 
-        # If it's a question or general query, never open browser
-        if is_question:
-            return False
-
-        return False
+        return True
 
     async def _handle_tool_call(self, name: str, args: Dict[str, Any], call_id: str) -> None:
         """Execute tool → verify → send response back to Gemini."""
