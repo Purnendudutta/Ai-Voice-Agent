@@ -2665,10 +2665,9 @@ async function startBrowserMic() {
                 audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
             }
 
-            // Suppress speaker echo feedback while assistant is actively speaking
-            if ((S.agent.state === 'SPEAKING' || isAudioCurrentlyPlaying()) && rms < 0.05) {
-                return;
-            }
+            // Browser echoCancellation removes speaker bleed.
+            // Always send mic audio to server so Gemini's server-side VAD can detect
+            // user speech and trigger barge-in interruption, even while assistant is speaking.
 
             // Downsample accurately to 16000 Hz if hardware uses 44.1kHz or 48kHz
             const samples16k = resampleTo16k(inputData, micContext.sampleRate || 16000);

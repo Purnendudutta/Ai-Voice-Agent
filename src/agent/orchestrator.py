@@ -320,7 +320,9 @@ class AgentOrchestrator:
                                 except Exception as e:
                                     logger.debug(f"Failed to forward initial speech chunk: {e}")
 
-                # ── SPEAKING state: suppress mic acoustic echo (prevent false self-interruption) ──
+                # ── SPEAKING state: forward mic audio to Gemini for server-side VAD barge-in ──
+                # Browser audio has echoCancellation enabled, so speaker output is stripped.
+                # Gemini's server-side VAD will detect genuine user speech and send 'interrupted'.
                 if self.state == AgentState.SPEAKING or (hasattr(self.speaker, "is_playing") and self.speaker.is_playing):
                     # Check wake word interruption if neural wake word engine is active
                     if self.wake_word.enabled:
@@ -330,30 +332,12 @@ class AgentOrchestrator:
                             await self.interrupt_speech()
                             continue
 
-                    # If user explicitly enables voice barge-in (recommended ONLY when wearing headphones)
-                    if getattr(settings, "allow_voice_barge_in", False):
-                        vad_event = self.vad.process_chunk(chunk)
-                        if vad_event == VADEvent.SPEECH_START:
-                            logger.info("User barge-in detected during speech (headphone mode) -> Switching to LISTENING.")
-                            await self.interrupt_speech()
-                            if self.gemini.is_connected:
-                                try:
-                                    await self.gemini.send_audio(chunk)
-                                except Exception as e:
-                                    logger.debug(f"Failed to forward barge-in chunk: {e}")
-                            continue
-
-                    # Intentional voice detection: when user speaks firmly/loudly into mic (RMS >= 0.035)
-                    # Speaker bleed into mic is typically < 0.02 RMS.
-                    audio_data = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
-                    chunk_rms = float(np.sqrt(np.mean(audio_data**2)))
-                    if chunk_rms >= 0.035:
-                        logger.info(f"Intentional user voice detected during speech (RMS: {chunk_rms:.4f}) -> Forwarding to Gemini for barge-in.")
-                        if self.gemini.is_connected:
-                            try:
-                                await self.gemini.send_audio(chunk)
-                            except Exception as e:
-                                logger.debug(f"Failed to forward speech chunk: {e}")
+                    # Forward audio to Gemini so its server-side VAD can detect user barge-in
+                    if self.gemini.is_connected:
+                        try:
+                            await self.gemini.send_audio(chunk)
+                        except Exception as e:
+                            logger.debug(f"Failed to forward audio during speech: {e}")
                     continue
 
                 # ── LISTENING state: stream audio to Gemini ──
