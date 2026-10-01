@@ -81,7 +81,7 @@ class SpeakerOutput:
             self._stream.start()
             self._is_playing = True
         except Exception as e:
-            logger.warning(f"Physical speaker not available ({e}). In-browser audio streaming active.")
+            logger.info(f"Physical speaker not attached ({e}). In-browser audio streaming active.")
             self._is_playing = False
 
     def stop(self):

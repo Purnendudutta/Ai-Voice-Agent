@@ -89,7 +89,7 @@ class MicrophoneStream:
             self._stream.start()
             self._is_active = True
         except Exception as e:
-            logger.warning(f"Physical microphone not available ({e}). In-browser audio streaming active.")
+            logger.info(f"Physical microphone not attached ({e}). In-browser audio streaming active.")
             self._is_active = False
 
     def stop(self):

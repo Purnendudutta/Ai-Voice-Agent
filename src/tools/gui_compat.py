@@ -84,23 +84,38 @@ class HeadlessPyAutoGUI:
 def setup_gui_compatibility():
     """
     Ensure pyautogui can be imported safely.
-    Sets DISPLAY fallback on Linux and provides HeadlessPyAutoGUI if no display server is reachable.
+    Starts Xvfb if available on Linux, and provides HeadlessPyAutoGUI if no display server is reachable.
     """
     if "pyautogui" in sys.modules and not isinstance(sys.modules["pyautogui"], HeadlessPyAutoGUI):
         return sys.modules["pyautogui"]
 
-    # Provide fallback DISPLAY environment variable if missing on Linux
-    if sys.platform.startswith("linux") and "DISPLAY" not in os.environ:
-        os.environ["DISPLAY"] = ":99"
+    # Provide virtual X11 display on Linux if Xvfb is available
+    if sys.platform.startswith("linux"):
+        import shutil
+        import subprocess
+        import time
+        if "DISPLAY" not in os.environ:
+            xvfb_path = shutil.which("Xvfb")
+            if xvfb_path:
+                try:
+                    subprocess.Popen(
+                        [xvfb_path, ":99", "-screen", "0", "1920x1080x24", "-nolisten", "tcp"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                    time.sleep(0.3)
+                    os.environ["DISPLAY"] = ":99"
+                except Exception:
+                    pass
 
     try:
+        if sys.platform.startswith("linux") and "DISPLAY" not in os.environ:
+            raise RuntimeError("No X11 DISPLAY available in headless environment")
         import pyautogui
         return pyautogui
     except (Exception, KeyError) as e:
-        logger.warning(
-            "Display/GUI automation library (pyautogui) could not be initialized (%s). "
-            "Activating HeadlessPyAutoGUI fallback for headless cloud environment.",
-            e
+        logger.info(
+            "Display/GUI automation running in HeadlessPyAutoGUI fallback mode for cloud environment."
         )
         headless = HeadlessPyAutoGUI()
         sys.modules["pyautogui"] = headless

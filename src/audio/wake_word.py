@@ -38,10 +38,10 @@ class WakeWordDetector:
 
             self._enabled = True
             logger.info("Neural wake word detection active (model: 'Hey Jarvis' on ONNX Runtime).")
-        except ImportError as e:
-            logger.warning(f"Failed to import openwakeword ({e}). Wake word detection will be disabled.")
+        except ImportError:
+            logger.info("Neural wake word library not installed. Using VAD voice activity detection.")
         except Exception as e:
-            logger.warning(f"Error initializing openwakeword ({e}). Wake word detection will be disabled.")
+            logger.info(f"Wake word detector inactive ({e}). Using VAD voice activity detection.")
 
     @property
     def enabled(self) -> bool:
