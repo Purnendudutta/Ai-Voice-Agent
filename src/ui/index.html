@@ -2097,6 +2097,12 @@ function setAgentState(state) {
     if (typeof updateMobileTalkBtnState === 'function') {
         updateMobileTalkBtnState(state);
     }
+
+    if ((state === 'SPEAKING' || state === 'LISTENING') && !S.agent.muted) {
+        if (typeof startSpeechRecognition === 'function') {
+            startSpeechRecognition();
+        }
+    }
 }
 
 /* =========================================================================
@@ -2468,9 +2474,40 @@ function resampleTo16k(inputData, inputSampleRate) {
     return result;
 }
 
-// ── On-device Web Speech Recognition (for mobile accuracy & offline fallback) ──
+// ── On-device Web Speech Recognition (multilingual interruption & voice recognition) ──
 let speechRec = null;
 let isRecActive = false;
+
+const INTERRUPT_PATTERNS = [
+    // Devanagari Hindi keywords
+    /रुको/, /रुक/, /अरे/, /सुनो/, /चुप/, /बस/, /ठहरो/, /स्टॉप/, /वेट/, /पॉज/, /शांत/, /रहने\s*दो/,
+    // Latin / English / Hinglish keywords
+    /\bstop\b/i, /\bstopping\b/i,
+    /\bruko\b/i, /\bruk\b/i, /\brook[oa]\b/i,
+    /\barey\b/i, /\barre\b/i, /\bare\b/i,
+    /\bchup\b/i, /\bchoop\b/i,
+    /\bsuno\b/i, /\bsun\b/i,
+    /\bbas\b/i, /\bbuss?\b/i,
+    /\bwait\b/i, /\bwaiting\b/i,
+    /\bhold\s*on\b/i, /\bhang\s*on\b/i,
+    /\bpause\b/i,
+    /\bthehro\b/i,
+    /\bshutup\b/i, /\bshut\s*up\b/i,
+    /\bquiet\b/i,
+    /\bsilence\b/i,
+    /\blisten\b/i
+];
+
+function checkInterruptKeyword(text) {
+    if (!text) return null;
+    const clean = text.trim();
+    for (let i = 0; i < INTERRUPT_PATTERNS.length; i++) {
+        if (INTERRUPT_PATTERNS[i].test(clean)) {
+            return clean;
+        }
+    }
+    return null;
+}
 
 function initSpeechRecognition() {
     const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2500,22 +2537,18 @@ function initSpeechRecognition() {
             }
 
             const isSpeaking = (S.agent.state === 'SPEAKING' || isAudioCurrentlyPlaying());
-            const interruptKeywords = [
-                'stop', 'ruko', 'ruk', 'arey', 'are', 'chup', 'suno', 'wait',
-                'hold on', 'pause', 'bas', 'shutup', 'shut up', 'quiet', 'listen'
-            ];
-            const spokenText = (interim + ' ' + final).toLowerCase().trim();
+            const spokenText = (interim + ' ' + final);
 
             if (isSpeaking) {
-                const matched = interruptKeywords.find(k => new RegExp(`(^|\\s)${k}([\\s.,!?]|$)`, 'i').test(spokenText));
+                const matched = checkInterruptKeyword(spokenText);
                 if (matched) {
-                    console.log(`[Interrupt] Assistant speech stopped by keyword: "${matched}"`);
+                    console.log(`[Interrupt] Assistant speech stopped by: "${matched}"`);
                     stopAllPlayback();
                     setAgentState('LISTENING');
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify({ type: 'interrupt', data: { keyword: matched } }));
                     }
-                    toast(`✋ Interrupted: "${matched}"`, 2000);
+                    toast(`✋ Interrupted: "${matched}"`, 2200);
                 }
                 // When assistant is speaking, suppress ambient noise, room echo, and non-interrupt chatter
                 return;
@@ -2550,12 +2583,20 @@ function initSpeechRecognition() {
             if (e.error !== 'no-speech') {
                 console.debug("[SpeechRecognition] Status:", e.error);
             }
+            if (e.error === 'not-allowed') {
+                isRecActive = false;
+            }
         };
 
         speechRec.onend = () => {
             isRecActive = false;
-            if (S.agent.state === 'LISTENING' && !S.agent.muted) {
-                try { speechRec.start(); } catch (_) {}
+            // Always keep listening unless the user explicitly muted
+            if (!S.agent.muted) {
+                setTimeout(() => {
+                    if (!isRecActive && !S.agent.muted) {
+                        try { speechRec.start(); } catch (_) {}
+                    }
+                }, 100);
             }
         };
     } catch (e) {

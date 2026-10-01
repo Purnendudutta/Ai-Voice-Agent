@@ -327,8 +327,7 @@ class AgentOrchestrator:
                         detected_word = self.wake_word.process_chunk(chunk)
                         if detected_word:
                             logger.info(f"Wake word '{detected_word}' detected during speech -> Interrupting and switching to LISTENING.")
-                            self.speaker.clear_queue()
-                            await self._set_state(AgentState.LISTENING)
+                            await self.interrupt_speech()
                             continue
 
                     # If user explicitly enables voice barge-in (recommended ONLY when wearing headphones)
@@ -336,17 +335,25 @@ class AgentOrchestrator:
                         vad_event = self.vad.process_chunk(chunk)
                         if vad_event == VADEvent.SPEECH_START:
                             logger.info("User barge-in detected during speech (headphone mode) -> Switching to LISTENING.")
-                            self.speaker.clear_queue()
-                            self._speech_active = True
-                            self._last_speech_time = asyncio.get_running_loop().time()
-                            await self._set_state(AgentState.LISTENING)
+                            await self.interrupt_speech()
                             if self.gemini.is_connected:
                                 try:
                                     await self.gemini.send_audio(chunk)
                                 except Exception as e:
                                     logger.debug(f"Failed to forward barge-in chunk: {e}")
-                    # By default (desktop speakers), ignore mic input while assistant is speaking
-                    # to prevent speaker audio from echoing back into the microphone and cutting off speech.
+                            continue
+
+                    # Intentional voice detection: when user speaks firmly/loudly into mic (RMS >= 0.035)
+                    # Speaker bleed into mic is typically < 0.02 RMS.
+                    audio_data = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
+                    chunk_rms = float(np.sqrt(np.mean(audio_data**2)))
+                    if chunk_rms >= 0.035:
+                        logger.info(f"Intentional user voice detected during speech (RMS: {chunk_rms:.4f}) -> Forwarding to Gemini for barge-in.")
+                        if self.gemini.is_connected:
+                            try:
+                                await self.gemini.send_audio(chunk)
+                            except Exception as e:
+                                logger.debug(f"Failed to forward speech chunk: {e}")
                     continue
 
                 # ── LISTENING state: stream audio to Gemini ──
@@ -744,10 +751,13 @@ class AgentOrchestrator:
         text_lower = text.strip().lower()
         interrupt_keywords = [
             "stop", "ruko", "arey", "are", "chup", "suno", "wait", 
-            "hold on", "shutup", "shut up", "pause", "bas", "ruk"
+            "hold on", "shutup", "shut up", "pause", "bas", "ruk", "thehro"
         ]
+        devanagari_keywords = ["रुको", "रुक", "अरे", "सुनो", "चुप", "बस", "ठहरो", "स्टॉप", "वेट", "पॉज", "शांत"]
         if self.state == AgentState.SPEAKING:
-            if any(re.search(rf"\b{k}\b", text_lower) for k in interrupt_keywords):
+            is_devanagari = any(dk in text for dk in devanagari_keywords)
+            is_latin = any(re.search(rf"\b{k}\b", text_lower) for k in interrupt_keywords)
+            if is_devanagari or is_latin:
                 await self.interrupt_speech()
                 return
 
