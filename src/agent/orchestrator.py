@@ -77,7 +77,7 @@ class AgentOrchestrator:
         self._speech_active = False
         self._tool_active = False
         self._last_speech_time: float = 0.0
-        self._silence_timeout_seconds: float = 8.0
+        self._silence_timeout_seconds: float = 15.0
 
         # Reconnection coordination
         self._reconnecting = False
