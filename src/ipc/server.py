@@ -234,6 +234,16 @@ class IPCServer:
             )
             return {"status": "updated", "preferences": updated}
 
+        # ── REST: Text-to-Speech Direct Streaming ──
+        @self.app.get("/api/tts")
+        async def stream_tts(text: str = Query(...), gender: str = Query("female")):
+            """Synthesize speech and stream MP3 directly to browser clients."""
+            from src.audio.local_tts import local_tts
+            mp3_bytes = await local_tts.synthesize_mp3(text, gender=gender)
+            if not mp3_bytes:
+                raise HTTPException(status_code=500, detail="TTS synthesis failed")
+            return Response(content=mp3_bytes, media_type="audio/mpeg")
+
         # ── REST: Generate auth token (for WebSocket auth) ──
         @self.app.get("/api/token")
         async def get_token():

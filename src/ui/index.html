@@ -1364,6 +1364,8 @@
      MAIN LAYOUT
      ===================================================================== -->
 <main id="mainWrap">
+    <!-- Persistent Unlocked Audio Element for Mobile/Web Output -->
+    <audio id="companionAudio" playsinline webkit-playsinline preload="auto" style="display:none;"></audio>
 
     <!-- LEFT PANEL: EXPANDED REMINDERS & RECENT ACTIVITY -->
     <aside class="left-panel">
@@ -1964,8 +1966,8 @@ $('charViewport').addEventListener('click', () => {
     const q = quotes[Math.floor(Math.random() * quotes.length)];
     $('tSpeaker').textContent = S.agent.name + ':';
     $('tText').textContent = q;
-    unlockAudioContext();
-    speakBrowserSpeech(q);
+    primeAudioPlayback();
+    playDirectHttpAudio(q);
 });
 
 function spawnParticles(n = 8) {
@@ -2119,11 +2121,71 @@ function base64ToUint8(base64) {
     return bytes;
 }
 
+let companionAudio = null;
+let audioPrimed = false;
+let activeAudioElement = null;
+let audioPlayedThisTurn = false;
+let speechFallbackTimer = null;
+let lastAssistantSpeech = "";
+
+function getCompanionAudio() {
+    if (!companionAudio) {
+        companionAudio = document.getElementById('companionAudio');
+        if (!companionAudio) {
+            companionAudio = document.createElement('audio');
+            companionAudio.id = 'companionAudio';
+            companionAudio.setAttribute('playsinline', '');
+            companionAudio.setAttribute('webkit-playsinline', '');
+            companionAudio.preload = 'auto';
+            companionAudio.style.display = 'none';
+            document.body.appendChild(companionAudio);
+        }
+    }
+    return companionAudio;
+}
+
+// User-Gesture Prime Handler: Unlocks HTML5 audio, AudioContext, and SpeechSynthesis
+function primeAudioPlayback() {
+    // 1. Prime persistent HTML5 Audio element with tiny silent WAV
+    const a = getCompanionAudio();
+    if (!audioPrimed) {
+        try {
+            // 1-frame silent WAV (valid RIFF format)
+            a.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            const playPromise = a.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    a.pause();
+                    a.currentTime = 0;
+                    audioPrimed = true;
+                    console.log("[Audio] HTML5 audio element unlocked by user gesture.");
+                }).catch(() => {});
+            }
+        } catch (_) {}
+    }
+
+    // 2. Prime Web Audio API AudioContext
+    unlockAudioContext();
+
+    // 3. Prime device speech synthesis
+    if ('speechSynthesis' in window) {
+        try {
+            const dummy = new SpeechSynthesisUtterance('');
+            dummy.volume = 0.01;
+            window.speechSynthesis.speak(dummy);
+        } catch (_) {}
+    }
+}
+
+// Ensure audio is permanently unlocked by ANY touch or click anywhere on the page
+['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, primeAudioPlayback, { passive: true });
+});
+
 function unlockAudioContext() {
     if (!playContext) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         try {
-            // Native hardware rate without forced sampleRate argument - avoids NotSupportedError on iOS Safari
             playContext = new AudioCtx();
         } catch (e) {
             console.warn('[AudioContext] Could not initialize:', e);
@@ -2132,13 +2194,8 @@ function unlockAudioContext() {
         nextPlayTime = playContext.currentTime;
     }
     if (playContext.state === 'suspended') {
-        playContext.resume().then(() => {
-            console.log('[AudioContext] Unlocked & active.');
-        }).catch(err => {
-            console.debug('[AudioContext] Unlock pending gesture:', err);
-        });
+        playContext.resume().catch(() => {});
     }
-    // WebKit/iOS unlock trick: play a 1-sample silent buffer synchronously inside user gesture
     try {
         const silentBuf = playContext.createBuffer(1, 1, 22050);
         const srcNode = playContext.createBufferSource();
@@ -2148,18 +2205,9 @@ function unlockAudioContext() {
     } catch (_) {}
 }
 
-// Ensure audio context is unlocked by ANY touch or click interaction on mobile
-['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
-    document.addEventListener(evt, unlockAudioContext, { passive: true });
-});
-
 function initPlayContext() {
-    unlockAudioContext();
+    primeAudioPlayback();
 }
-
-let activeAudioElement = null;
-let audioPlayedThisTurn = false;
-let speechFallbackTimer = null;
 
 function notifyAudioStarted() {
     audioPlayedThisTurn = true;
@@ -2180,6 +2228,7 @@ function speakBrowserSpeech(text) {
         utter.rate = 1.0;
         utter.pitch = S.prefs.gender === 'male' ? 0.95 : 1.15;
         utter.onstart = () => {
+            notifyAudioStarted();
             setAgentState('SPEAKING');
             audioPower = 0.75;
         };
@@ -2194,50 +2243,97 @@ function speakBrowserSpeech(text) {
 }
 
 function scheduleSpeechFallback(text) {
+    lastAssistantSpeech = text;
     if (speechFallbackTimer) clearTimeout(speechFallbackTimer);
     audioPlayedThisTurn = false;
     speechFallbackTimer = setTimeout(() => {
         if (!audioPlayedThisTurn && !activeAudioElement && activeAudioSources.length === 0) {
-            console.log("[Audio Fallback] Server audio stream not detected, speaking via device SpeechSynthesis.");
-            speakBrowserSpeech(text);
+            console.log("[Audio Fallback] Server audio not detected, attempting direct HTTP stream or speech synthesis.");
+            playDirectHttpAudio(text);
         }
-    }, 1100);
+    }, 1200);
+}
+
+function playDirectHttpAudio(text) {
+    try {
+        notifyAudioStarted();
+        const a = getCompanionAudio();
+        stopAllPlayback();
+        const gender = S.prefs.gender === 'male' ? 'male' : 'female';
+        a.src = `/api/tts?text=${encodeURIComponent(text)}&gender=${gender}`;
+        activeAudioElement = a;
+        a.onplay = () => {
+            notifyAudioStarted();
+            setAgentState('SPEAKING');
+            audioPower = 0.85;
+        };
+        a.ontimeupdate = () => {
+            audioPower = 0.55 + 0.35 * Math.abs(Math.sin(Date.now() * 0.008));
+        };
+        a.onended = () => {
+            activeAudioElement = null;
+            audioPower = 0.05;
+            setAgentState('LISTENING');
+        };
+        a.onerror = () => {
+            speakBrowserSpeech(text);
+        };
+        const p = a.play();
+        if (p !== undefined) {
+            p.then(() => notifyAudioStarted()).catch(() => {
+                speakBrowserSpeech(text);
+            });
+        }
+    } catch (_) {
+        speakBrowserSpeech(text);
+    }
 }
 
 function playAudioClip(b64Data, mimeType = 'audio/mpeg') {
     try {
         notifyAudioStarted();
         stopAllPlayback();
-        const audio = new Audio();
-        audio.src = `data:${mimeType};base64,${b64Data}`;
-        audio.preload = 'auto';
-        activeAudioElement = audio;
 
-        audio.onplay = () => {
+        const a = getCompanionAudio();
+        a.src = `data:${mimeType};base64,${b64Data}`;
+        activeAudioElement = a;
+
+        a.onplay = () => {
             notifyAudioStarted();
             setAgentState('SPEAKING');
             audioPower = 0.85;
         };
-        audio.ontimeupdate = () => {
+        a.ontimeupdate = () => {
             audioPower = 0.55 + 0.35 * Math.abs(Math.sin(Date.now() * 0.008));
         };
-        audio.onended = () => {
+        a.onended = () => {
             activeAudioElement = null;
             audioPower = 0.05;
             setAgentState('LISTENING');
         };
-        audio.onerror = (e) => {
-            console.debug("Audio clip playback error:", e);
+        a.onerror = (e) => {
+            console.debug("Audio clip playback error, falling back to direct stream/speech:", e);
+            if (lastAssistantSpeech) {
+                playDirectHttpAudio(lastAssistantSpeech);
+            }
         };
 
-        const playPromise = audio.play();
+        const playPromise = a.play();
         if (playPromise !== undefined) {
-            playPromise.catch(err => {
+            playPromise.then(() => {
+                notifyAudioStarted();
+            }).catch(err => {
                 console.warn("Audio element play error:", err);
+                if (lastAssistantSpeech) {
+                    playDirectHttpAudio(lastAssistantSpeech);
+                }
             });
         }
     } catch (err) {
         console.warn("playAudioClip error:", err);
+        if (lastAssistantSpeech) {
+            playDirectHttpAudio(lastAssistantSpeech);
+        }
     }
 }
 
@@ -2249,13 +2345,14 @@ function stopAllPlayback() {
     if ('speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch (_) {}
     }
-    if (activeAudioElement) {
+    if (companionAudio) {
         try {
-            activeAudioElement.pause();
-            activeAudioElement.currentTime = 0;
-            activeAudioElement.src = '';
+            companionAudio.pause();
+            companionAudio.currentTime = 0;
+            companionAudio.src = '';
         } catch (_) {}
-        activeAudioElement = null;
+    }
+    activeAudioElement = null;
     }
     for (let i = 0; i < activeAudioSources.length; i++) {
         try { activeAudioSources[i].stop(); } catch (_) {}
@@ -2512,7 +2609,7 @@ async function startBrowserMic() {
 }
 
 function triggerManualWake() {
-    unlockAudioContext();
+    primeAudioPlayback();
     if (S.agent.muted) {
         applyMuteUI(false);
     }
@@ -2568,6 +2665,7 @@ function applyMuteUI(muted) {
 
 // User-triggered mute button toggle
 btnMic.addEventListener('click', () => {
+    primeAudioPlayback();
     const targetMuted = !S.agent.muted;
     applyMuteUI(targetMuted);
 
@@ -2939,7 +3037,7 @@ $('btnStop').addEventListener('click', () => {
 function handleCmd(text) {
     const t = text.trim();
     if (!t) return;
-    unlockAudioContext();
+    primeAudioPlayback();
 
     $('cmdInput').value = '';
     const mobInput = $('chatInputMobile');
@@ -3071,6 +3169,7 @@ function updateMobileTalkBtnState(state) {
 
 if (mobileBigTalkBtn) {
     mobileBigTalkBtn.addEventListener('click', () => {
+        primeAudioPlayback();
         if (S.agent.state === 'SPEAKING') {
             stopAllPlayback();
             triggerManualWake();
