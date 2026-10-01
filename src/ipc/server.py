@@ -84,6 +84,8 @@ class IPCServer:
     def set_orchestrator(self, orchestrator: Any) -> None:
         """Set the Agent Orchestrator reference for command routing."""
         self.orchestrator = orchestrator
+        if orchestrator and hasattr(orchestrator, "ipc_server"):
+            orchestrator.ipc_server = self
 
     def _setup_routes(self) -> None:
         """Register all HTTP and WebSocket routes."""

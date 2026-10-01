@@ -2127,6 +2127,7 @@ let activeAudioElement = null;
 let audioPlayedThisTurn = false;
 let speechFallbackTimer = null;
 let lastAssistantSpeech = "";
+let lastAudioActivityTime = 0;
 
 function getCompanionAudio() {
     if (!companionAudio) {
@@ -2211,10 +2212,22 @@ function initPlayContext() {
 
 function notifyAudioStarted() {
     audioPlayedThisTurn = true;
+    lastAudioActivityTime = Date.now();
     if (speechFallbackTimer) {
         clearTimeout(speechFallbackTimer);
         speechFallbackTimer = null;
     }
+    if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+    }
+}
+
+function isAudioCurrentlyPlaying() {
+    if (activeAudioElement && !activeAudioElement.paused && !activeAudioElement.ended) return true;
+    if (activeAudioSources.length > 0) return true;
+    if (Date.now() - lastAudioActivityTime < 1800) return true;
+    if ('speechSynthesis' in window && window.speechSynthesis.speaking) return true;
+    return false;
 }
 
 function speakBrowserSpeech(text) {
@@ -2243,15 +2256,19 @@ function speakBrowserSpeech(text) {
 }
 
 function scheduleSpeechFallback(text) {
+    // When Gemini Live is connected, it handles all speech streaming natively. Do NOT schedule client TTS.
+    if (S.geminiConnected) return;
+
     lastAssistantSpeech = text;
     if (speechFallbackTimer) clearTimeout(speechFallbackTimer);
-    audioPlayedThisTurn = false;
+    if (audioPlayedThisTurn || isAudioCurrentlyPlaying()) return;
+
     speechFallbackTimer = setTimeout(() => {
-        if (!audioPlayedThisTurn && !activeAudioElement && activeAudioSources.length === 0) {
-            console.log("[Audio Fallback] Server audio not detected, attempting direct HTTP stream or speech synthesis.");
+        if (!audioPlayedThisTurn && !isAudioCurrentlyPlaying() && !S.geminiConnected) {
+            console.log("[Audio Fallback] Server audio not detected in offline mode, attempting direct speech.");
             playDirectHttpAudio(text);
         }
-    }, 1200);
+    }, 2000);
 }
 
 function playDirectHttpAudio(text) {
@@ -2365,8 +2382,14 @@ function stopAllPlayback() {
 
 function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
     try {
-        // If an HTML5 audio clip is already playing, skip duplicate PCM chunks
-        if (activeAudioElement) return;
+        // Stop any leftover HTML5 audio clip so live Gemini audio stream takes priority without collision
+        if (activeAudioElement) {
+            try {
+                activeAudioElement.pause();
+                activeAudioElement.currentTime = 0;
+            } catch (_) {}
+            activeAudioElement = null;
+        }
 
         notifyAudioStarted();
         unlockAudioContext();
@@ -2573,6 +2596,11 @@ async function startBrowserMic() {
             const rms = Math.sqrt(sum / inputData.length);
             if (rms > 0.01) {
                 audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
+            }
+
+            // Suppress speaker echo feedback while assistant is actively speaking
+            if ((S.agent.state === 'SPEAKING' || isAudioCurrentlyPlaying()) && rms < 0.05) {
+                return;
             }
 
             // Downsample accurately to 16000 Hz if hardware uses 44.1kHz or 48kHz
@@ -3345,7 +3373,9 @@ function initWS() {
                         $('tSpeaker').textContent = S.agent.name + ':';
                         $('tText').textContent = `"${msg.data.text}"`;
                         addChatMessage(S.agent.name, msg.data.text, false);
-                        scheduleSpeechFallback(msg.data.text);
+                        if (!S.geminiConnected) {
+                            scheduleSpeechFallback(msg.data.text);
+                        }
                     } else if (msg.data.role === 'user') {
                         $('tSpeaker').textContent = 'You:';
                         $('tText').textContent = `"${msg.data.text}"`;

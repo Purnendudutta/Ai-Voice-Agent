@@ -82,6 +82,7 @@ class AgentOrchestrator:
         # Reconnection coordination
         self._reconnecting = False
         self._reconnect_lock = asyncio.Lock()
+        self.ipc_server: Any = None
 
         # Wire local TTS audio streaming to browser WebSocket
         try:
@@ -91,12 +92,19 @@ class AgentOrchestrator:
         except Exception as e:
             logger.debug(f"Could not wire local TTS audio callback: {e}")
 
+    def _has_active_web_clients(self) -> bool:
+        """Check if any browser WebSocket client is currently connected."""
+        if hasattr(self, "ipc_server") and self.ipc_server and hasattr(self.ipc_server, "active_connections"):
+            return len(self.ipc_server.active_connections) > 0
+        return False
+
     async def _on_local_tts_audio(self, pcm_bytes: bytes, sample_rate: int) -> None:
-        """Stream locally synthesized speech chunks to WebSocket clients and local speaker."""
-        try:
-            self.speaker.play_chunk(pcm_bytes)
-        except Exception:
-            pass
+        """Stream locally synthesized speech chunks to WebSocket clients or local speaker."""
+        if not self._has_active_web_clients():
+            try:
+                self.speaker.play_chunk(pcm_bytes)
+            except Exception:
+                pass
         import base64
         b64_audio = base64.b64encode(pcm_bytes).decode("ascii")
         await self._emit_event("audio_stream", {
@@ -312,10 +320,25 @@ class AgentOrchestrator:
                                 except Exception as e:
                                     logger.debug(f"Failed to forward initial speech chunk: {e}")
 
+                # ── SPEAKING state: suppress mic feedback, allow user barge-in ──
+                if self.state == AgentState.SPEAKING:
+                    vad_event = self.vad.process_chunk(chunk)
+                    if vad_event == VADEvent.SPEECH_START:
+                        logger.info("User barge-in detected during speech -> Switching to LISTENING.")
+                        self._speech_active = True
+                        self._last_speech_time = asyncio.get_running_loop().time()
+                        await self._set_state(AgentState.LISTENING)
+                        if self.gemini.is_connected:
+                            try:
+                                await self.gemini.send_audio(chunk)
+                            except Exception as e:
+                                logger.debug(f"Failed to forward barge-in chunk: {e}")
+                    continue
+
                 # ── LISTENING state: stream audio to Gemini ──
-                if self.state in (AgentState.LISTENING, AgentState.SPEAKING) and not self._tool_active:
+                if self.state == AgentState.LISTENING and not self._tool_active:
                     # Silence inactivity check: if user does not speak for 8 seconds, return to IDLE standby
-                    if self.state == AgentState.LISTENING and not self._speech_active:
+                    if not self._speech_active:
                         now = asyncio.get_running_loop().time()
                         if self._last_speech_time > 0 and (now - self._last_speech_time) >= self._silence_timeout_seconds:
                             logger.info(f"Silence timeout ({self._silence_timeout_seconds}s) reached. Switching to IDLE standby.")
@@ -377,8 +400,8 @@ class AgentOrchestrator:
                     if response.audio_data:
                         if self.state != AgentState.SPEAKING:
                             await self._set_state(AgentState.SPEAKING)
-                        self.speaker.play_chunk(response.audio_data)
-                        turn_pcm_chunks.append(response.audio_data)
+                        if not self._has_active_web_clients():
+                            self.speaker.play_chunk(response.audio_data)
                         import base64
                         b64_audio = base64.b64encode(response.audio_data).decode("ascii")
                         await self._emit_event("audio_stream", {
@@ -420,26 +443,9 @@ class AgentOrchestrator:
                             call_id=response.tool_call_id or response.tool_call.name,
                         )
 
-                    # ── After audio finishes, emit turn audio_clip and return to LISTENING ──
+                    # ── After audio finishes, return to LISTENING ──
                     if not response.audio_data and not response.tool_call:
-                        if turn_pcm_chunks:
-                            try:
-                                import io, wave, base64
-                                full_pcm = b"".join(turn_pcm_chunks)
-                                turn_pcm_chunks.clear()
-                                buf = io.BytesIO()
-                                with wave.open(buf, "wb") as wf:
-                                    wf.setnchannels(1)
-                                    wf.setsampwidth(2)
-                                    wf.setframerate(24000)
-                                    wf.writeframes(full_pcm)
-                                wav_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-                                await self._emit_event("audio_clip", {
-                                    "base64": wav_b64,
-                                    "mime_type": "audio/wav"
-                                })
-                            except Exception as wav_err:
-                                logger.debug(f"Failed to generate turn WAV clip: {wav_err}")
+                        turn_pcm_chunks.clear()
 
                         if self.state == AgentState.SPEAKING and not self.speaker.is_playing:
                             if self._continuous_conversation:
@@ -858,12 +864,14 @@ class AgentOrchestrator:
         await self._emit_event("wake_word_detected", {"word": "manual"})
         logger.info("Manual wake-up triggered: agent set to LISTENING.")
 
-        if greet:
+        if greet and not self.gemini.is_connected:
             asyncio.create_task(self._spoken_wake_response())
 
     async def _spoken_wake_response(self) -> None:
-        """Immediate vocal response when user initiates conversation by tapping talk button."""
+        """Immediate vocal response when user initiates conversation in offline degraded mode."""
         try:
+            if self.gemini.is_connected or self.state == AgentState.SPEAKING:
+                return
             prefs = self.get_preferences()
             agent_name = prefs.get("agent_name", "Shruti")
             persona_mode = prefs.get("persona_mode", "romantic_girlfriend")

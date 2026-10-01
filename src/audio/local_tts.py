@@ -112,7 +112,7 @@ class LocalTTS:
 
         mp3_bytes = await self.synthesize_mp3(text, gender=gender)
         if mp3_bytes:
-            # 1. Dispatch full MP3 clip to web clients for HTML5 audio playback
+            # 1. Primary: If a web client callback is registered, dispatch MP3 audio clip for HTML5 playback
             if self.on_audio_clip:
                 try:
                     import base64
@@ -120,10 +120,11 @@ class LocalTTS:
                     clip_res = self.on_audio_clip(b64_mp3, "audio/mpeg")
                     if asyncio.iscoroutine(clip_res):
                         await clip_res
+                    return
                 except Exception as clip_err:
                     logger.debug(f"Audio clip dispatch error: {clip_err}")
 
-            # 2. Decode MP3 to PCM and stream to browser WebSocket
+            # 2. Local fallback: if no web client callback is active, play on local physical sound card
             try:
                 import miniaudio
                 import numpy as np
@@ -132,33 +133,17 @@ class LocalTTS:
                 if decoded.nchannels > 1:
                     samples = samples.reshape(-1, decoded.nchannels)[:, 0]
 
-                raw_bytes = samples.tobytes()
-
-                if self.on_audio_data:
-                    chunk_duration = 0.15  # 150ms slices
-                    chunk_samples = int(decoded.sample_rate * chunk_duration)
-                    chunk_bytes_len = chunk_samples * 2
-
-                    for i in range(0, len(raw_bytes), chunk_bytes_len):
-                        chunk = raw_bytes[i:i + chunk_bytes_len]
-                        cb_res = self.on_audio_data(chunk, decoded.sample_rate)
-                        if asyncio.iscoroutine(cb_res):
-                            await cb_res
-                        await asyncio.sleep(chunk_duration * 0.85)
-
-                # Play on local physical sound card if one exists (Windows/host)
                 try:
                     import sounddevice as sd
                     sd.play(samples, samplerate=decoded.sample_rate)
                     duration = len(samples) / decoded.sample_rate
-                    if not self.on_audio_data:
-                        await asyncio.sleep(duration + 0.1)
+                    await asyncio.sleep(duration + 0.1)
                 except Exception as sd_err:
                     logger.debug(f"Physical sound device unavailable (normal in Docker/cloud): {sd_err}")
 
                 return
             except Exception as dec_err:
-                logger.debug(f"Error decoding MP3 to PCM: {dec_err}")
+                logger.debug(f"Error playing MP3 locally: {dec_err}")
                 return
 
         # 3. Offline fallback: Windows SAPI.SpVoice via COM (Windows only)
