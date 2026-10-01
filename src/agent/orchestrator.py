@@ -320,19 +320,33 @@ class AgentOrchestrator:
                                 except Exception as e:
                                     logger.debug(f"Failed to forward initial speech chunk: {e}")
 
-                # ── SPEAKING state: suppress mic feedback, allow user barge-in ──
-                if self.state == AgentState.SPEAKING:
-                    vad_event = self.vad.process_chunk(chunk)
-                    if vad_event == VADEvent.SPEECH_START:
-                        logger.info("User barge-in detected during speech -> Switching to LISTENING.")
-                        self._speech_active = True
-                        self._last_speech_time = asyncio.get_running_loop().time()
-                        await self._set_state(AgentState.LISTENING)
-                        if self.gemini.is_connected:
-                            try:
-                                await self.gemini.send_audio(chunk)
-                            except Exception as e:
-                                logger.debug(f"Failed to forward barge-in chunk: {e}")
+                # ── SPEAKING state: suppress mic acoustic echo (prevent false self-interruption) ──
+                if self.state == AgentState.SPEAKING or (hasattr(self.speaker, "is_playing") and self.speaker.is_playing):
+                    # Check wake word interruption if neural wake word engine is active
+                    if self.wake_word.enabled:
+                        detected_word = self.wake_word.process_chunk(chunk)
+                        if detected_word:
+                            logger.info(f"Wake word '{detected_word}' detected during speech -> Interrupting and switching to LISTENING.")
+                            self.speaker.clear_queue()
+                            await self._set_state(AgentState.LISTENING)
+                            continue
+
+                    # If user explicitly enables voice barge-in (recommended ONLY when wearing headphones)
+                    if getattr(settings, "allow_voice_barge_in", False):
+                        vad_event = self.vad.process_chunk(chunk)
+                        if vad_event == VADEvent.SPEECH_START:
+                            logger.info("User barge-in detected during speech (headphone mode) -> Switching to LISTENING.")
+                            self.speaker.clear_queue()
+                            self._speech_active = True
+                            self._last_speech_time = asyncio.get_running_loop().time()
+                            await self._set_state(AgentState.LISTENING)
+                            if self.gemini.is_connected:
+                                try:
+                                    await self.gemini.send_audio(chunk)
+                                except Exception as e:
+                                    logger.debug(f"Failed to forward barge-in chunk: {e}")
+                    # By default (desktop speakers), ignore mic input while assistant is speaking
+                    # to prevent speaker audio from echoing back into the microphone and cutting off speech.
                     continue
 
                 # ── LISTENING state: stream audio to Gemini ──

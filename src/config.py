@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     audio_chunk_size: int = 1024
     vad_energy_threshold: float = 0.015
     vad_silence_duration: float = 0.8
+    allow_voice_barge_in: bool = Field(
+        default=False,
+        validation_alias="ALLOW_VOICE_BARGE_IN",
+        description="Enable microphone barge-in during speaker playback (recommended ONLY when wearing headphones to prevent acoustic echo self-interruption)."
+    )
 
     # Wake Word Engine
     wake_word_enabled: bool = True
