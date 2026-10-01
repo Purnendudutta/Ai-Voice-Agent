@@ -711,11 +711,15 @@ class AgentOrchestrator:
             try:
                 await asyncio.sleep(15)
 
-                if self._running and not self.gemini.is_connected and not self._reconnecting:
+                if self._running and not self._reconnecting:
                     from src.config import settings
                     if settings.gemini_api_key and settings.gemini_api_key != "your_gemini_api_key_here":
-                        logger.info("Health monitor detected disconnected state. Initiating reconnect...")
-                        await self._reconnect_gemini()
+                        if not self.gemini.is_connected:
+                            logger.info("Health monitor detected disconnected state. Initiating reconnect...")
+                            await self._reconnect_gemini()
+                        elif getattr(self.gemini, "received_go_away", False) and self.state == AgentState.IDLE:
+                            logger.info("Health monitor detected pending GoAway signal while in IDLE. Gracefully refreshing session...")
+                            await self._reconnect_gemini()
 
             except asyncio.CancelledError:
                 raise
@@ -725,8 +729,28 @@ class AgentOrchestrator:
 
     # ── Public API ────────────────────────────────────────────────────
 
+    async def interrupt_speech(self) -> None:
+        """Immediately stop speech playback and return to LISTENING state."""
+        if self.state == AgentState.SPEAKING or (hasattr(self.speaker, "is_playing") and self.speaker.is_playing):
+            logger.info("Speech playback interrupted by user command keyword.")
+            if hasattr(self.speaker, "clear_queue"):
+                self.speaker.clear_queue()
+            await self._set_state(AgentState.LISTENING)
+            await self._emit_event("interrupted", {})
+
     async def send_text_command(self, text: str) -> None:
         """Handle manual text input from the user."""
+        import re
+        text_lower = text.strip().lower()
+        interrupt_keywords = [
+            "stop", "ruko", "arey", "are", "chup", "suno", "wait", 
+            "hold on", "shutup", "shut up", "pause", "bas", "ruk"
+        ]
+        if self.state == AgentState.SPEAKING:
+            if any(re.search(rf"\b{k}\b", text_lower) for k in interrupt_keywords):
+                await self.interrupt_speech()
+                return
+
         self.context.add_message("user", text)
         await self._emit_event("transcript", {"role": "user", "text": text})
         if self.gemini.is_connected:

@@ -2499,6 +2499,28 @@ function initSpeechRecognition() {
                 }
             }
 
+            const isSpeaking = (S.agent.state === 'SPEAKING' || isAudioCurrentlyPlaying());
+            const interruptKeywords = [
+                'stop', 'ruko', 'ruk', 'arey', 'are', 'chup', 'suno', 'wait',
+                'hold on', 'pause', 'bas', 'shutup', 'shut up', 'quiet', 'listen'
+            ];
+            const spokenText = (interim + ' ' + final).toLowerCase().trim();
+
+            if (isSpeaking) {
+                const matched = interruptKeywords.find(k => new RegExp(`(^|\\s)${k}([\\s.,!?]|$)`, 'i').test(spokenText));
+                if (matched) {
+                    console.log(`[Interrupt] Assistant speech stopped by keyword: "${matched}"`);
+                    stopAllPlayback();
+                    setAgentState('LISTENING');
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'interrupt', data: { keyword: matched } }));
+                    }
+                    toast(`✋ Interrupted: "${matched}"`, 2000);
+                }
+                // When assistant is speaking, suppress ambient noise, room echo, and non-interrupt chatter
+                return;
+            }
+
             if (interim) {
                 $('tSpeaker').textContent = 'You:';
                 $('tText').textContent = `"${interim}..."`;
@@ -3058,8 +3080,13 @@ function closeTask() {
 
 $('btnDismiss').addEventListener('click', closeTask);
 $('btnStop').addEventListener('click', () => {
+    stopAllPlayback();
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'interrupt', data: {} }));
+    }
     closeTask();
-    toast('Task interrupted.');
+    setAgentState('LISTENING');
+    toast('Playback stopped.');
 });
 
 /* =========================================================================
@@ -3203,6 +3230,9 @@ if (mobileBigTalkBtn) {
         primeAudioPlayback();
         if (S.agent.state === 'SPEAKING') {
             stopAllPlayback();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'interrupt', data: {} }));
+            }
             triggerManualWake();
         } else if (S.agent.muted) {
             applyMuteUI(false);

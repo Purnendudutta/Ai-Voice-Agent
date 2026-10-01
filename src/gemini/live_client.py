@@ -132,6 +132,7 @@ class GeminiLiveClient:
         self.is_connected = False
         self.connection_error: Optional[Exception] = None
         self.session_handle: Optional[str] = None
+        self.received_go_away: bool = False
         self.current_agent_name = settings.agent_name
         self.current_language = settings.language_preference
         self.current_voice = settings.voice_name
@@ -231,6 +232,7 @@ class GeminiLiveClient:
                 
                 self.is_connected = True
                 self.connection_error = None
+                self.received_go_away = False
                 logger.info(f"Connected to Gemini Live API (resumed={bool(self.session_handle)})")
                 return
             except Exception as e:
@@ -327,6 +329,7 @@ class GeminiLiveClient:
                 # Handle GoAway signal from server (graceful shutdown notification)
                 if getattr(response, "go_away", None) is not None:
                     time_left = getattr(response.go_away, "time_left", None)
+                    self.received_go_away = True
                     logger.info(f"Gemini Live server sent GoAway signal (time_left={time_left}).")
 
                 # Handle Session Resumption updates to preserve conversational context across drops

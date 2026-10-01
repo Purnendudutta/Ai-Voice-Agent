@@ -54,7 +54,10 @@ class Settings(BaseSettings):
     # Wake Word Engine
     wake_word_enabled: bool = True
     wake_words: List[str] = Field(
-        default_factory=lambda: ["hello", "hi", "hey", "shruti", "jarvis", "gemini", "computer", "assistant"]
+        default_factory=lambda: [
+            "hello", "hi", "hey", "shruti", "jarvis", "gemini", "computer", "assistant",
+            "stop", "ruko", "arey", "wait", "chup", "suno", "bas"
+        ]
     )
     wake_word_sensitivity: float = 0.65
 

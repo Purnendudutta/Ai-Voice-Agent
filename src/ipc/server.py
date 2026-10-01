@@ -313,6 +313,9 @@ class IPCServer:
             elif msg_type == "wake" and self.orchestrator:
                 await self.orchestrator.wake_up(greet=True)
 
+            elif msg_type == "interrupt" and self.orchestrator:
+                await self.orchestrator.interrupt_speech()
+
             elif msg_type == "browser_audio" and self.orchestrator:
                 # Decodes base64 16kHz PCM audio chunk from browser mic
                 b64_pcm = data.get("pcm_base64")
