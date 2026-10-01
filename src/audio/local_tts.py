@@ -120,7 +120,6 @@ class LocalTTS:
                     clip_res = self.on_audio_clip(b64_mp3, "audio/mpeg")
                     if asyncio.iscoroutine(clip_res):
                         await clip_res
-                    return
                 except Exception as clip_err:
                     logger.debug(f"Audio clip dispatch error: {clip_err}")
 

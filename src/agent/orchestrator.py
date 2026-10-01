@@ -99,17 +99,17 @@ class AgentOrchestrator:
         return False
 
     async def _on_local_tts_audio(self, pcm_bytes: bytes, sample_rate: int) -> None:
-        """Stream locally synthesized speech chunks to WebSocket clients or local speaker."""
-        if not self._has_active_web_clients():
-            try:
-                self.speaker.play_chunk(pcm_bytes)
-            except Exception:
-                pass
+        """Stream locally synthesized speech chunks to WebSocket clients and local speaker."""
+        try:
+            self.speaker.play_chunk(pcm_bytes)
+        except Exception:
+            pass
         import base64
         b64_audio = base64.b64encode(pcm_bytes).decode("ascii")
         await self._emit_event("audio_stream", {
             "pcm_base64": b64_audio,
-            "sample_rate": sample_rate
+            "sample_rate": sample_rate,
+            "server_speaker": bool(self.speaker._is_playing)
         })
 
     async def _on_local_tts_clip(self, b64_audio: str, mime_type: str) -> None:
@@ -400,13 +400,13 @@ class AgentOrchestrator:
                     if response.audio_data:
                         if self.state != AgentState.SPEAKING:
                             await self._set_state(AgentState.SPEAKING)
-                        if not self._has_active_web_clients():
-                            self.speaker.play_chunk(response.audio_data)
+                        self.speaker.play_chunk(response.audio_data)
                         import base64
                         b64_audio = base64.b64encode(response.audio_data).decode("ascii")
                         await self._emit_event("audio_stream", {
                             "pcm_base64": b64_audio,
-                            "sample_rate": 24000
+                            "sample_rate": 24000,
+                            "server_speaker": bool(self.speaker._is_playing)
                         })
 
                     # ── Input transcript (what user said) ──

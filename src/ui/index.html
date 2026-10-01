@@ -2380,20 +2380,9 @@ function stopAllPlayback() {
     audioPower = 0.05;
 }
 
-function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
+function playRemotePcmChunk(pcmBase64, sampleRate = 24000, skipPlayback = false) {
     try {
-        // Stop any leftover HTML5 audio clip so live Gemini audio stream takes priority without collision
-        if (activeAudioElement) {
-            try {
-                activeAudioElement.pause();
-                activeAudioElement.currentTime = 0;
-            } catch (_) {}
-            activeAudioElement = null;
-        }
-
         notifyAudioStarted();
-        unlockAudioContext();
-        if (!playContext) return;
 
         const rawBytes = base64ToUint8(pcmBase64);
         let byteLen = rawBytes.byteLength;
@@ -2414,6 +2403,21 @@ function playRemotePcmChunk(pcmBase64, sampleRate = 24000) {
         // Live visualizer reacts dynamically to AI voice output
         const rms = Math.sqrt(sum / numSamples);
         audioPower = Math.min(1.0, Math.max(audioPower, rms * 5.0));
+
+        // If local machine speakers are already outputting audio, skip duplicate browser playback to avoid echo
+        if (skipPlayback) return;
+
+        // Stop any leftover HTML5 audio clip so live Gemini audio stream takes priority without collision
+        if (activeAudioElement) {
+            try {
+                activeAudioElement.pause();
+                activeAudioElement.currentTime = 0;
+            } catch (_) {}
+            activeAudioElement = null;
+        }
+
+        unlockAudioContext();
+        if (!playContext) return;
 
         // playContext.createBuffer automatically resamples to the hardware rate
         const buffer = playContext.createBuffer(1, float32.length, sampleRate);
@@ -3360,11 +3364,17 @@ function initWS() {
                     }
                 } else if (msg.type === 'audio_stream') {
                     if (msg.data && msg.data.pcm_base64) {
-                        playRemotePcmChunk(msg.data.pcm_base64, msg.data.sample_rate || 24000);
+                        const isLocalHost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+                        const skipPlayback = isLocalHost && !!msg.data.server_speaker;
+                        playRemotePcmChunk(msg.data.pcm_base64, msg.data.sample_rate || 24000, skipPlayback);
                     }
                 } else if (msg.type === 'audio_clip') {
                     if (msg.data && msg.data.base64) {
-                        playAudioClip(msg.data.base64, msg.data.mime_type || 'audio/mpeg');
+                        const isLocalHost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+                        const skipPlayback = isLocalHost && !!msg.data.server_speaker;
+                        if (!skipPlayback) {
+                            playAudioClip(msg.data.base64, msg.data.mime_type || 'audio/mpeg');
+                        }
                     }
                 } else if (msg.type === 'interrupted') {
                     stopAllPlayback();
