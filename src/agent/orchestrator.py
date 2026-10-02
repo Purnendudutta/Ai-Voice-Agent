@@ -394,6 +394,7 @@ class AgentOrchestrator:
                     continue
 
                 turn_pcm_chunks = []
+                current_output_transcript = []  # Accumulate output transcript fragments
                 async for response in self.gemini.receive_responses():
                     if not self._running:
                         break
@@ -419,10 +420,11 @@ class AgentOrchestrator:
                             "text": response.input_transcript
                         })
 
-                    # ── Output transcript (what Gemini said) ──
+                    # ── Output transcript (what Gemini said) — accumulate fragments ──
                     if response.output_transcript:
-                        self.context.add_message("assistant", response.output_transcript)
-                        await self._emit_event("transcript", {
+                        current_output_transcript.append(response.output_transcript)
+                        # Update the live subtitle bar with the growing text
+                        await self._emit_event("transcript_stream", {
                             "role": "assistant",
                             "text": response.output_transcript
                         })
@@ -432,6 +434,16 @@ class AgentOrchestrator:
                         logger.info("Barge-in: user interrupted assistant speech.")
                         self.speaker.clear_queue()
                         turn_pcm_chunks.clear()
+                        # Flush accumulated transcript before interruption
+                        if current_output_transcript:
+                            full_text = " ".join(current_output_transcript).strip()
+                            if full_text:
+                                self.context.add_message("assistant", full_text)
+                                await self._emit_event("transcript", {
+                                    "role": "assistant",
+                                    "text": full_text
+                                })
+                            current_output_transcript.clear()
                         await self._set_state(AgentState.LISTENING)
                         await self._emit_event("interrupted", {})
 
@@ -450,6 +462,17 @@ class AgentOrchestrator:
                         turn_pcm_chunks.clear()
 
                         if self.state == AgentState.SPEAKING and not self.speaker.is_playing:
+                            # Flush accumulated output transcript as a single message
+                            if current_output_transcript:
+                                full_text = " ".join(current_output_transcript).strip()
+                                if full_text:
+                                    self.context.add_message("assistant", full_text)
+                                    await self._emit_event("transcript", {
+                                        "role": "assistant",
+                                        "text": full_text
+                                    })
+                                current_output_transcript.clear()
+
                             if self._continuous_conversation:
                                 await self._set_state(AgentState.LISTENING)
                             else:

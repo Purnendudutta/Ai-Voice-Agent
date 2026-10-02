@@ -25,6 +25,7 @@ class SpeakerOutput:
         self._is_playing = False
         # Buffer for partial chunks if needed
         self._buffer = bytearray()
+        self._muted = False
 
     @property
     def is_playing(self) -> bool:
@@ -99,8 +100,16 @@ class SpeakerOutput:
 
     def play_chunk(self, data: bytes):
         """Queues a raw PCM chunk for playback."""
+        if self._muted:
+            return
         if self._is_playing:
             self._queue.put(data)
+
+    def set_muted(self, muted: bool) -> None:
+        """Enable or disable speaker output muting (for web-only sessions)."""
+        self._muted = muted
+        if muted:
+            self.clear_queue()
 
     def clear_queue(self):
         """Immediately empties the audio queue and buffer (for barge-in/interruption)."""

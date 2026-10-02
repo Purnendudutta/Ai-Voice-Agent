@@ -69,11 +69,7 @@ class IPCServer:
         # CORS for localhost
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=[
-                "http://localhost",
-                f"http://localhost:{settings.web_ui_port}",
-                f"http://127.0.0.1:{settings.web_ui_port}",
-            ],
+            allow_origins=["*"],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
@@ -132,42 +128,147 @@ class IPCServer:
 
         # ── WebSocket endpoint ──
         @self.app.websocket("/ws")
-        async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None)):
-            # Auth check (skip in dev if no token provided for ease of use)
-            await websocket.accept()
-            self.active_connections.append(websocket)
-            logger.info(f"WebSocket client connected (total: {len(self.active_connections)})")
+        async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None), session_id: Optional[str] = Query(None)):
+            import uuid
+            from src.audio.microphone import MicrophoneStream
+            from src.audio.speaker import SpeakerOutput
+            from src.audio.vad import VoiceActivityDetector, VADEvent
+            from src.audio.wake_word import WakeWordDetector
+            from src.gemini.live_client import GeminiLiveClient
+            from src.agent.context import ContextManager
+            from src.agent.orchestrator import AgentOrchestrator
 
-            # Send initial state
-            if self.orchestrator:
+            await websocket.accept()
+            sid = session_id or str(uuid.uuid4())
+            logger.info(f"New private session connected: {sid}")
+
+            # Create isolated subsystems for this session
+            session_mic = MicrophoneStream(
+                sample_rate=settings.audio_input_sample_rate,
+                channels=settings.audio_channels,
+                chunk_size=settings.audio_chunk_size,
+            )
+            # Don't start hardware mic capture for web sessions — audio comes via WebSocket
+            session_speaker = SpeakerOutput(
+                sample_rate=settings.audio_output_sample_rate,
+                channels=settings.audio_channels,
+            )
+            # Mute physical desktop speaker for remote web sessions
+            # Audio plays in the user's browser via WebSocket streaming
+            session_vad = VoiceActivityDetector(
+                energy_threshold=settings.vad_energy_threshold,
+                silence_duration=settings.vad_silence_duration,
+                sample_rate=settings.audio_input_sample_rate,
+                chunk_size=settings.audio_chunk_size,
+            )
+            session_wake = WakeWordDetector(sensitivity=settings.wake_word_sensitivity)
+            session_gemini = GeminiLiveClient(max_retries=settings.max_execution_retries)
+            session_context = ContextManager()
+
+            session_orch = AgentOrchestrator(
+                microphone=session_mic,
+                speaker=session_speaker,
+                vad=session_vad,
+                wake_word=session_wake,
+                gemini=session_gemini,
+                context=session_context,
+            )
+
+            # Private event emitter: sends ONLY to this client's WebSocket
+            async def private_emit(event: dict) -> None:
+                try:
+                    await websocket.send_json(event)
+                except Exception:
+                    pass
+
+            session_orch.on_event = private_emit
+
+            # Also register with legacy list for backward compat with REST endpoints
+            self.active_connections.append(websocket)
+
+            # Start the private orchestrator
+            orch_task = asyncio.create_task(session_orch.start())
+
+            try:
+                # Send initial state to this client
                 await websocket.send_json({
                     "type": "state_change",
-                    "data": {"state": self.orchestrator.get_state(), "previous": "INIT"}
+                    "data": {"state": session_orch.get_state(), "previous": "INIT"}
                 })
                 await websocket.send_json({
                     "type": "system_status",
-                    "data": self.orchestrator.get_status()
+                    "data": session_orch.get_status()
                 })
 
-            try:
                 while True:
                     ws_msg = await websocket.receive()
                     if ws_msg.get("type") == "websocket.disconnect":
                         break
 
-                    # 1. Direct binary audio frames from in-browser microphone
+                    # Binary audio from this device's browser mic -> this session's mic queue
                     if "bytes" in ws_msg and ws_msg["bytes"]:
-                        if self.orchestrator and hasattr(self.orchestrator, "microphone"):
-                            self.orchestrator.microphone.queue.put_nowait(ws_msg["bytes"])
+                        session_mic.queue.put_nowait(ws_msg["bytes"])
 
-                    # 2. Text / JSON messages
+                    # Text/JSON commands -> this session's orchestrator
                     elif "text" in ws_msg and ws_msg["text"]:
-                        await self._handle_ws_message(websocket, ws_msg["text"])
+                        try:
+                            message = json.loads(ws_msg["text"])
+                            msg_type = message.get("type")
+                            data = message.get("data", {})
+
+                            if msg_type == "text_command" and session_orch:
+                                text = data.get("text", "").strip()
+                                if text:
+                                    asyncio.create_task(session_orch.send_text_command(text))
+                            elif msg_type == "interrupt" and session_orch:
+                                await session_orch.interrupt_speech()
+                            elif msg_type == "toggle_mic" and session_orch:
+                                muted = data.get("muted")
+                                is_muted = session_orch.toggle_mute(muted)
+                                await websocket.send_json({"type": "mic_status", "data": {"muted": is_muted}})
+                            elif msg_type == "wake" and session_orch:
+                                await session_orch.wake_up(greet=True)
+                            elif msg_type == "update_preferences" and session_orch:
+                                await session_orch.update_preferences(
+                                    agent_name=data.get("agent_name"),
+                                    language=data.get("language"),
+                                    voice_name=data.get("voice_name"),
+                                    persona_mode=data.get("persona_mode")
+                                )
+                            elif msg_type == "confirm_action" and session_orch:
+                                request_id = data.get("request_id")
+                                if request_id:
+                                    await session_orch.handle_confirmation(request_id, True)
+                            elif msg_type == "cancel_action" and session_orch:
+                                request_id = data.get("request_id")
+                                if request_id:
+                                    await session_orch.handle_confirmation(request_id, False)
+                            elif msg_type == "browser_audio" and session_orch:
+                                b64_pcm = data.get("pcm_base64")
+                                if b64_pcm:
+                                    try:
+                                        raw_bytes = base64.b64decode(b64_pcm)
+                                        session_mic.queue.put_nowait(raw_bytes)
+                                    except Exception as err:
+                                        logger.debug(f"Error handling browser audio: {err}")
+                            elif msg_type == "ping":
+                                await websocket.send_json({"type": "pong", "data": {}})
+                        except json.JSONDecodeError:
+                            logger.error("Invalid JSON received over WebSocket")
+                        except Exception as e:
+                            logger.error(f"Error handling WS message in session {sid}: {e}")
+
             except WebSocketDisconnect:
-                self._remove_connection(websocket)
+                logger.info(f"Session disconnected: {sid}")
             except Exception as e:
-                logger.error(f"WebSocket error: {e}")
+                logger.warning(f"Session error [{sid}]: {e}")
+            finally:
+                # Clean up this session
                 self._remove_connection(websocket)
+                await session_orch.stop()
+                if not orch_task.done():
+                    orch_task.cancel()
+                logger.info(f"Cleaned up session: {sid}")
 
         # ── REST: Status ──
         @self.app.get("/api/status")

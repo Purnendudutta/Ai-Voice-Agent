@@ -3413,8 +3413,15 @@ function initWS() {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host  = location.host || 'localhost:8000';
 
+    // Generate a unique session ID per browser tab for private independent sessions
+    let sessionId = sessionStorage.getItem('ai_agent_session_id');
+    if (!sessionId) {
+        sessionId = 'dev_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+        sessionStorage.setItem('ai_agent_session_id', sessionId);
+    }
+
     try {
-        ws = new WebSocket(`${proto}//${host}/ws`);
+        ws = new WebSocket(`${proto}//${host}/ws?session_id=${encodeURIComponent(sessionId)}`);
 
         ws.onopen = () => {
             console.log('[WebSocket] Connected to Voice Agent backend.');
@@ -3448,6 +3455,12 @@ function initWS() {
                     }
                 } else if (msg.type === 'interrupted') {
                     stopAllPlayback();
+                } else if (msg.type === 'transcript_stream') {
+                    // Live subtitle update (fragments) — update subtitle bar only, no chat bubble
+                    if (msg.data.role === 'assistant') {
+                        $('tSpeaker').textContent = S.agent.name + ':';
+                        $('tText').textContent = `"${msg.data.text}"`;
+                    }
                 } else if (msg.type === 'transcript') {
                     if (msg.data.role === 'assistant') {
                         $('tSpeaker').textContent = S.agent.name + ':';

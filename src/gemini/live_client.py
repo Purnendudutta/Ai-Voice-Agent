@@ -17,6 +17,25 @@ def build_system_prompt(
     persona_mode: str = "romantic_girlfriend"
 ) -> str:
     """Builds a contextual, bilingual system prompt with customizable persona."""
+    from datetime import datetime
+    import time as _time
+    try:
+        now = datetime.now().astimezone()
+        current_time_str = now.strftime('%I:%M %p')  # e.g. 12:47 PM
+        current_date_str = now.strftime('%A, %B %d, %Y')  # e.g. Wednesday, October 02, 2026
+        tz_name = now.strftime('%Z') or _time.tzname[0] or 'IST'
+        tz_offset = now.strftime('%z')  # e.g. +0530
+        time_context = (
+            f"CURRENT DATE & TIME CONTEXT (CRITICAL - use this to answer any time/date questions):\n"
+            f"- Current Time: {current_time_str}\n"
+            f"- Current Date: {current_date_str}\n"
+            f"- Timezone: {tz_name} (UTC{tz_offset[:3]}:{tz_offset[3:]})\n"
+            f"- When the user asks 'what time is it', 'kya time hua hai', 'kitne baje hai', etc., "
+            f"tell them the current time from this context. Do NOT say you cannot access the time."
+        )
+    except Exception:
+        time_context = ""
+
     if language == "hindi":
         lang_rule = "LANGUAGE PREFERENCE: You MUST primarily speak in sweet, affectionate Hindi (हिन्दी) or Hinglish. Always speak warmly in Hindi unless the user asks for English."
     elif language == "english":
@@ -63,6 +82,8 @@ RELATIONSHIP & PERSONA:
 {persona_rule}
 
 {lang_rule}
+
+{time_context}
 
 IMPORTANT INSTRUCTIONS:
 1. Introduce yourself as {agent_name} if asked.
